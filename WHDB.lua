@@ -21,6 +21,20 @@ WHDB_PlotUpdate = 0;
 WHDB_CommentParts = 0;
 WHDB_Version = "Continued-WHDB for Rapid Quest Pack";
 
+function WHDB_OnMouseDown(arg1)
+	if (arg1 == "LeftButton") then
+		WHDB_Frame:StartMoving();
+	end
+end
+function WHDB_OnMouseUp(arg1)
+	if (arg1 == "LeftButton") then
+		WHDB_Frame:StopMovingOrSizing();
+	end
+end
+function WHDB_OnFrameShow()
+	
+end
+
 function WHDB_Init()
 	-- C changed VARIABLES_LOADED to PLAYER_LOGIN
 	this:RegisterEvent("PLAYER_LOGIN");
@@ -77,13 +91,17 @@ function WHDB_Event(event, arg1)
 			else
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 			end
-			WHDB_Settings[WHDB_Player]["waypoints"] = 1
+			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
+			WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
+			WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
 		else
 			if (WHDB_Settings[WHDB_Player] == nil) then
 				WHDB_Settings[WHDB_Player] = {};
 				WHDB_Settings[WHDB_Player]["UseColors"] = 1;
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
-				WHDB_Settings[WHDB_Player]["waypoints"] = 1
+				WHDB_Settings[WHDB_Player]["waypoints"] = 1;
+				WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
+				WHDB_Settings[WHDB_Player]["updateNotes"] = 0;				
 			end
 		end
 		-- New version settings update
@@ -92,11 +110,18 @@ function WHDB_Event(event, arg1)
 			WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 		end
 		if (WHDB_Settings[WHDB_Player]["waypoints"] == nil) then
-			WHDB_Settings[WHDB_Player]["waypoints"] = 1
+			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
+		end
+		if (WHDB_Settings[WHDB_Player]["commentNotes"] == nil) then
+			WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
+		end
+		if (WHDB_Settings[WHDB_Player]["updateNotes"] == nil) then
+			WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
 		end
 		-- WHDB if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 		-- WHDB 	WHDB_PlotAllQuests();
 		-- WHDB end
+		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
 	-- C debug until ...
 	--elseif (event == "ZONE_CHANGED") then
@@ -114,20 +139,20 @@ function WHDB_Event(event, arg1)
 	-- C ... here
 	
 	-- C changed to elseif
-	elseif (event == "QUEST_WATCH_UPDATE") then
+	elseif (event == "QUEST_WATCH_UPDATE") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1) then
 		-- WHDB WHDB_Print("QUEST_WATCH_UPDATE");
 		WHDB_PlotUpdate = 1;
 	elseif (event == "QUEST_LOG_UPDATE") then
-		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and WHDB_PlotUpdate == 1) then
+		if ((WHDB_Settings[WHDB_Player]["auto_plot"] == 1) and (WHDB_PlotUpdate == 1) and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1)) then
 			-- WHDB WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
 			WHDB_PlotUpdate = 0;
 		end
-	elseif (event == "UNIT_QUEST_LOG_CHANGED") then
+	-- C elseif ((event == "UNIT_QUEST_LOG_CHANGED") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1)) then
 		-- WHDB WHDB_Print("UNIT_QUEST_LOG_CHANGED");
-		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and arg1 == "player") then
-			WHDB_PlotUpdate = 1;
-		end
+		-- C if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and arg1 == "player") then
+		-- C 	WHDB_PlotUpdate = 1;
+		-- C end
 	end
 end
 
@@ -172,6 +197,8 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb colors | Enable/Disable: Coloring of text in the quest log.");
 		WHDB_Print("/whdb auto | Enable/Disable: Automatically plot uncompleted objectives on map.");
 		WHDB_Print("/whdb waypoint | Enable/Disable: Plot waypoints on map.");
+		WHDB_Print("/whdb cnotes | Enable/Disable: Plot comments on map.");
+		WHDB_Print("/whdb update | Enable/Disable: Automatically update notes. (Very slow right now)");
 		WHDB_Print("/whdb copy <character> | Copy characters config to current one.");
 		DEFAULT_CHAT_FRAME:AddMessage("\n");
 		WHDB_Print("Note: All parameters are case sensitive!");
@@ -189,7 +216,7 @@ function WHDB_Slash(input)
 		if (questName ~= "") then
 			WHDB_Print("Quest Comments");
 			WHDB_Print("---------------------------------------------------");
-			local QuestComments = WHDB_GetComments(questName);
+			local QuestComments = WHDB_GetComments(questName, '');
 			-- C commented because string.gmatch is not working
 			-- WHDB for v in string.gmatch(QuestComments, "[^\n]+") do
 			-- WHDB	 WHDB_Print(v);
@@ -280,22 +307,14 @@ function WHDB_Slash(input)
 			WHDB_Print("There are no settings for this character.");
 		end
 	elseif (string.sub(input,1,4) == "auto") then
-		if (MetaMap_SetNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-			if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
-				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
-				WHDB_Print("Auto plotting disabled.");
-				WHDB_CleanMap();
-			else
-				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
-				WHDB_Print("Auto plotting enabled.");
-				WHDB_PlotAllQuests();
-			end
-		else
-			WHDB_Print("A map mod is needed to autoplot quests.");
-		end
+		SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
-		SwitchWP();
-	-- C disable else
+		SwitchSetting("waypoints");
+	elseif (string.sub(input,1,8) == "cnotes") then
+		SwitchSetting("commentNotes");
+	elseif (string.sub(input,1,8) == "update") then
+		SwitchSetting("updateNotes");
+	-- C disable else 
 		-- C disable if (input == nil) then input = ""; end
 		-- C disable WHDB_Print("Unknown command: \""..input.."\"");
 	end
@@ -313,7 +332,7 @@ function WHDB_PlotAllQuests()
 end
 
 function WHDB_Print( string )
-	DEFAULT_CHAT_FRAME:AddMessage("|cFF000099E-WHDB:|r " .. string, 0.95, 0.95, 0.5);
+	DEFAULT_CHAT_FRAME:AddMessage("|cAA0000FFC-WHDB:|r " .. string, 0.95, 0.95, 0.5);
 end
 
 function WHDB_Print_Indent( string )
@@ -343,13 +362,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	end
 	local questTitle = GetQuestLogTitle(questLogID);
 	-- C debug
-	DEFAULT_CHAT_FRAME:AddMessage("questTitle: "..questTitle);
-	local questComments = WHDB_GetComments(questTitle);
-	if ( IsCurrentQuestFailed() ) then
-		questTitle = questTitle.." - ("..TEXT(FAILED)..")";
-	end
-	getglobal(prefix.."QuestLogQuestTitle"):SetText(questTitle);
-
+	DEFAULT_CHAT_FRAME:AddMessage("WHDB_QuestLog_UpdateQuestDetails(questTitle: "..questTitle..")");
 	local questDescription;
 	local questObjectives;
 	questDescription, questObjectives = GetQuestLogQuestText();
@@ -357,6 +370,11 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	-- C DEFAULT_CHAT_FRAME:AddMessage(questObjectives);
 	-- C if (questObjectives == nil) then DEFAULT_CHAT_FRAME:AddMessage("questObjectives = nil"); end
 	-- C if (questObjectives == '') then DEFAULT_CHAT_FRAME:AddMessage("questObjectives = ''"); end
+	local questComments = WHDB_GetComments(questTitle, questObjectives);
+	if ( IsCurrentQuestFailed() ) then
+		questTitle = questTitle.." - ("..TEXT(FAILED)..")";
+	end
+	getglobal(prefix.."QuestLogQuestTitle"):SetText(questTitle);
 	getglobal(prefix.."QuestLogObjectivesText"):SetText(questObjectives);
 	
 	local questTimer = GetQuestLogTimeLeft();
@@ -457,7 +475,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		-- C check for objective type other than item or monster, e.g. object, reputation, event
 		elseif (type ~= "item" and type ~= "monster") then
 			-- C debug
-			DEFAULT_CHAT_FRAME:AddMessage(type.." quest objective-type not supported yet by WHDB");
+			DEFAULT_CHAT_FRAME:AddMessage("WHDB_QuestLog_UpdateQuestDetails("..type.." quest objective-type not supported yet)");
 		end
 
 		string:SetText(text);
@@ -640,7 +658,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription_"..t, "BOTTOMLEFT", 0, -5);
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetJustifyH("LEFT");
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetTextColor(r, g, b, a);
-		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetText(part);
+		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetText("## Part "..n.." ##\n"..part);
 		QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogCommentsDescription_"..n));
 		WHDB_CommentParts = n;
 	end
@@ -686,9 +704,6 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 
 	-- C moved some code further up from here and modified it
 	
-	-- C redundant
-	-- C showMap =  GetCommentNotes(questTitle) or showMap;
-	
 	-- C Change by Redshadowz:
 	-- C if and else statements uncommented until ...
 	if (not showMap) then
@@ -714,8 +729,8 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 end
 
 --E New Icons from mpq files
-Cartographer_Notes:RegisterIcon("Wasanderes", {
-    text = "Wasanderes",
+Cartographer_Notes:RegisterIcon("QuestionMark", {
+    text = "QuestionMark",
     path = "Interface\\GossipFrame\\ActiveQuestIcon",
 })
 Cartographer_Notes:RegisterIcon("NPC", {
@@ -728,6 +743,8 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 })
 
 function WHDB_PlotNotesOnMap()
+	sortOverlayingMapNotes();
+	
 	local zone = nil;
 	local title = nil;
 	local noteID = nil;
@@ -735,14 +752,18 @@ function WHDB_PlotNotesOnMap()
 	local firstNote = 1;
 	
 	for nKey, nData in ipairs(WHDB_MAP_NOTES) do
+		-- C nData[1] is zone name/number
+		-- C nData[2] is x coordinate
+		-- C nData[3] is y coordinate
+		-- C nData[4] is comment title
+		-- C nData[5] is comment body
+		-- C nData[6] is icon number
 		-- C debug
-		-- C WHDB_Print(nData[1]);
+		-- C WHDB_Print(nData[1].."\n"..nData[2]..":"..nData[3].."\n"..nData[4].."\n"..nData[5]);
 		
 		-- C check for zoneId's instead of names and change if necessary.
 		-- C until ...
-		if type(nData[1]) == number then
-			nData[1] = zoneData[nData[1]]
-		end
+		
 		-- C ... here
 		if (MetaMapNotes_AddNewNote ~= nil) then
 			if (nData[6] == 0) then
@@ -771,10 +792,6 @@ function WHDB_PlotNotesOnMap()
 				firstNote = 0;
 				end
 			end
-			
-			
-			
-			
 		end
 		if (Cartographer_Notes ~= nil) then
 			if (nData[6] == 0) then
@@ -782,9 +799,11 @@ function WHDB_PlotNotesOnMap()
 			elseif (nData[6] == 1) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Diamond", "WHDB", 'title', nData[4], 'info', nData[5]);			
 			elseif (nData[6] == 2) then
-				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Wasanderes", "WHDB", 'title', nData[4], 'info', nData[5]);
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "QuestionMark", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 3) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Waypoint", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] == 4) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);
 			end
 		end
 		if (MapNotes_Data_Notes ~= nil) then
@@ -821,6 +840,9 @@ function WHDB_PlotNotesOnMap()
 			title = nData[4];
 		end
 	end
+	if table.getn(WHDB_MAP_NOTES) ~= nil then
+		WHDB_Print(table.getn(WHDB_MAP_NOTES).." notes plotted.")
+	end
 	WHDB_MAP_NOTES = {}
 	return zone, title, noteID;
 end
@@ -836,18 +858,32 @@ function WHDB_GetMapIDFromZone(zoneText)
 	return -1, zoneText;
 end
 
-function WHDB_GetComments(questTitle)
+function WHDB_GetComments(questTitle, questObjectives)
+	-- C Update for new functionality
+	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
 	local questCom = "";
-	if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
-		for id, comment in ipairs(qData[WHDB_Player_Faction][questTitle]['comments']) do
-			questCom = questCom .. comment .."\n____________________\n";
+	if (qIDs) then
+		if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
+			for id, oc in pairs(qData[WHDB_Player_Faction][questTitle]['IDs']) do
+				if (oc[2] ~= nil) then
+					for n, comment in pairs(oc[2]) do
+						questCom = questCom .. comment .."\n____________________\n"; 
+					end
+				end
+			end
 		end
-	elseif (qData['Common'][questTitle] ~= nil) then
-		for id, comment in ipairs(qData['Common'][questTitle]['comments']) do
-			questCom = questCom .. comment .."\n____________________\n";
+		if (qData['Common'][questTitle] ~= nil) then
+			for id, oc in pairs(qData['Common'][questTitle]['IDs']) do
+				if (oc[2] ~= nil) then
+					for n, comment in pairs(oc[2]) do
+						questCom = questCom .. comment .."\n____________________\n"; 
+					end
+				end
+			end
 		end
-	else
-		questCom = questCom  .. "No comments for this quest.\n\n";
+		if (questCom == "") then
+			questCom = "No comments for this quest.\n\n";
+		end
 	end
 	return questCom;
 end
@@ -893,6 +929,7 @@ function WHDB_CleanMap()
 	if (MapNotes_Data_Notes ~= nil) then
 		MapNotes_DeleteNotesByCreatorAndName("WHDB");
 	end
+	WHDB_Print("Map cleaned.");
 end
 
 function WHDB_DoCleanMap()
@@ -938,7 +975,74 @@ function SearchEndNPC(quest)
 	return nil;
 end
 
--- C new functions below here
+-- C ######################## new functions below here ########################
+
+function sortOverlayingMapNotes()
+	local ICONS_TEXT = {
+		[0] = '|cFF0000FFNPC:|r\n',
+		[1] = '',
+		[2] = '',
+		[3] = '|cFF0000FFWaypoint|r:\n'
+	};
+	if (WHDB_MAP_NOTES ~= {}) then
+		local notes = {};
+		local doneIndex = {};
+		for n, nData in pairs(WHDB_MAP_NOTES) do
+			local done = false;
+			for index, number in pairs(doneIndex) do
+				if (number == n) then done = true; end
+			end
+			if not (done) then
+			-- C legacy check, shouldn't be needed
+			if type(nData[1]) == number then
+				nData[1] = zoneData[nData[1]]
+			end
+			-- C nData[1] = zone name, nData[2] = x coordinate, nData[3] = y coordinate, nData[4] = comment title, nData[5] = comment body, nData[6] = icon number
+			table.insert(doneIndex, n);
+			local temp = {};
+			local multi = false;
+			local icon = nData[6]
+			
+			-- C check for overlaying notes
+			for n2, nData2 in pairs(WHDB_MAP_NOTES) do
+				local done = false;
+				for index, number in pairs(doneIndex) do
+					if (number == n2) then done = true; end
+				end
+				if not (done) then
+					-- C determine here which notes should be merged, only exact match right now
+					if ((nData[1] == nData2[1]) and (nData[2] == nData2[2]) and (nData[3] == nData2[3])) then
+						table.insert(temp, nData2);
+						table.insert(doneIndex, n2);
+						multi = true;
+						if ( nData[6] ~= nData2[6]) then icon = 4; end
+					end
+				end
+			end
+			
+			-- C merge tooltip displays
+			if (multi) then
+				local zone = nData[1];
+				local x = nData[2];
+				local y = nData[3];
+				local length = table.getn(temp) + 1;
+				local commentTitle = "Showing "..length.." notes for this coordinates";
+				local comment = ICONS_TEXT[nData[6]]..nData[4]..":\n"..nData[5].."\n_____________\n";
+				for n, nData3 in pairs(temp) do
+					comment = comment.."\n"..ICONS_TEXT[nData3[6]]..nData3[4]..":\n"..nData3[5].."\n_____________";
+				end
+				local merge = {nData[1], nData[2], nData[3], commentTitle, comment, icon}
+				table.insert(notes, merge);
+			-- C single tooltip
+			else
+				table.insert(notes, nData);
+			end
+			end
+		end
+		WHDB_MAP_NOTES = notes;
+	end
+end
+
 -- C ingame test
 -- C /script GetQuestEndNotes(2); WHDB_PlotNotesOnMap();
 
@@ -967,9 +1071,16 @@ function GetQuestEndNotes(questLogID)
 				end
 			end
 			if (table.getn(names) > 0) then
-				for n, name in pairs(names) do
-					commentTitle = "END: "..questTitle.." - "..n.."/"..table.getn(names).." NPCs";
-					GetNPCNotes(name, commentTitle, name.."\n("..multi.." quests with this name)", 2, questTitle);
+				if (table.getn(names) > 1) then
+					for n, name in pairs(names) do
+						local commentTitle = "END: "..questTitle.." - "..n.."/"..table.getn(names).." NPCs";
+						local comment = name.."\n("..multi.." quests with this name)"
+						GetNPCNotes(name, commentTitle, comment, 2, questTitle);
+					end
+				else
+					local name = names[1]
+					local comment = name.."\n(Ends "..multi.." quests with this name)"
+					return GetNPCNotes(name, "END: "..questTitle, comment, 2, questTitle);
 				end
 			end
 			return true;
@@ -982,21 +1093,22 @@ function GetQuestEndNotes(questLogID)
 	end
 end
 
+-- C TODO check objectives text
 function GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (questObjectives == nil) then questObjectives = ''; end
 	-- C debug
-	DEFAULT_CHAT_FRAME:AddMessage("questName: "..questName);
-	DEFAULT_CHAT_FRAME:AddMessage("objectives text: "..objectives);
+	-- C DEFAULT_CHAT_FRAME:AddMessage("questName: "..questName);
+	-- C DEFAULT_CHAT_FRAME:AddMessage("objectives text: "..objectives);
 	
 	if ((qData[WHDB_Player_Faction][questName] ~= nil)) then
-		for n, o in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
 			table.insert(qIDs, n);
 		end
 	end
 	
 	if((qData['Common'][questName] ~= nil)) then
-		for n, o in pairs(qData['Common'][questName]['IDs']) do
+		for n, o, c in pairs(qData['Common'][questName]['IDs']) do
 			table.insert(qIDs, n);
 		end
 	end
@@ -1029,19 +1141,32 @@ function GetQuestIDs(questName, objectives)
 	else return length, qIDs; end
 end
 
+-- C TODO 19 npc names are used twice. first found is chosen atm
 function GetNPCID(npcName)
 	for npcid, data in pairs(npcData) do
 		if (data['name'] == npcName) then return npcid; end
 	end
 end
 
-function SwitchWP()
-	if (WHDB_Settings[WHDB_Player]["waypoints"] == 0) then
-		WHDB_Settings[WHDB_Player]["waypoints"] = 1;
-		WHDB_Print("Waypoint plotting enabled.");
+function SwitchSetting(setting)
+	text = {
+		["waypoints"] = "Waypoint plotting",
+		["commentNotes"] = "Comment note plotting",
+		["updateNotes"] = "Automatic note updating",
+		["auto_plot"] = "Auto plotting",
+	};
+	if (WHDB_Settings[WHDB_Player][setting] == 0) then
+		WHDB_Settings[WHDB_Player][setting] = 1;
+		WHDB_Print(text[setting].." enabled.");
 	else
-		WHDB_Settings[WHDB_Player]["waypoints"] = 0;
-		WHDB_Print("Waypoint plotting disabled.");
+		WHDB_Settings[WHDB_Player][setting] = 0;
+		WHDB_Print(text[setting].." disabled.");
+	end
+end
+
+function CheckSetting(setting)
+	if (WHDB_Settings[WHDB_Player][setting] == 1) then
+		getglobal(setting):SetChecked(true);
 	end
 end
 
@@ -1090,6 +1215,7 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 end
 
 function GetQuestNotes(questLogID)
+	-- C WHDB_MAP_NOTES = {};
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
 	-- C debug
 	-- C DEFAULT_CHAT_FRAME:AddMessage(questTitle);
@@ -1118,12 +1244,12 @@ function GetQuestNotes(questLogID)
 					-- C check for objective type other than item or monster, e.g. objective, reputation, event
 					elseif (type ~= "item" and type ~= "monster") then
 						-- C debug
-						DEFAULT_CHAT_FRAME:AddMessage(type.." quest objective-type not supported yet by WHDB");
+						DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..type.." quest objective-type not supported yet)");
 					end
 				end
 			end
-			if ((not isComplete) and (numObjectives ~= 0)) then 
-				showMap = GetCommentNotes(questTitle) or showMap;
+			if ((not isComplete) and (numObjectives ~= 0) and (WHDB_Settings[WHDB_Player]["commentNotes"] == 1)) then 
+				showMap = GetCommentNotes(questTitle, questLogID) or showMap;
 			end
 		end
 		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
@@ -1162,11 +1288,24 @@ end
 -- C breaks comments (inserts a new line character) on every last space in 80 chars
 -- C TODO: invisible (to player) characters are counted, e.g. text coloring
 -- C minor bug though, at least compared to before
+-- C partially solved through new comment data without colors
 function LineFeedComment(comment)
 	if (string.len(comment) > 80) then
 		temp = {};
 		pointer = 1;
 		while (string.len(string.sub(comment, pointer)) > 80) do
+			while (string.len(string.sub(comment, pointer)) > 80) do
+				local nBegin, nEnd  = string.find(string.sub(comment, pointer, pointer +80), "\n")
+				if (nEnd ~= nil) then
+					table.insert(temp, string.sub(comment, pointer, pointer + nEnd - 2));
+					pointer = pointer + nEnd;
+				else
+					break;
+				end
+			end
+			if (string.len(string.sub(comment, pointer)) < 80) then
+				break;
+			end
 			local space = string.find(comment, "%s", pointer + 70);
 			if (space ~= nil) then
 				table.insert(temp, string.sub(comment, pointer, space-1));
@@ -1183,7 +1322,9 @@ function LineFeedComment(comment)
 	end
 end
 
-function GetCommentNotes(questName)
+-- C TODO: clean up redundant code into seperate function
+function GetCommentNotes(questName, questObjectives)
+	--[[
 	if (qData[WHDB_Player_Faction][questName]) then
 		questKind = qData[WHDB_Player_Faction];
 	elseif (qData['Common'][questName]) then
@@ -1192,22 +1333,153 @@ function GetCommentNotes(questName)
 		questKind = nil;
 		return false;
 	end
+	]]--
 	local showMap = false;
-	for id, comment in ipairs(questKind[questName]['comments']) do
-		local f = 0;
-		while f ~= nil do
-			f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
-			if (coordx ~= nil and coordy ~= nil) then
-				WHDB_PopulateZones();
-				if (WHDB_QuestZoneInfo[questName] ~= nil) then
-					if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
-						table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, questName, LineFeedComment(comment), 1});
-						showMap = true;
+	local multi, qIDs = GetQuestIDs(questName, questObjectives);
+	if (qIDs ~= false) then
+		if (multi ~= false) then
+			for n, qID in pairs(qIDs) do
+				if (qData['Common'][questName] ~= nil) then
+					if (qData['Common'][questName]['IDs'] ~= nil) then
+						if (qData['Common'][questName]['IDs'][qID] ~= nil) then
+						if (qData['Common'][questName]['IDs'][qID][2] ~= nil) then
+							for id, comment in ipairs(qData['Common'][questName]['IDs'][qID][2]) do
+								local f = 0;
+								while f ~= nil do
+									f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+									if (coordx ~= nil and coordy ~= nil) then
+										WHDB_PopulateZones();
+										if (WHDB_QuestZoneInfo[questName] ~= nil) then
+											if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
+												table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, "Comment for quest: "..questName, LineFeedComment(comment), 1});
+												showMap = true;
+											end
+										end
+									end
+								end
+							end
+						end
+						end
+					end
+				end
+				if (qData[WHDB_Player_Faction][questName] ~= nil) then
+					if (qData[WHDB_Player_Faction][questName]['IDs'] ~= nil) then
+						if (qData[WHDB_Player_Faction][questName]['IDs'][qID] ~= nil) then
+						if (qData[WHDB_Player_Faction][questName]['IDs'][qID][2] ~= nil) then
+							for id, comment in ipairs(qData[WHDB_Player_Faction][questName]['IDs'][qID][2]) do
+								local f = 0;
+								while f ~= nil do
+									f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+									if (coordx ~= nil and coordy ~= nil) then
+										WHDB_PopulateZones();
+										if (WHDB_QuestZoneInfo[questName] ~= nil) then
+											if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
+												table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, "Comment for quest: "..questName, LineFeedComment(comment), 1});
+												showMap = true;
+											end
+										end
+									end
+								end
+							end
+						end
+						end
+					end
+				end
+			end
+		elseif (multi == false) then
+			if (qData['Common'][questName] ~= nil) then
+				if (qData['Common'][questName]['IDs'] ~= nil) then
+					if (qData['Common'][questName]['IDs'][qIDs] ~= nil) then
+					if (qData['Common'][questName]['IDs'][qIDs][2] ~= nil) then
+						for id, comment in ipairs(qData['Common'][questName]['IDs'][qIDs][2]) do
+							local f = 0;
+							while f ~= nil do
+								f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+								if (coordx ~= nil and coordy ~= nil) then
+									WHDB_PopulateZones();
+									if (WHDB_QuestZoneInfo[questName] ~= nil) then
+										if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
+											table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, "Comment for quest: "..questName, LineFeedComment(comment), 1});
+											showMap = true;
+										end
+									end
+								end
+							end
+						end
+					end
+					end
+				end
+			end
+			if (qData[WHDB_Player_Faction][questName] ~= nil) then
+				if (qData[WHDB_Player_Faction][questName]['IDs'] ~= nil) then
+					if (qData[WHDB_Player_Faction][questName]['IDs'][qIDs] ~= nil) then
+					if (qData[WHDB_Player_Faction][questName]['IDs'][qIDs][2] ~= nil) then
+						for id, comment in ipairs(qData[WHDB_Player_Faction][questName]['IDs'][qIDs][2]) do
+							local f = 0;
+							while f ~= nil do
+								f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+								if (coordx ~= nil and coordy ~= nil) then
+									WHDB_PopulateZones();
+									if (WHDB_QuestZoneInfo[questName] ~= nil) then
+										if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
+											table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, "Comment for quest: "..questName, LineFeedComment(comment), 1});
+											showMap = true;
+										end
+									end
+								end
+							end
+						end
+					end
+					end
+				end
+			end
+			return showMap;
+		end
+	else
+		return false;
+	end
+	--[[
+	if (qData[WHDB_Player_Faction][questName]['IDs'] ~= nil) then
+		for id, o, comments in ipairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+			if (comments ~= nil) then
+				local f = 0;
+				while f ~= nil do
+					f, t, coordx, coordy = strfind(comments, "%[([0-9]*) ([0-9]*)%]", f+1);
+					if (coordx ~= nil and coordy ~= nil) then
+						WHDB_PopulateZones();
+						if (WHDB_QuestZoneInfo[questName] ~= nil) then
+							if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
+								table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, questName, LineFeedComment(comment), 1});
+								showMap = true;
+							end
+						end
 					end
 				end
 			end
 		end
 	end
+	if (qData['Common'][questName] ~= nil) then
+	if (qData['Common'][questName]['IDs'] ~= nil) then
+		for id, o, comments in ipairs(qData['Common'][questName]['IDs']) do
+			if (comments ~= nil) then
+				local f = 0;
+				while f ~= nil do
+					f, t, coordx, coordy = strfind(comments, "%[([0-9]*) ([0-9]*)%]", f+1);
+					if (coordx ~= nil and coordy ~= nil) then
+						WHDB_PopulateZones();
+						if (WHDB_QuestZoneInfo[questName] ~= nil) then
+							if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questName]) ~= -1) then
+								table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questName], coordx, coordy, questName, LineFeedComment(comment), 1});
+								showMap = true;
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	end
+	]]--
 	return showMap
 end
 
