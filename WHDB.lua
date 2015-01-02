@@ -8,14 +8,24 @@
 -- E changes on the original WHDB code by Redshadowz (see link below) have been commented
 -- E in order to divide the code in original Rapid Quest Pack, Redshadow's and mine
 -- E http://www.wow-one.com/forum/topic/4430-quest-helper-for-1121/page__st__60__p__482768#entry482768
+-- E also included some changes from WHDB 2.0 - 2.1.1
 ----------------------------------------------------------------------------------------------------------------------
 WHDB_MAP_NOTES = {};
 WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
+WHDB_Player_Faction = "";
+WHDB_Track_Note = "";
+WHDB_UpdateTime = 0;
+WHDB_PlotUpdate = 0;
+WHDB_StartLevel = 0;
+WHDB_Version = "2.0";
 
 function WHDB_Init()
 	-- E changed VARIABLES_LOADED to PLAYER_LOGIN
 	this:RegisterEvent("PLAYER_LOGIN");
+	this:RegisterEvent("QUEST_WATCH_UPDATE");
+	this:RegisterEvent("QUEST_LOG_UPDATE");
+	this:RegisterEvent("UNIT_QUEST_LOG_CHANGED");
 	-- E events registered for testing purposes. until ...
 	--this:RegisterEvent("ZONE_CHANGED");
 	--this:RegisterEvent("ZONE_CHANGED_INDOORS");
@@ -25,7 +35,8 @@ function WHDB_Init()
 	SLASH_WHDB1 = "/whdb";
 end
 
-function WHDB_Event(event)
+function WHDB_Event(event, arg1)
+    -- E changed VARIABLES_LOADED to PLAYER_LOGIN
 	if (event == "PLAYER_LOGIN") then
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
@@ -33,32 +44,73 @@ function WHDB_Event(event)
 			WHDB_Print("Cartographer Database Registered.");
 		end
 		--Free the oposite faction database. -- not working in 1.12.1 UnitFactionGroup not init yet
-		-- E Bullshit. UnitFactionGroup is working, but not initialised when VARIABLES_LOADED event fires,
+		-- E Bullshit. UnitFactionGroup is working on some servers, but isn't initialised when VARIABLES_LOADED event triggers,
 		-- E so changed to PLAYER_LOGIN event and modified it a bit (else-if and else). changes until...
-		fac = UnitFactionGroup("player")
-		if (fac == "Alliance") then
+		WHDB_Player_Faction = UnitFactionGroup("player")
+		if (WHDB_Player_Faction == "Alliance") then
 			qData["Horde"] = nil;
 			WHDB_Print("Horde data cleared.");
-		elseif (fac == "Horde") then
+		elseif (WHDB_Player_Faction == "Horde") then
 			qData["Alliance"] = nil;
 			WHDB_Print("Alliance data cleared.");
 		else
-			WHDB_Print("Use /reloadUI to dump opposite faction quests.");
+			WHDB_Print("Unable to use UnitFactionGroup(\"player\"). Try making yourself visible and then use the chat-command /reloadUI.");
 		end
 		-- E ... here
 		WHDB_Player = UnitName("player");
+		WHDB_StartLevel = UnitLevel("player");
+
+		-- Initial settings configuration
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
 			WHDB_Settings[WHDB_Player] = {};
 			WHDB_Settings[WHDB_Player]["UseColors"] = 1;
+			WHDB_Settings[WHDB_Player]["GarbageClean"] = 1;
+			WHDB_Settings[WHDB_Player]["LowLevelFilter"] = 60;
+			WHDB_Settings[WHDB_Player]["HighLevelFilter"] = 60;
+			WHDB_Settings[WHDB_Player]["DisableLevelFilter"] = 1;
+			if (Cartographer_Notes ~= nil or MetaMap_DeleteNotes ~= nil) then
+				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
+			else
+				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+			end
 		else
 			if (WHDB_Settings[WHDB_Player] == nil) then
 				WHDB_Settings[WHDB_Player] = {};
 				WHDB_Settings[WHDB_Player]["UseColors"] = 1;
+				WHDB_Settings[WHDB_Player]["GarbageClean"] = 1;
+				WHDB_Settings[WHDB_Player]["LowLevelFilter"] = 60;
+				WHDB_Settings[WHDB_Player]["HighLevelFilter"] = 60;
+				WHDB_Settings[WHDB_Player]["DisableLevelFilter"] = 1;
+				if (Cartographer_Notes ~= nil or MetaMap_DeleteNotes ~= nil) then
+					WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
+				else
+					WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+				end
 			end
 		end
+		-- New version settings update
+		if (WHDB_Settings[WHDB_Player]["auto_plot"] == nil) then
+			if (Cartographer_Notes ~= nil or MetaMap_DeleteNotes ~= nil) then
+				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
+			else
+				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+			end
+		end
+		if (WHDB_Settings[WHDB_Player]["GarbageClean"] == nil) then
+			WHDB_Settings[WHDB_Player]["GarbageClean"] = 1;		
+		end
+		
+		frame = CreateFrame("Frame", "WHDB_TimerFrame", UIParent);
+		frame:SetScript("OnUpdate", function() 
+			WHDB_OnUpdate();
+		end);
+		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+			WHDB_PlotAllQuests();
+		end		
 		WHDB_ShowUsingInfo();
 		WHDB_Print("WHDB Loaded.");
+	end
 	-- E debug until ...
 	--elseif (event == "ZONE_CHANGED") then
 	--	DEFAULT_CHAT_FRAME:AddMessage("ZONE_CHANGED");
@@ -73,6 +125,20 @@ function WHDB_Event(event)
 	--	DEFAULT_CHAT_FRAME:AddMessage(GetRealZoneText());
 	--	DEFAULT_CHAT_FRAME:AddMessage(GetSubZoneText());
 	-- E ... here
+	if (event == "QUEST_WATCH_UPDATE") then
+		WHDB_PlotUpdate = 1;
+	end
+	if (event == "QUEST_LOG_UPDATE") then
+		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and WHDB_PlotUpdate == 1) then
+			WHDB_Print("Plots updated.");
+			WHDB_PlotAllQuests();
+			WHDB_PlotUpdate = 0;
+		end
+	end
+	if (event == "UNIT_QUEST_LOG_CHANGED") then
+		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and arg1 == "player") then
+			WHDB_PlotUpdate = 1;
+		end
 	end
 end
 
@@ -109,14 +175,20 @@ function WHDB_Slash(input)
 		WHDB_Print("Commands available:");
 		WHDB_Print("-------------------------------------------------------");
 		WHDB_Print("/whdb help | This help.");
+		WHDB_Print("/whdb version | Show WHDB version.");
 		WHDB_Print("/whdb com <quest name> | Get quest comments by quest name.");
 		WHDB_Print("/whdb item <item name> | Get item drop info and show map if possible.");
 		WHDB_Print("/whdb mob <monster name> | Get monser location and show map if possible.");
 		WHDB_Print("/whdb clean | Clean map notes.");
-		WHDB_Print("/whdb colors <0 or 1>| Enable/Disable coloring of text in the quest log.");
-		WHDB_Print("/whdb copy <character>| Copy characters config to current one.");
+		WHDB_Print("/whdb colors <0 or 1> | Enable/Disable coloring of text in the quest log.");
+		WHDB_Print("/whdb copy <character> | Copy characters config to current one.");
+		WHDB_Print("/whdb auto | Automatically plot uncompleted objectives in map.");
+		WHDB_Print("/whdb garbage | Toggle garbage clean on every plot refresh.");
 		WHDB_Print("");
 		WHDB_Print("Note: All parameters are case sensitive!");
+	end
+	if (string.sub(input,1,7) == "version") then
+		WHDB_Print("Version "..WHDB_Version);
 	end
 	if (string.sub(input,1,3) == "com") then
 		local questName = string.sub(input, 5);
@@ -148,8 +220,6 @@ function WHDB_Slash(input)
 				end
 				i = j+1;
 			end
-			t = string.sub(QuestComments, i);
-			WHDB_Print(t);
 			-- E ... here
 		end
 	end
@@ -248,6 +318,139 @@ function WHDB_Slash(input)
 			WHDB_Print("There are no settings for this character.");
 		end
 	end
+	if (string.sub(input,1,4) == "auto") then
+		if (MetaMap_SetNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
+			if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+				WHDB_Print("Auto plotting disabled.");
+				WHDB_CleanMap();
+			else
+				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
+				WHDB_Print("Auto plotting enabled.");
+				WHDB_PlotAllQuests();
+			end
+		else
+			WHDB_Print("A map mod is needed to autoplot quests.");
+		end	
+	end
+	if (string.sub(input,1,7) == "garbage") then
+		if (WHDB_Settings[WHDB_Player]["GarbageClean"] == 1) then
+			WHDB_Settings[WHDB_Player]["GarbageClean"] = 0;
+			WHDB_Print("Garbage cleaning disabled. WoW will manage garbage collects.");
+		else
+			WHDB_Settings[WHDB_Player]["GarbageClean"] = 1;
+			WHDB_Print("Garbage cleaning enabled.");
+		end
+	end
+end
+
+function WHDB_OnUpdate()
+	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+		if (WHDB_UpdateTime ~= nil) then
+			WHDB_UpdateTime = WHDB_UpdateTime + 1;
+			if (WHDB_UpdateTime > 500) then
+				WHDB_UpdateTime = 0;
+			end
+		else
+			WHDB_UpdateTime = 0;
+		end
+	end
+end
+
+function WHDB_PlotAllQuests()
+	local k=1;
+	WHDB_MAP_NOTES = {};
+	while (GetQuestLogTitle(k) ~= nil) do
+		k = k + 1;
+		local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(k);
+        -- E debug
+        -- E DEFAULT_CHAT_FRAME:AddMessage(questTitle);
+        -- E DEFAULT_CHAT_FRAME:AddMessage(isComplete);
+		if (not header and questTitle ~= nil) then
+			local numObjectives = GetNumQuestLeaderBoards(k);
+			local monsterName, zoneName, noteAdded, showMap, noteID;
+			for i=1, numObjectives, 1 do
+				local text, type, finished = GetQuestLogLeaderBoard(i, k);
+				local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
+				if (not finished) then
+					if (type == "monster") then
+						local i, j, monsterName = strfind(itemName, "(.*) slain");
+						if (monsterName ~= nil) then
+							if (npcData[monsterName] ~= nil) then
+								if (npcData[monsterName]["zone"] ~= nil) then
+									zoneName = zoneData[npcData[monsterName]["zone"]];
+								else
+									zoneName = WHDB_QuestZoneInfo[questTitle];
+								end
+								for cid, cdata in pairs(npcData[monsterName]["coords"]) do
+									local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
+									table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, questTitle, monsterName, 0});
+								end
+							end
+						end
+					elseif (type == "item") then
+						if (itemData[itemName] ~= nil) then
+							for monsterName, monsterDrop in pairs(itemData[itemName]) do
+								if (npcData[monsterName] ~= nil) then
+									if (npcData[monsterName]["zone"] ~= nil) then
+										zoneName = zoneData[npcData[monsterName]["zone"]];
+									else
+										zoneName = WHDB_QuestZoneInfo[questTitle];
+									end
+									local dropRate = monsterDrop;
+									if (dropRate == nil) then dropRate = ""; else dropRate = dropRate .. "%"; end											
+									for cid, cdata in pairs(npcData[monsterName]["coords"]) do
+										local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
+										table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, questTitle, monsterName .. "\nDrop: " .. dropRate, 0});
+									end
+								end
+							end
+						end
+                    -- E check for objective type other than item or monster, e.g. objective, reputation, event
+                    elseif (type ~= "item" and type ~= "monster") then
+                        -- E debug
+                        DEFAULT_CHAT_FRAME:AddMessage(type.."-quest objectives not supported yet by WHDB");
+					end
+				end
+			end
+			if (qData[WHDB_Player_Faction][questTitle] ~= nil and not isComplete) then
+				for id, comment in ipairs(qData[WHDB_Player_Faction][questTitle]['comments']) do
+					local f = 0;
+					while f ~= nil do
+						f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+						if (coordx ~= nil and coordy ~= nil) then
+							WHDB_PopulateZones();
+							if (WHDB_QuestZoneInfo[questTitle] ~= nil) then
+								if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
+									if (string.len(comment) > 250) then
+										comment = string.sub(comment,1,250) .. "...";
+									end
+									table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questTitle], coordx, coordy, questTitle, comment, 1});
+								end
+							end
+						end
+					end
+				end
+			end
+            -- E condition set to TRUE due to some quests not showing isComplete correctly
+			if (true) then
+				endq = SearchEndNPC(questTitle);
+				if (endq ~= nil) then
+					monsterName = endq;
+					if (npcData[monsterName] ~= nil) then
+						zoneName = zoneData[npcData[monsterName]["zone"]];
+						if (zoneName == nil) then zoneName = npcData[monsterName]["zone"]; end
+						for cid, cdata in pairs(npcData[monsterName]["coords"]) do
+							local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
+							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, "END: "..questTitle, monsterName, 2});
+						end
+					end
+				end
+			end
+		end
+	end
+	WHDB_CleanMap();
+	WHDB_PlotNotesOnMap();
 end
 
 function WHDB_Print( string )
@@ -287,6 +490,8 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	local questDescription;
 	local questObjectives;
 	questDescription, questObjectives = GetQuestLogQuestText();
+    -- E debug
+	DEFAULT_CHAT_FRAME:AddMessage(questObjectives);
 	getglobal(prefix.."QuestLogObjectivesText"):SetText(questObjectives);
 	
 	local questTimer = GetQuestLogTimeLeft();
@@ -394,14 +599,21 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 						local dropRate = monsterDrop;
 						if (dropRate == nil) then dropRate = ""; else dropRate = dropRate .. "%"; end
 						text = text.."\n";
-
+						if (WHDB_Settings[WHDB_Player]["UseColors"] == 1) then
+							text = text.."|cFF444444    Dropped by: " .. monsterName .. "\n|r";
+							text = text.."|cFF220044        Drop Rate: " .. dropRate .. "\n|r";
+							text = text.."|cFF442200        Zone: " .. zoneName .. "\n|r";
+							text = text.."|cFF002244        Level: " .. Level .. "\n|r";
+							text = text.."|cFF002244        Health: " .. HP .. "\n|r";
+							text = text.."|cFF224400        Coords: " .. npcData[monsterName]["coords"][1] .. "\n|r";
+						else
 							text = text.."    Dropped by: " .. monsterName .. "\n";
 							text = text.."        Drop Rate: " .. dropRate .. "\n";
 							text = text.."        Zone: " .. zoneName .. "\n";
 							text = text.."        Level: " .. Level .. "\n";
 							text = text.."        Health: " .. HP .. "\n";
 							text = text.."        Coords: " .. npcData[monsterName]["coords"][1] .. "\n";
-						
+						end
 						if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
 							for cid, cdata in pairs(npcData[monsterName]["coords"]) do
 								local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
@@ -414,8 +626,8 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 					end
 				end
 			end
-		-- E check for objective type other than item or monster, e.g. objective, reputation
-		elseif type ~= "item" and type ~= "monster" then
+		-- E check for objective type other than item or monster, e.g. objective, reputation, event
+		elseif (type ~= "item" and type ~= "monster") then
 			-- E debug
 			DEFAULT_CHAT_FRAME:AddMessage(type.."-quest objectives not supported yet by WHDB");
 		end
@@ -488,8 +700,9 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	getglobal(prefix.."QuestLogMapButtonsTitle"):SetText("Map Plots");
 	getglobal(prefix.."QuestLogMapButtonsTitle"):SetTextColor(r, g, b, a);
 	
-	-- E code moved from further down and edited
+	-- E code moved from further down below and edited it
 	-- E quest rewards show before comments now
+    -- E fix below here
 	-- E <<
 	
 	local numRewards = GetNumQuestLogRewards();
@@ -517,16 +730,17 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 			-- E + 35 due to 2 rows of text being displayed for choices
 			offs = offs + (x*45) + 35;
 		end
-		-- E money row if there are no rewards
-		if money > 0 and numRewards == 0 then
+		-- E money row if there are no other rewards
+		if (money > 0 and numRewards == 0 and tname == nil) then
 			offs = offs + 25;
 		end
 		-- E check for spell reward
 		if (tname ~= nil) then
-			if (numRewards + money) == 0 then
+            offs = offs + 50;
+            -- E check if spell is the only reward
+			if ((numRewards + money) == 0) then
 				offs = offs + 25;
 			end
-			offs = offs + 50;
 		end
 		-- E offset has to be negative
 		offs = offs * (-1);
@@ -535,11 +749,10 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		getglobal(prefix.."QuestLogRewardTitleText"):Show();
 		QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogRewardTitleText"));
 	else
-		getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -50);
+		getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -40);
 		getglobal(prefix.."QuestLogRewardTitleText"):Hide();
 	end
 
-	
 	-- E >>
 	
 	getglobal(prefix.."QuestLogCommentsTitle"):SetHeight(0);
@@ -556,22 +769,21 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	getglobal(prefix.."QuestLogCommentsDescription"):SetText(questComments);
 	getglobal(prefix.."QuestLogCommentsDescription"):SetTextColor(r, g, b, a);
 	
-
 	-- EWHDB getglobal(prefix.."QuestLogRewardTitleText"):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription", "BOTTOMLEFT", 0, -15);
 
 	QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogCommentsDescription"));
 	if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-		if (qData[UnitFactionGroup("player")][questTitle] ~= nil) then
-			for id, comment in ipairs(qData[UnitFactionGroup("player")][questTitle]['comments']) do
+		if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
+			for id, comment in ipairs(qData[WHDB_Player_Faction][questTitle]['comments']) do
 				local f = 0;
 				while f ~= nil do
 					f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
 					if (coordx ~= nil and coordy ~= nil) then
 						WHDB_PopulateZones();
 						if (WHDB_QuestZoneInfo[questTitle] ~= nil) then
-							if (WHDB_GetMapIDFromZome(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
-								if (string.len(comment) > 150) then
-									comment = string.sub(comment,1,150) .. "...";
+							if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
+								if (string.len(comment) > 250) then
+									comment = string.sub(comment,1,250) .. "...";
 								end
 								table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questTitle], coordx, coordy, questTitle, comment, 1});
 								if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
@@ -605,23 +817,37 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	if (getglobal(prefix.."QuestLogShowMap") == nil) then
 		CreateFrame("Button", prefix.."QuestLogShowMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
 		CreateFrame("Button", prefix.."QuestLogCleanMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
+		CreateFrame("Button", prefix.."QuestLogAutoMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
 	end
 	
 	getglobal(prefix.."QuestLogShowMap"):SetText("Show Map");
 	getglobal(prefix.."QuestLogShowMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -10);
 	getglobal(prefix.."QuestLogShowMap"):SetHeight(25);
-	getglobal(prefix.."QuestLogShowMap"):SetWidth(105);
+	getglobal(prefix.."QuestLogShowMap"):SetWidth(85);
 	getglobal(prefix.."QuestLogShowMap"):RegisterForClicks("LeftButtonUp");
 	getglobal(prefix.."QuestLogShowMap"):SetScript("OnClick", WHDB_ShowMap);
 	
 	getglobal(prefix.."QuestLogCleanMap"):SetText("Clean Map");
-	getglobal(prefix.."QuestLogCleanMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 110, -10);
+	getglobal(prefix.."QuestLogCleanMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 90, -10);
 	getglobal(prefix.."QuestLogCleanMap"):SetHeight(25);
-	getglobal(prefix.."QuestLogCleanMap"):SetWidth(105);
+	getglobal(prefix.."QuestLogCleanMap"):SetWidth(85);
 	getglobal(prefix.."QuestLogCleanMap"):RegisterForClicks("LeftButtonUp");
-	getglobal(prefix.."QuestLogCleanMap"):SetScript("OnClick", WHDB_CleanMap);
+	getglobal(prefix.."QuestLogCleanMap"):SetScript("OnClick", function()
+		getglobal(prefix.."QuestLogAutoMap"):Enable();
+		WHDB_DoCleanMap();
+	end);
 
-	-- E moved some code further up from here myself
+	getglobal(prefix.."QuestLogAutoMap"):SetText("Autoplot");
+	getglobal(prefix.."QuestLogAutoMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 180, -10);
+	getglobal(prefix.."QuestLogAutoMap"):SetHeight(25);
+	getglobal(prefix.."QuestLogAutoMap"):SetWidth(85);
+	getglobal(prefix.."QuestLogAutoMap"):RegisterForClicks("LeftButtonUp");
+	getglobal(prefix.."QuestLogAutoMap"):SetScript("OnClick", function()
+		this:Disable();
+		WHDB_EnableAuto();
+	end);
+
+	-- E moved some code further up from here and modified it
 	
 	-- E Change by Redshadowz:
 	-- E if and else statements uncommented until ...
@@ -632,7 +858,12 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		getglobal(prefix.."QuestLogShowMap"):Enable();
 		getglobal(prefix.."QuestLogCleanMap"):Enable();
 	end
-	-- E ... here
+	-- E ... here	
+	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and showMap) then
+		getglobal(prefix.."QuestLogAutoMap"):Disable();
+	else
+		getglobal(prefix.."QuestLogAutoMap"):Enable();
+	end
 	
 	QuestFrameItems_Update("QuestLog");
 	if ( not doNotScroll ) then
@@ -650,12 +881,15 @@ function WHDB_PlotNotesOnMap()
 	local firstNote = 1;
 	
 	for nKey, nData in ipairs(WHDB_MAP_NOTES) do
+        -- E debug
 		-- E WHDB_Print(nData[1]);
 		
-		-- E check for zoneId's instead of names
+		-- E check for zoneId's instead of names and change if necessary.
+        -- E until ...
 		if type(nData[1]) == number then
 			nData[1] = zoneData[nData[1]]
 		end
+        -- E ... here
 		if (MetaMapNotes_AddNewNote ~= nil) then
 			if (nData[6] == 0) then
 				local continent, zone = MetaMap_NameToZoneID(nData[1]);
@@ -698,7 +932,7 @@ function WHDB_PlotNotesOnMap()
 			end
 		end
 		if (MapNotes_Data_Notes ~= nil) then
-			local c, z = WHDB_GetMapIDFromZome(nData[1]);
+			local c, z = WHDB_GetMapIDFromZone(nData[1]);
 			if (key ~= -1) then
 				SetMapZoom(c, z);
 				key = MapNotes_GetMapKey();
@@ -734,7 +968,7 @@ function WHDB_PlotNotesOnMap()
 	return zone, title, noteID;
 end
 
-function WHDB_GetMapIDFromZome(zoneText)
+function WHDB_GetMapIDFromZone(zoneText)
 	for cKey, cName in ipairs{GetMapContinents()} do
 		for zKey,zName in ipairs{GetMapZones(cKey)} do
 			if(zoneText == zName) then
@@ -747,16 +981,28 @@ end
 
 function WHDB_GetComments(questTitle)
 	local questComments = "";
-	
-	if (qData[UnitFactionGroup("player")][questTitle] ~= nil) then
-		for id, comment in ipairs(qData[UnitFactionGroup("player")][questTitle]['comments']) do
+	if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
+		for id, comment in ipairs(qData[WHDB_Player_Faction][questTitle]['comments']) do
+			questComments = questComments .. comment .."\n\n";
+		end
+	elseif (qData['Common'][questTitle] ~= nil) then
+		for id, comment in ipairs(qData['Common'][questTitle]['comments']) do
 			questComments = questComments .. comment .."\n\n";
 		end
 	else
 		questComments = questComments  .. "No comments for this quest.\n\n";
 	end
-	questComments = questComments .. "";
 	return questComments;
+end
+
+function WHDB_GetReqLevel(questTitle)
+	if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
+		return qData[WHDB_Player_Faction][questTitle]['reqlevel'];
+	elseif (qData['Common'][questTitle] ~= nil) then
+		return qData['Common'][questTitle]['reqlevel'];
+	else
+		return "?";
+	end
 end
 
 function WHDB_ShowMap()
@@ -769,12 +1015,12 @@ function WHDB_ShowMap()
 	if (Cartographer) then
 		if (ShowMapZone ~= nil) then
 			WorldMapFrame:Show();								
-			SetMapZoom(WHDB_GetMapIDFromZome(ShowMapZone));
+			SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 		end
 	end
 	if (MapNotes_Data_Notes ~= nil) then
 		WorldMapFrame:Show();
-		SetMapZoom(WHDB_GetMapIDFromZome(ShowMapZone));
+		SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 	end
 end
 
@@ -789,6 +1035,22 @@ function WHDB_CleanMap()
 	end
 	if (MapNotes_Data_Notes ~= nil) then
 		MapNotes_DeleteNotesByCreatorAndName("WHDB");
+	end
+end
+
+function WHDB_DoCleanMap()
+	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+		WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+		WHDB_Print("Auto plotting disabled.");
+	end
+	WHDB_CleanMap();
+end
+
+function WHDB_EnableAuto()
+	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 0) then
+		WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
+		WHDB_Print("Auto plotting enabled.");
+		WHDB_PlotAllQuests();
 	end
 end
 
