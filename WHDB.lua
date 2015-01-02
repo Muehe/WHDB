@@ -286,7 +286,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 
 	local questDescription;
 	local questObjectives;
-	questDescription, questObjectives = GetQuestLogQuestText(); 
+	questDescription, questObjectives = GetQuestLogQuestText();
 	getglobal(prefix.."QuestLogObjectivesText"):SetText(questObjectives);
 	
 	local questTimer = GetQuestLogTimeLeft();
@@ -307,98 +307,9 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	-- E debug
 	-- E DEFAULT_CHAT_FRAME:AddMessage(numObjectives);
 	
-
 	local monsterName, zoneName, noteAdded, showMap, noteID;
-	-- E Change by Redshadowz:
-	-- E code moved from below, snip ...
-	if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-		if (qData[UnitFactionGroup("player")][questTitle] ~= nil) then
-			for id, comment in ipairs(qData[UnitFactionGroup("player")][questTitle]['comments']) do
-				local f = 0;
-				while f ~= nil do
-					f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
-					if (coordx ~= nil and coordy ~= nil) then
-						WHDB_PopulateZones();
-						if (WHDB_QuestZoneInfo[questTitle] ~= nil) then
-							if (WHDB_GetMapIDFromZome(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
-								if (string.len(comment) > 150) then
-									comment = string.sub(comment,1,150) .. "...";
-								end
-								table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questTitle], coordx, coordy, questTitle, comment, 1});
-								if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-									showMap = true;
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-		endq = SearchEndNPC(questTitle);
-		if (endq ~= nil) then
-			monsterName = endq;
-			if (npcData[monsterName] ~= nil) then
-				zoneName = zoneData[npcData[monsterName]["zone"]];
-				if (zoneName == nil) then zoneName = npcData[monsterName]["zone"]; end
-				if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-					for cid, cdata in pairs(npcData[monsterName]["coords"]) do
-						local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
-						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, "END: "..questTitle, monsterName, 2});
-						if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then							
-							showMap = true;
-						end
-					end
-				end
-			end
-		-- E ... here
-		-- E Change by Redshadowz:
-		-- E Quest guess code, used if no info found. until ...
-		else
-			if (Level == nil) then Level = "Unknown"; end
-			if (HP == nil) then HP = "Unknown"; end
-			local zoneName = nil;
-			if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-				local questComments = WHDB_GetComments(questTitle);
-				-- E variable added to check for "No comments for this quest." return in if statement
-				local noComments = WHDB_GetComments("asdasfafe");
-				local questguess;
-				local isInstance = nil;
-				local f, t, coordx, coordy;
-				if (questComments ~= noComments) then
-					for id, cdata in pairs(zoneDataShort) do
-						local Questdesclower = strlower(questDescription);
-						if strfind(Questdesclower,  zoneDataShort[id]) then
-							if zoneData2[id] ~= "instance" then zoneName = zoneData2[id]; else zoneName = instanceData[id][1]; isInstance = 1; coordx = instanceData[id][2]; coordy = instanceData[id][3]; end;
-								break;
-						end
-					end			
-					for id, cdata in pairs(zoneDataShort) do
-						local qDatalower = strlower(qData[UnitFactionGroup("player")][questTitle]['comments'][1]);
-						if strfind(qDatalower,  zoneDataShort[id]) then
-							if zoneData2[id] ~= "instance" then zoneName = zoneData2[id]; else zoneName = instanceData[id][1]; isInstance = 1; coordx = instanceData[id][2]; coordy = instanceData[id][3]; end;
-							break;
-						end
-					end
-					if not isInstance then f, t, coordx, coordy = strfind(questComments, "%[(%d*)[%s%c](%d*)%]"); end;
-					if coordx and coordy and zoneName then
-						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, questTitle, "Not guaranteed", 3});
-					else
-						f, t, coordx, coordy = strfind(questComments, "(%d%d)[:,](%d%d)");
-						if coordx and coordy and zoneName then table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, questTitle, "Not guaranteed", 3}); end;
-						isInstance = nil;
-					end;
-					if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then							
-						showMap = true;
-					end
-				end
-			end
-		end
-	end
-	
-	-- E ... here
-	
 	for i=1, numObjectives, 1 do
-		local strin = getglobal(prefix.."QuestLogObjective"..i);
+		local string = getglobal(prefix.."QuestLogObjective"..i);
 		local text;
 		local type;
 		local finished;
@@ -411,10 +322,10 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
 		
 		if ( finished ) then
-			strin:SetTextColor(0.2, 0.2, 0.2);
+			string:SetTextColor(0.2, 0.2, 0.2);
 			text = text.." ("..TEXT(COMPLETE)..")";
 		else
-			strin:SetTextColor(0, 0, 0);
+			string:SetTextColor(0, 0, 0);
 		end
 		
 		-- EWHDB checks objectives and saves map notes if coordinates are found
@@ -502,48 +413,6 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 						end
 					end
 				end
-			-- E Change by Redshadowz:
-			-- E The complete else statement is new.
-			-- E Quest guess code, used if no info is found
-			else
-				if (Level == nil) then Level = "Unknown"; end
-				if (HP == nil) then HP = "Unknown"; end
-				local zoneName = nil;
-				if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
-					local questComments = WHDB_GetComments(questTitle);
-					-- E variable added to check for "No comments for this quest."-return in if statement
-					local noComments = WHDB_GetComments("asdasfafe");
-					local questguess;
-					local isInstance = nil;
-					local f, t, coordx, coordy;
-					if (questComments ~= noComments) then
-						for id, cdata in pairs(zoneDataShort) do
-							local Questdesclower = strlower(questDescription);
-							if strfind(Questdesclower,  zoneDataShort[id]) then
-								if zoneData2[id] ~= "instance" then zoneName = zoneData2[id]; else zoneName = instanceData[id][1]; isInstance = 1; coordx = instanceData[id][2]; coordy = instanceData[id][3]; end;
-								break;
-							end
-						end			
-						for id, cdata in pairs(zoneDataShort) do
-							local qDatalower = strlower(qData[UnitFactionGroup("player")][questTitle]['comments'][1]);
-							if strfind(qDatalower,  zoneDataShort[id]) then
-								if zoneData2[id] ~= "instance" then zoneName = zoneData2[id]; else zoneName = instanceData[id][1]; isInstance = 1; coordx = instanceData[id][2]; coordy = instanceData[id][3]; end;
-								break;
-							end
-						end
-						if not isInstance then f, t, coordx, coordy = strfind(questComments, "%[(%d*)[%s%c](%d*)%]"); end;
-						if coordx and coordy and zoneName then
-							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, questTitle, "Not guaranteed", 3});
-						else
-							f, t, coordx, coordy = strfind(questComments, "(%d%d)[:,](%d%d)");
-							if coordx and coordy and zoneName then table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, questTitle, "Not guaranteed", 3}); end;
-							isInstance = nil;
-						end;
-						if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then							
-							showMap = true;
-						end
-					end
-				end
 			end
 		-- E check for objective type other than item or monster, e.g. objective, reputation
 		elseif type ~= "item" and type ~= "monster" then
@@ -551,11 +420,10 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 			DEFAULT_CHAT_FRAME:AddMessage(type.."-quest objectives not supported yet by WHDB");
 		end
 
-		strin:SetText(text);
-		strin:Show();
-		QuestFrame_SetAsLastShown(strin);
+		string:SetText(text);
+		string:Show();
+		QuestFrame_SetAsLastShown(string);
 	end
-
 
 	for i=numObjectives + 1, MAX_OBJECTIVES, 1 do
 		getglobal(prefix.."QuestLogObjective"..i):Hide();
@@ -688,13 +556,51 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	getglobal(prefix.."QuestLogCommentsDescription"):SetText(questComments);
 	getglobal(prefix.."QuestLogCommentsDescription"):SetTextColor(r, g, b, a);
 	
-	
+
 	-- EWHDB getglobal(prefix.."QuestLogRewardTitleText"):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription", "BOTTOMLEFT", 0, -15);
 
 	QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogCommentsDescription"));
-	
-	-- E Change by Redshadowz:
-	-- E some code moved to the top from here
+	if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
+		if (qData[UnitFactionGroup("player")][questTitle] ~= nil) then
+			for id, comment in ipairs(qData[UnitFactionGroup("player")][questTitle]['comments']) do
+				local f = 0;
+				while f ~= nil do
+					f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+					if (coordx ~= nil and coordy ~= nil) then
+						WHDB_PopulateZones();
+						if (WHDB_QuestZoneInfo[questTitle] ~= nil) then
+							if (WHDB_GetMapIDFromZome(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
+								if (string.len(comment) > 150) then
+									comment = string.sub(comment,1,150) .. "...";
+								end
+								table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questTitle], coordx, coordy, questTitle, comment, 1});
+								if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
+									showMap = true;
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		endq = SearchEndNPC(questTitle);
+		if (endq ~= nil) then
+			monsterName = endq;
+			if (npcData[monsterName] ~= nil) then
+				zoneName = zoneData[npcData[monsterName]["zone"]];
+				if (zoneName == nil) then zoneName = npcData[monsterName]["zone"]; end
+				if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
+					for cid, cdata in pairs(npcData[monsterName]["coords"]) do
+						local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
+						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, "END: "..questTitle, monsterName, 2});
+						if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then							
+							showMap = true;
+						end
+					end
+				end
+			end
+		end
+	end
 
 	if (getglobal(prefix.."QuestLogShowMap") == nil) then
 		CreateFrame("Button", prefix.."QuestLogShowMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
@@ -751,9 +657,7 @@ function WHDB_PlotNotesOnMap()
 			nData[1] = zoneData[nData[1]]
 		end
 		if (MetaMapNotes_AddNewNote ~= nil) then
-			-- E Change by Redshadowz
-			-- E or statement added to if statement
-			if (nData[6] == 0 or nData[6] == 3) then
+			if (nData[6] == 0) then
 				local continent, zone = MetaMap_NameToZoneID(nData[1]);
 				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 2, 7, 0, 0, 1);
 			elseif (nData[6] == 1) then
@@ -790,11 +694,7 @@ function WHDB_PlotNotesOnMap()
 			elseif (nData[6] == 1) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Diamond", "WHDB", 'title', nData[4], 'info', nData[5]);			
 			elseif (nData[6] == 2) then
-				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Circle", "WHDB", 'title', nData[4], 'info', nData[5]);
-			-- E Change by Redshadowz
-			-- E elseif added for the unsecure mapnotes added by his code
-			elseif (nData[6] == 3) then
-				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);			
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Circle", "WHDB", 'title', nData[4], 'info', nData[5]);			
 			end
 		end
 		if (MapNotes_Data_Notes ~= nil) then
