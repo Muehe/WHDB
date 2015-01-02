@@ -6,28 +6,33 @@ WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
 
 function WHDB_Init()
-	this:RegisterEvent("VARIABLES_LOADED");
+	-- E changed VARIABLES_LOADED to PLAYER_LOGIN
+	this:RegisterEvent("PLAYER_LOGIN");
 	SlashCmdList["WHDB"] = WHDB_Slash;
 	SLASH_WHDB1 = "/whdb";
 end
 
 function WHDB_Event(event)
-	if (event == "VARIABLES_LOADED") then
+	if (event == "PLAYER_LOGIN") then
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
 			Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
 			WHDB_Print("Cartographer Database Registered.");
 		end
 		--Free the oposite faction database. -- not working in 1.12.1 UnitFactionGroup not init yet
-		---WHDB_Print(UnitFactionGroup("player"));
-		--if (UnitFactionGroup("player") == "Alliance") then
-		--	qData["Horde"] = nil;
-		--	WHDB_Print("Horde data cleared");
-		--else
-		--	qData["Alliance"] = nil;
-		--	WHDB_Print("Alliance data cleared");
-		--end
-		--And clean it.
+		-- E Bullshit. UnitFactionGroup is working, but not initialised when VARIABLES_LOADED event fires,
+		-- E so changed to PLAYER_LOGIN event and modified it a bit (else-if and else). changes until...
+		fac = UnitFactionGroup("player")
+		if (fac == "Alliance") then
+			qData["Horde"] = nil;
+			WHDB_Print("Horde data cleared.");
+		elseif (fac == "Horde") then
+			qData["Alliance"] = nil;
+			WHDB_Print("Alliance data cleared.");
+		else
+			WHDB_Print("Use /reloadUI to dump opposite faction quests.");
+		end
+		-- E ... here
 		WHDB_Player = UnitName("player");
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
@@ -64,11 +69,10 @@ function WHDB_ShowUsingInfo()
 end
 
 function WHDB_Slash(input)
-	local params = {};
-	for v in string.gmatch(input, "[^ ]+") do
-		tinsert(params, v);
-	end
-	if (params[1] == "help" or params[1] == "") then
+	-- E fixed by exchanging returns from string.gmatch()-function on top
+	-- E with string.sub()-function in the if-statements and writing a
+	-- E workaround in the section for comments display
+	if (string.sub(input,1,4) == "help" or params[1] == "") then
 		WHDB_Print("Commands available:");
 		WHDB_Print("-------------------------------------------------------");
 		WHDB_Print("/whdb help | This help.");
@@ -81,26 +85,39 @@ function WHDB_Slash(input)
 		WHDB_Print("");
 		WHDB_Print("Note: All parameters are case sensitive!");
 	end
-	if (params[1] == "com") then
-		local questName = strtrim(string.sub(input, 5));
+	if (string.sub(input,1,3) == "com") then
+		local questName = string.sub(input, 5);
 		if (string.sub(questName,1,1) == "[") then
 			if (string.sub(questName,3,3) == "]") then
-				questName = strtrim(string.sub(questName,4));
+				questName = string.sub(questName,4);
 			else
-				questName = strtrim(string.sub(questName,5));
+				questName = string.sub(questName,5);
 			end
 		end
 		if (questName ~= "") then
 			WHDB_Print("Quest Comments");
 			WHDB_Print("---------------------------------------------------");
 			local QuestComments = WHDB_GetComments(questName);
-			for v in string.gmatch(QuestComments, "[^\n]+") do
-				WHDB_Print(v);
+			
+			-- E replacement for gmatch code. until ...
+			local i = 0;
+			while string.find(QuestComments, "\n", i) ~= nil do
+				j = string.find(QuestComments, "\n", i);
+				t = string.sub(QuestComments, i, j);
+				if (t == "\n") then
+					WHDB_Print("---------------------------------------------------");
+				else
+					WHDB_Print(t);
+				end
+				i = j+1;
 			end
+			t = string.sub(QuestComments, i);
+			WHDB_Print(t);
+			-- E ... here
 		end
 	end
-	if (params[1] == "item") then
-		local itemName = strtrim(string.sub(input, 6));
+	if (string.sub(input,1,4) == "item") then
+		local itemName = string.sub(input, 6);
 		if (string.sub(itemName,1,1) == "|") then
 			_, _, _, itemName = string.find(itemName, "^|c%x+|H(.+)|h%[(.+)%]")
 		end
@@ -142,8 +159,8 @@ function WHDB_Slash(input)
 			end
 		end
 	end
-	if (params[1] == "mob") then
-		local monsterName = strtrim(string.sub(input, 5));
+	if (string.sub(input,1,3) == "mob") then
+		local monsterName = string.sub(input, 5);
 		if (monsterName ~= "") then
 			WHDB_Print("Location for: "..monsterName);
 			if (monsterName ~= nil) then
@@ -171,22 +188,22 @@ function WHDB_Slash(input)
 			end			
 		end
 	end
-	if (params[1] == "clean") then
+	if (string.sub(input,1,5) == "clean") then
 		WHDB_CleanMap();
 	end
-	if (params[1] == "colors") then
-		if (params[2] == "1") then
+	if (string.sub(input,1,6) == "colors") then
+		if (string.sub(input,8) == "1") then
 			WHDB_Settings[WHDB_Player]["UseColors"] = 1;
 			WHDB_Print("Text colors enabled.");
 		end
-		if (params[2] == "0") then
+		if (string.sub(input,8) == "0") then
 			WHDB_Settings[WHDB_Player]["UseColors"] = 0;
 			WHDB_Print("Text colors disabled.");
 		end
 	end
-	if (params[1] == "copy") then
-		if (WHDB_Settings[params[2]] ~= nil) then
-			for k,v in pairs(WHDB_Settings[params[2]]) do
+	if (string.sub(input,1,4) == "copy") then
+		if (WHDB_Settings[string.sub(input,6)] ~= nil) then
+			for k,v in pairs(WHDB_Settings[string.sub(input,6)]) do
 				WHDB_Settings[WHDB_Player][k] = v;
 			end
 			WHDB_Print("Settings loaded.");
