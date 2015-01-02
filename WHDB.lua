@@ -94,6 +94,7 @@ function WHDB_Event(event, arg1)
 			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
 			WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
 			WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
+			WHDB_Settings[WHDB_Player]["sortOverlay"] = 1;
 		else
 			if (WHDB_Settings[WHDB_Player] == nil) then
 				WHDB_Settings[WHDB_Player] = {};
@@ -101,7 +102,8 @@ function WHDB_Event(event, arg1)
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 				WHDB_Settings[WHDB_Player]["waypoints"] = 1;
 				WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
-				WHDB_Settings[WHDB_Player]["updateNotes"] = 0;				
+				WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
+				WHDB_Settings[WHDB_Player]["sortOverlay"] = 1;
 			end
 		end
 		-- New version settings update
@@ -117,6 +119,9 @@ function WHDB_Event(event, arg1)
 		end
 		if (WHDB_Settings[WHDB_Player]["updateNotes"] == nil) then
 			WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
+		end
+		if (WHDB_Settings[WHDB_Player]["sortOverlay"] == nil) then
+			WHDB_Settings[WHDB_Player]["sortOverlay"] = 1;
 		end
 		-- WHDB if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 		-- WHDB 	WHDB_PlotAllQuests();
@@ -349,14 +354,15 @@ function QuestLog_UpdateQuestDetails(doNotScroll)
 	end
 end
 
--- WHDB Kind of the main function, most stuff happens here.
+-- C funtion greatly reworked, removed buttons, they are in new WHDB UI
+-- C TODO some characters (1-6) are lost between the comment parts
+
 -- WHDB It updates the Quest-Log with buttons, target info, comments, etc.,
--- WHDB so nearly everything for Rapid Quest Pack functionality is in here.
 function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	if (getglobal(prefix.."QuestLogFrame"):IsVisible()) then
 	local questLogID = GetQuestLogSelection();
-	WHDB_MAP_NOTES = {};
-	showMap = false or GetQuestNotes(questLogID);
+	-- C WHDB_MAP_NOTES = {};
+	-- C showMap = false or GetQuestNotes(questLogID);
 	if ( not questTitle ) then
 		questTitle = "";
 	end
@@ -392,10 +398,8 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	
 	-- Show Quest Watch if track quest is checked
 	local numObjectives = GetNumQuestLeaderBoards();
-	-- C debug
-	-- C DEFAULT_CHAT_FRAME:AddMessage(numObjectives);
 	
-	local monsterName, zoneName, noteAdded, showMap, noteID;
+	local monsterName, zoneName, noteAdded, noteID;
 	for i=1, numObjectives, 1 do
 		local string = getglobal(prefix.."QuestLogObjective"..i);
 		local text, type, finished = GetQuestLogLeaderBoard(i);
@@ -528,41 +532,9 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogQuestDescription"));
 	end	
 	
-	local questSet = {};
-	if (string.len(questComments) > 3900) then
-		local questComment = questComments
-		while (string.len(questComment) > 3900) do
-			local part = string.sub(questComment, 1, 3900);
-			questComment = string.sub(questComment, 3901);
-			table.insert(questSet, part);
-		end
-		table.insert(questSet, questComment);
-	else
-		table.insert(questSet, questComments);
-	end
-	
-	if (getglobal(prefix.."QuestLogMapButtonsTitle") == nil) then
-		getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogMapButtonsTitle","","QuestTitleFont");
-	end
-	getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogCommentsTitle","","QuestTitleFont");
-	-- C changed for correct comment display, still bugged
-	getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogCommentsDescription_0","","QuestFont");
-	for n, set in pairs(questSet) do
-		-- C debug
-		-- C DEFAULT_CHAT_FRAME:AddMessage(n);
-		getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogCommentsDescription_"..n,"","QuestFont");
-	end
-
-	-- C opy description font color. (for skinner like addons)
+	-- copy description font color. (for skinner like addons)
 	local r, g, b, a = getglobal(prefix.."QuestLogQuestDescription"):GetTextColor();
-	
-	getglobal(prefix.."QuestLogMapButtonsTitle"):SetHeight(0);
-	getglobal(prefix.."QuestLogMapButtonsTitle"):SetWidth(285);
-	getglobal(prefix.."QuestLogMapButtonsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogQuestDescription", "BOTTOMLEFT", 0, -15);
-	getglobal(prefix.."QuestLogMapButtonsTitle"):SetJustifyH("LEFT");
-	getglobal(prefix.."QuestLogMapButtonsTitle"):SetText("Map Plots");
-	getglobal(prefix.."QuestLogMapButtonsTitle"):SetTextColor(r, g, b, a);
-	
+	getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogCommentsTitle","","QuestTitleFont");
 	-- C code moved from further down below and edited it
 	-- C quest rewards show before comments now
 	-- C <<
@@ -575,7 +547,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	local ttexture, tname, tisTradeskillSpell, tisSpellLearned = GetQuestLogRewardSpell();
 	if ( (numRewards + numChoices + money) > 0 ) or (tname ~= nil) then
 		-- C anchor reward text below map buttons
-		getglobal(prefix.."QuestLogRewardTitleText"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -40);
+		getglobal(prefix.."QuestLogRewardTitleText"):SetPoint("TOPLEFT", prefix.."QuestLogQuestDescription", "BOTTOMLEFT", 0, -15);
 		-- C calculate space needed between rewards and comments in quest log
 		local offs = 0;
 		if numRewards > 0 then
@@ -614,20 +586,36 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogRewardTitleText"));
 	-- C for quests without reward
 	else
-		getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -40);
+		getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogQuestDescription", "BOTTOMLEFT", 0, -15);
 		getglobal(prefix.."QuestLogRewardTitleText"):Hide();
 	end
 
 	-- C >>
 	
+	local questSet = {};
+	if (string.len(questComments) > 3800) then
+		local questComment = questComments
+		while (string.len(questComment) > 3800) do
+			local part = string.sub(questComment, 1, 3800);
+			questComment = string.sub(questComment, 3801);
+			table.insert(questSet, part);
+		end
+		table.insert(questSet, questComment);
+	else
+		table.insert(questSet, questComments);
+	end
+	
+	-- C changed for correct comment display, still bugged
+	getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogCommentsDescription_0","","QuestFont");
+	for n, set in pairs(questSet) do
+		getglobal(prefix.."QuestLogDetailScrollChildFrame"):CreateFontString(prefix.."QuestLogCommentsDescription_"..n,"","QuestFont");
+	end
+
 	getglobal(prefix.."QuestLogCommentsTitle"):SetHeight(0);
 	getglobal(prefix.."QuestLogCommentsTitle"):SetWidth(285);
-	-- WHDB getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -50);
 	getglobal(prefix.."QuestLogCommentsTitle"):SetJustifyH("LEFT");
 	getglobal(prefix.."QuestLogCommentsTitle"):SetText("Comments");
 	getglobal(prefix.."QuestLogCommentsTitle"):SetTextColor(r, g, b, a);
-	-- C debug
-	-- C DEFAULT_CHAT_FRAME:AddMessage(string.len(questComments));
 	
 	getglobal(prefix.."QuestLogCommentsDescription_0"):SetHeight(0);
 	getglobal(prefix.."QuestLogCommentsDescription_0"):SetWidth(270);
@@ -655,7 +643,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetHeight(0);
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetWidth(270);
 		local t = n - 1;
-		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription_"..t, "BOTTOMLEFT", 0, -5);
+		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription_"..t, "BOTTOMLEFT", 0, -15);
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetJustifyH("LEFT");
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetTextColor(r, g, b, a);
 		getglobal(prefix.."QuestLogCommentsDescription_"..n):SetText("## Part "..n.." ##\n"..part);
@@ -665,61 +653,8 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	local questSet = nil;
 	local questComments = nil;
 	
-	if (getglobal(prefix.."QuestLogShowMap") == nil) then
-		CreateFrame("Button", prefix.."QuestLogShowMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
-		CreateFrame("Button", prefix.."QuestLogCleanMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
-		CreateFrame("Button", prefix.."QuestLogAutoMap", getglobal(prefix.."QuestLogDetailScrollChildFrame"), "UIPanelButtonTemplate");
-	end
-	
-	getglobal(prefix.."QuestLogShowMap"):SetText("Show Map");
-	getglobal(prefix.."QuestLogShowMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -10);
-	getglobal(prefix.."QuestLogShowMap"):SetHeight(25);
-	getglobal(prefix.."QuestLogShowMap"):SetWidth(85);
-	getglobal(prefix.."QuestLogShowMap"):RegisterForClicks("LeftButtonUp");
-	getglobal(prefix.."QuestLogShowMap"):SetScript("OnClick", function()
-		getglobal(prefix.."QuestLogAutoMap"):Enable();
-		getglobal(prefix.."QuestLogCleanMap"):Enable();
-		this:Disable();
-		WHDB_PlotNotesOnMap();
-	end);
-	
-	getglobal(prefix.."QuestLogCleanMap"):SetText("Clean Map");
-	getglobal(prefix.."QuestLogCleanMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 90, -10);
-	getglobal(prefix.."QuestLogCleanMap"):SetHeight(25);
-	getglobal(prefix.."QuestLogCleanMap"):SetWidth(85);
-	getglobal(prefix.."QuestLogCleanMap"):RegisterForClicks("LeftButtonUp");
-	getglobal(prefix.."QuestLogCleanMap"):SetScript("OnClick", function()
-		getglobal(prefix.."QuestLogAutoMap"):Enable();
-		WHDB_DoCleanMap();
-	end);
-
-	getglobal(prefix.."QuestLogAutoMap"):SetText("Autoplot");
-	getglobal(prefix.."QuestLogAutoMap"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 180, -10);
-	getglobal(prefix.."QuestLogAutoMap"):SetHeight(25);
-	getglobal(prefix.."QuestLogAutoMap"):SetWidth(85);
-	getglobal(prefix.."QuestLogAutoMap"):RegisterForClicks("LeftButtonUp");
-	getglobal(prefix.."QuestLogAutoMap"):SetScript("OnClick", function()
-		WHDB_SwitchAuto();
-	end);
-
 	-- C moved some code further up from here and modified it
-	
-	-- C Change by Redshadowz:
-	-- C if and else statements uncommented until ...
-	if (not showMap) then
-		getglobal(prefix.."QuestLogShowMap"):Disable();
-		getglobal(prefix.."QuestLogCleanMap"):Disable();
-	else
-		getglobal(prefix.."QuestLogShowMap"):Enable();
-		getglobal(prefix.."QuestLogCleanMap"):Enable();
-	end
-	-- C ... here	
-	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and showMap) then
-		getglobal(prefix.."QuestLogAutoMap"):Disable();
-	else
-		getglobal(prefix.."QuestLogAutoMap"):Enable();
-	end
-	
+
 	QuestFrameItems_Update("QuestLog");
 	if ( not doNotScroll ) then
 		getglobal(prefix.."QuestLogDetailScrollFrameScrollBar"):SetValue(0);
@@ -728,7 +663,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	end
 end
 
---E New Icons from mpq files
+-- C New Icons from mpq files
 Cartographer_Notes:RegisterIcon("QuestionMark", {
     text = "QuestionMark",
     path = "Interface\\GossipFrame\\ActiveQuestIcon",
@@ -743,7 +678,9 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 })
 
 function WHDB_PlotNotesOnMap()
-	sortOverlayingMapNotes();
+	if (WHDB_Settings[WHDB_Player]["sortOverlay"] == 1) then
+		sortOverlayingMapNotes();
+	end
 	
 	local zone = nil;
 	local title = nil;
@@ -760,11 +697,6 @@ function WHDB_PlotNotesOnMap()
 		-- C nData[6] is icon number
 		-- C debug
 		-- C WHDB_Print(nData[1].."\n"..nData[2]..":"..nData[3].."\n"..nData[4].."\n"..nData[5]);
-		
-		-- C check for zoneId's instead of names and change if necessary.
-		-- C until ...
-		
-		-- C ... here
 		if (MetaMapNotes_AddNewNote ~= nil) then
 			if (nData[6] == 0) then
 				local continent, zone = MetaMap_NameToZoneID(nData[1]);
@@ -979,10 +911,10 @@ end
 
 function sortOverlayingMapNotes()
 	local ICONS_TEXT = {
-		[0] = '|cFF0000FFNPC:|r\n',
+		[0] = '',
 		[1] = '',
 		[2] = '',
-		[3] = '|cFF0000FFWaypoint|r:\n'
+		[3] = ''
 	};
 	if (WHDB_MAP_NOTES ~= {}) then
 		local notes = {};
@@ -1154,6 +1086,7 @@ function SwitchSetting(setting)
 		["commentNotes"] = "Comment note plotting",
 		["updateNotes"] = "Automatic note updating",
 		["auto_plot"] = "Auto plotting",
+		["sortOverlay"] = "Merge Overlay",
 	};
 	if (WHDB_Settings[WHDB_Player][setting] == 0) then
 		WHDB_Settings[WHDB_Player][setting] = 1;
@@ -1202,7 +1135,7 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 						for cID, coords in pairs(coordsdata) do
 							coordx = coords[1]
 							coordy = coords[2]
-							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, comment, icon});
+							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, "|cFF00FF00Spawnpoint|r\n"..comment, icon});
 							showMap = true;
 						end
 					end
@@ -1226,7 +1159,6 @@ function GetQuestNotes(questLogID)
 		-- C debug
 		-- C DEFAULT_CHAT_FRAME:AddMessage(numObjectives);
 		if (numObjectives ~= nil) then
-			local monsterName, zoneName, noteAdded, showMap, noteID;
 			for i=1, numObjectives, 1 do
 				local text, type, finished = GetQuestLogLeaderBoard(i, questLogID);
 				local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
