@@ -3,12 +3,12 @@
 ----------------------------------------------------------------------------------------------------------------------
 -- Wowhead DB Enhanced By: Redshadowz, me
 -- E = WHDB Enhanced comment header
--- EWHDB = comments on original code, to explain it to myself or disable it
+-- WHDB = comments on original code, to explain it to myself or disable it
 -- E
 -- E changes on the original WHDB code by Redshadowz (see link below) have been commented
 -- E in order to divide the code in original Rapid Quest Pack, Redshadow's and mine
 -- E http://www.wow-one.com/forum/topic/4430-quest-helper-for-1121/page__st__60__p__482768#entry482768
--- E also included some changes from WHDB 2.0 - 2.1.1
+-- E included some changes from WHDB 2.0 - 2.1.1
 ----------------------------------------------------------------------------------------------------------------------
 WHDB_MAP_NOTES = {};
 WHDB_QuestZoneInfo = {};
@@ -36,7 +36,7 @@ function WHDB_Init()
 end
 
 function WHDB_Event(event, arg1)
-    -- E changed VARIABLES_LOADED to PLAYER_LOGIN
+	-- E changed VARIABLES_LOADED to PLAYER_LOGIN
 	if (event == "PLAYER_LOGIN") then
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
@@ -168,9 +168,9 @@ function WHDB_Slash(input)
 	-- E with string.sub()-function in the if-statements and writing a
 	-- E workaround in the section for comments display
 	
-	-- EWHDB for v in string.gmatch(input, "[^ ]+") do
-	-- EWHDB	    tinsert(params, v);
-	-- EWHDB end
+	-- WHDB for v in string.gmatch(input, "[^ ]+") do
+	-- WHDB		tinsert(params, v);
+	-- WHDB end
 	if (string.sub(input,1,4) == "help" or input == "") then
 		WHDB_Print("Commands available:");
 		WHDB_Print("-------------------------------------------------------");
@@ -204,9 +204,9 @@ function WHDB_Slash(input)
 			WHDB_Print("---------------------------------------------------");
 			local QuestComments = WHDB_GetComments(questName);
 			-- E commented because string.gmatch is not working
-			-- EWHDB for v in string.gmatch(QuestComments, "[^\n]+") do
-			-- EWHDB 	WHDB_Print(v);
-			-- EWHDB end
+			-- WHDB for v in string.gmatch(QuestComments, "[^\n]+") do
+			-- WHDB	 WHDB_Print(v);
+			-- WHDB end
 			
 			-- E replacement for gmatch code. calls WHDB_Print too much. changes until ...
 			local i = 0;
@@ -363,9 +363,9 @@ function WHDB_PlotAllQuests()
 	while (GetQuestLogTitle(k) ~= nil) do
 		k = k + 1;
 		local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(k);
-        -- E debug
-        -- E DEFAULT_CHAT_FRAME:AddMessage(questTitle);
-        -- E DEFAULT_CHAT_FRAME:AddMessage(isComplete);
+		-- E debug
+		-- E DEFAULT_CHAT_FRAME:AddMessage(questTitle);
+		-- E DEFAULT_CHAT_FRAME:AddMessage(isComplete);
 		if (not header and questTitle ~= nil) then
 			local numObjectives = GetNumQuestLeaderBoards(k);
 			local monsterName, zoneName, noteAdded, showMap, noteID;
@@ -406,10 +406,10 @@ function WHDB_PlotAllQuests()
 								end
 							end
 						end
-                    -- E check for objective type other than item or monster, e.g. objective, reputation, event
-                    elseif (type ~= "item" and type ~= "monster") then
-                        -- E debug
-                        DEFAULT_CHAT_FRAME:AddMessage(type.."-quest objectives not supported yet by WHDB");
+					-- E check for objective type other than item or monster, e.g. objective, reputation, event
+					elseif (type ~= "item" and type ~= "monster") then
+						-- E debug
+						DEFAULT_CHAT_FRAME:AddMessage(type.."-quest objectives not supported yet by WHDB");
 					end
 				end
 			end
@@ -431,9 +431,29 @@ function WHDB_PlotAllQuests()
 						end
 					end
 				end
+			-- E elseif added, uniring didn't account for "both faction"-quests here
+			elseif (qData['Common'][questTitle] ~= nil and not isComplete) then
+				for id, comment in ipairs(qData['Common'][questTitle]['comments']) do
+					local f = 0;
+					while f ~= nil do
+						f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+						if (coordx ~= nil and coordy ~= nil) then
+							WHDB_PopulateZones();
+							if (WHDB_QuestZoneInfo[questTitle] ~= nil) then
+								if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
+									if (string.len(comment) > 250) then
+										comment = string.sub(comment,1,250) .. "...";
+									end
+									table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questTitle], coordx, coordy, questTitle, comment, 1});
+								end
+							end
+						end
+					end
+				end
 			end
-            -- E condition set to TRUE due to some quests not showing isComplete correctly
-			if (true) then
+			-- E condition set to "true" due to some quests not showing "isComplete" correctly
+			-- E now always shows EndNPC
+			if (isComplete or numObjectives == 0) then
 				endq = SearchEndNPC(questTitle);
 				if (endq ~= nil) then
 					monsterName = endq;
@@ -458,7 +478,7 @@ function WHDB_Print( string )
 end
 
 function WHDB_Print_Indent( string )
-	DEFAULT_CHAT_FRAME:AddMessage("                       " .. string, 0.95, 0.95, 0.5);
+	DEFAULT_CHAT_FRAME:AddMessage("					   " .. string, 0.95, 0.95, 0.5);
 end
 
 function QuestLog_UpdateQuestDetails(doNotScroll)
@@ -471,9 +491,9 @@ function QuestLog_UpdateQuestDetails(doNotScroll)
 	end
 end
 
--- EWHDB Kind of the main function, most stuff happens here.
--- EWHDB It updates the Quest-Log with buttons, target info, comments, etc.,
--- EWHDB so nearly everything for Rapid Quest Pack functionality is in here.
+-- WHDB Kind of the main function, most stuff happens here.
+-- WHDB It updates the Quest-Log with buttons, target info, comments, etc.,
+-- WHDB so nearly everything for Rapid Quest Pack functionality is in here.
 function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	if (getglobal(prefix.."QuestLogFrame"):IsVisible()) then
 	WHDB_MAP_NOTES = {};
@@ -490,7 +510,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	local questDescription;
 	local questObjectives;
 	questDescription, questObjectives = GetQuestLogQuestText();
-    -- E debug
+	-- E debug
 	DEFAULT_CHAT_FRAME:AddMessage(questObjectives);
 	getglobal(prefix.."QuestLogObjectivesText"):SetText(questObjectives);
 	
@@ -533,7 +553,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 			string:SetTextColor(0, 0, 0);
 		end
 		
-		-- EWHDB checks objectives and saves map notes if coordinates are found
+		-- WHDB checks objectives and saves map notes if coordinates are found
 		if (type == "monster") then
 			-- E debug
 			-- E DEFAULT_CHAT_FRAME:AddMessage(type);
@@ -552,19 +572,19 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 					if (zoneName == nil) then zoneName = npcData[monsterName]["zone"]; end
 					text = text.."\n";
 					if (WHDB_Settings[WHDB_Player]["UseColors"] == 1) then
-						text = text.."|cFF442200    Zone: " .. zoneName .. "\n|r";
-						text = text.."|cFF002244    Level: " .. Level .. "\n|r";
-						text = text.."|cFF002244    Health: " .. HP .. "\n|r";
-						text = text.."|cFF224400    Coords: " .. npcData[monsterName]["coords"][1] .. "\n|r";
+						text = text.."|cFF442200	Zone: " .. zoneName .. "\n|r";
+						text = text.."|cFF002244	Level: " .. Level .. "\n|r";
+						text = text.."|cFF002244	Health: " .. HP .. "\n|r";
+						text = text.."|cFF224400	Coords: " .. npcData[monsterName]["coords"][1] .. "\n|r";
 					else
-						text = text.."    Zone: " .. zoneName .. "\n";
-						text = text.."    Level: " .. Level .. "\n";
-						text = text.."    Health: " .. HP .. "\n";
-						text = text.."    Coords: " .. npcData[monsterName]["coords"][1] .. "\n";
+						text = text.."	Zone: " .. zoneName .. "\n";
+						text = text.."	Level: " .. Level .. "\n";
+						text = text.."	Health: " .. HP .. "\n";
+						text = text.."	Coords: " .. npcData[monsterName]["coords"][1] .. "\n";
 					end
 					if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
 						-- E Change by Redshadowz:
-						-- E Not sure what it does exactly, seems to make map notes. Goes until ...
+						-- E Added if statement. Goes until ...
 						if (npcData[monsterName]["coords"]) then
 							for cid, cdata in pairs(npcData[monsterName]["coords"]) do
 								local f, t, coordx, coordy = strfind(npcData[monsterName]["coords"][cid], "(.*),(.*)");
@@ -600,19 +620,19 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 						if (dropRate == nil) then dropRate = ""; else dropRate = dropRate .. "%"; end
 						text = text.."\n";
 						if (WHDB_Settings[WHDB_Player]["UseColors"] == 1) then
-							text = text.."|cFF444444    Dropped by: " .. monsterName .. "\n|r";
-							text = text.."|cFF220044        Drop Rate: " .. dropRate .. "\n|r";
-							text = text.."|cFF442200        Zone: " .. zoneName .. "\n|r";
-							text = text.."|cFF002244        Level: " .. Level .. "\n|r";
-							text = text.."|cFF002244        Health: " .. HP .. "\n|r";
-							text = text.."|cFF224400        Coords: " .. npcData[monsterName]["coords"][1] .. "\n|r";
+							text = text.."|cFF444444	Dropped by: " .. monsterName .. "\n|r";
+							text = text.."|cFF220044		Drop Rate: " .. dropRate .. "\n|r";
+							text = text.."|cFF442200		Zone: " .. zoneName .. "\n|r";
+							text = text.."|cFF002244		Level: " .. Level .. "\n|r";
+							text = text.."|cFF002244		Health: " .. HP .. "\n|r";
+							text = text.."|cFF224400		Coords: " .. npcData[monsterName]["coords"][1] .. "\n|r";
 						else
-							text = text.."    Dropped by: " .. monsterName .. "\n";
-							text = text.."        Drop Rate: " .. dropRate .. "\n";
-							text = text.."        Zone: " .. zoneName .. "\n";
-							text = text.."        Level: " .. Level .. "\n";
-							text = text.."        Health: " .. HP .. "\n";
-							text = text.."        Coords: " .. npcData[monsterName]["coords"][1] .. "\n";
+							text = text.."	Dropped by: " .. monsterName .. "\n";
+							text = text.."		Drop Rate: " .. dropRate .. "\n";
+							text = text.."		Zone: " .. zoneName .. "\n";
+							text = text.."		Level: " .. Level .. "\n";
+							text = text.."		Health: " .. HP .. "\n";
+							text = text.."		Coords: " .. npcData[monsterName]["coords"][1] .. "\n";
 						end
 						if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
 							for cid, cdata in pairs(npcData[monsterName]["coords"]) do
@@ -702,12 +722,13 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	
 	-- E code moved from further down below and edited it
 	-- E quest rewards show before comments now
-    -- E fix below here
 	-- E <<
+	-- E fix below here
 	
 	local numRewards = GetNumQuestLogRewards();
 	local numChoices = GetNumQuestLogChoices();
 	local money = GetQuestLogRewardMoney();
+	-- E added check for spell rewards
 	local ttexture, tname, tisTradeskillSpell, tisSpellLearned = GetQuestLogRewardSpell();
 	if ( (numRewards + numChoices + money) > 0 ) or (tname ~= nil) then
 		-- E anchor reward text below map buttons
@@ -720,7 +741,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 			y = (numRewards/2);
 			-- E ... which we round upwards, in case an uneven number was given, and we got the number of Rows we need
 			x = math.floor(y + .5);
-			-- E x*45 is for item rows, + 20 for text, modify these (50/20) if display is bugged
+			-- E x*45 is for item rows, + 25 for text, modify these (45/25) if display is bugged
 			offs = (x*45) + 25;
 		end
 		if numChoices > 0 then
@@ -736,8 +757,8 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		end
 		-- E check for spell reward
 		if (tname ~= nil) then
-            offs = offs + 50;
-            -- E check if spell is the only reward
+			offs = offs + 50;
+			-- E check if spell is the only reward
 			if ((numRewards + money) == 0) then
 				offs = offs + 25;
 			end
@@ -748,6 +769,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogRewardTitleText", "BOTTOMLEFT", 0, offs);
 		getglobal(prefix.."QuestLogRewardTitleText"):Show();
 		QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogRewardTitleText"));
+	-- E for quests without reward
 	else
 		getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -40);
 		getglobal(prefix.."QuestLogRewardTitleText"):Hide();
@@ -757,7 +779,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	
 	getglobal(prefix.."QuestLogCommentsTitle"):SetHeight(0);
 	getglobal(prefix.."QuestLogCommentsTitle"):SetWidth(285);
-	-- EWHDB getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -50);
+	-- WHDB getglobal(prefix.."QuestLogCommentsTitle"):SetPoint("TOPLEFT", prefix.."QuestLogMapButtonsTitle", "BOTTOMLEFT", 0, -50);
 	getglobal(prefix.."QuestLogCommentsTitle"):SetJustifyH("LEFT");
 	getglobal(prefix.."QuestLogCommentsTitle"):SetText("Comments");
 	getglobal(prefix.."QuestLogCommentsTitle"):SetTextColor(r, g, b, a);
@@ -769,12 +791,34 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 	getglobal(prefix.."QuestLogCommentsDescription"):SetText(questComments);
 	getglobal(prefix.."QuestLogCommentsDescription"):SetTextColor(r, g, b, a);
 	
-	-- EWHDB getglobal(prefix.."QuestLogRewardTitleText"):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription", "BOTTOMLEFT", 0, -15);
+	-- WHDB getglobal(prefix.."QuestLogRewardTitleText"):SetPoint("TOPLEFT", prefix.."QuestLogCommentsDescription", "BOTTOMLEFT", 0, -15);
 
 	QuestFrame_SetAsLastShown(getglobal(prefix.."QuestLogCommentsDescription"));
 	if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
 		if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
 			for id, comment in ipairs(qData[WHDB_Player_Faction][questTitle]['comments']) do
+				local f = 0;
+				while f ~= nil do
+					f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
+					if (coordx ~= nil and coordy ~= nil) then
+						WHDB_PopulateZones();
+						if (WHDB_QuestZoneInfo[questTitle] ~= nil) then
+							if (WHDB_GetMapIDFromZone(WHDB_QuestZoneInfo[questTitle]) ~= -1) then
+								if (string.len(comment) > 250) then
+									comment = string.sub(comment,1,250) .. "...";
+								end
+								table.insert(WHDB_MAP_NOTES,{WHDB_QuestZoneInfo[questTitle], coordx, coordy, questTitle, comment, 1});
+								if (MetaMapNotes_AddNewNote ~= nil or MapNotes_Data_Notes ~= nil or Cartographer_Notes ~= nil) then
+									showMap = true;
+								end
+							end
+						end
+					end
+				end
+			end
+		-- E elseif added, uniring didn't account for "both faction"-quests here
+		elseif (qData['Common'][questTitle] ~= nil) then
+			for id, comment in ipairs(qData['Common'][questTitle]['comments']) do
 				local f = 0;
 				while f ~= nil do
 					f, t, coordx, coordy = strfind(comment, "%[([0-9]*) ([0-9]*)%]", f+1);
@@ -881,15 +925,15 @@ function WHDB_PlotNotesOnMap()
 	local firstNote = 1;
 	
 	for nKey, nData in ipairs(WHDB_MAP_NOTES) do
-        -- E debug
+		-- E debug
 		-- E WHDB_Print(nData[1]);
 		
 		-- E check for zoneId's instead of names and change if necessary.
-        -- E until ...
+		-- E until ...
 		if type(nData[1]) == number then
 			nData[1] = zoneData[nData[1]]
 		end
-        -- E ... here
+		-- E ... here
 		if (MetaMapNotes_AddNewNote ~= nil) then
 			if (nData[6] == 0) then
 				local continent, zone = MetaMap_NameToZoneID(nData[1]);
@@ -1056,9 +1100,9 @@ end
 
 function WHDB_PopulateZones()
 	local numEntries, numQuests = GetNumQuestLogEntries();
-	local lastZone, questLogTitleText, suggestedGroup, level, questTag, isHeader, isCollapsed, isComplete;
+	local lastZone, questLogTitleText, level, questTag, isHeader, isCollapsed, isComplete;
 	for i=1, numEntries, 1 do
-		questLogTitleText, level, questTag, suggestedGroup, isHeader, isCollapsed, isComplete = GetQuestLogTitle(i);
+		questLogTitleText, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(i);
 		if (isHeader) then
 			lastZone = questLogTitleText;
 		else
