@@ -197,8 +197,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb version | Show WHDB version.");
 		WHDB_Print("/whdb com <quest name> | Get quest comments by name.");
 		WHDB_Print("/whdb item <item name> | Show item drop info on map.");
-		WHDB_Print("/whdb mob <npc name> | Show NPC location on map.");
-		WHDB_Print("/whdb obj <object name> | Show object location on map.");
+		WHDB_Print("/whdb mob <npc name> | Show NPC location onm map.");
 		WHDB_Print("/whdb clean | Clean map notes.");
 		WHDB_Print("/whdb colors | Enable/Disable: Coloring of text in the quest log.");
 		WHDB_Print("/whdb auto | Enable/Disable: Automatically plot uncompleted objectives on map.");
@@ -290,18 +289,6 @@ function WHDB_Slash(input)
 					end
 				else
 					WHDB_Print("No location found.");
-				end
-			end			
-		end
-	elseif (string.sub(input,1,3) == "obj") then
-		local objName = string.sub(input, 5);
-		if (objName ~= "") then
-			WHDB_Print("Locations for: "..objName);
-			if (objName ~= nil) then
-				if (GetObjNotes(objName, objName, "This object can be found here", 0)) then
-					WHDB_ShowMap();
-				else
-					WHDB_Print("No locations found.");
 				end
 			end			
 		end
@@ -1093,19 +1080,6 @@ function GetNPCID(npcName)
 	end
 end
 
-function GetObjID(objName)
-	local objIDs = {};
-	for objID, data in pairs(objData) do
-		if (data['name'] == objName) then 
-			table.insert(objIDs, objID);
-		end
-	end
-	
-	if objIDs == {} then return false
-	else return objIDs
-	end
-end
-
 function SwitchSetting(setting)
 	text = {
 		["waypoints"] = "Waypoint plotting",
@@ -1134,6 +1108,14 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 	if (npcName ~= nil) then
 		npcID = GetNPCID(npcName);
 		if (npcData[npcID] ~= nil) then
+			if (npcData[npcID]["zone"] ~= nil) then
+				zoneName = zoneData[npcData[npcID]["zone"]];
+			-- C elseif just kept in case it was needed for something I missed
+			elseif (questTitle ~= nil) then
+				zoneName = WHDB_QuestZoneInfo[questTitle];
+			else
+				return false;
+			end
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
@@ -1165,34 +1147,6 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 	return false;
 end
 
--- C tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
-function GetObjNotes(objName, commentTitle, comment, icon, questTitle)
-	if (objName ~= nil) then
-		objIDs = GetObjID(objName); -- C TODO
-		local showMap = false;
-		local count = 0;
-		for n, objID in pairs(objIDs) do
-			if (objData[objID] ~= nil) then
-				if (objData[objID]["zones"]) then
-					for zoneID, coordsdata in pairs(objData[objID]["zones"]) do
-						if (zoneID ~= 5 and zoneID ~= 6) then -- C legacy, unused, kept for future (world map coords)
-							zoneName = zoneData[zoneID]
-							for cID, coords in pairs(coordsdata) do
-								coordx = coords[1]
-								coordy = coords[2]
-								table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, comment, icon});
-								showMap = true;
-							end
-						end
-					end
-				end
-			end
-		end
-		return showMap;
-	end
-	return false;
-end
-
 function GetQuestNotes(questLogID)
 	-- C WHDB_MAP_NOTES = {};
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
@@ -1219,9 +1173,7 @@ function GetQuestNotes(questLogID)
 								showMap = GetNPCNotes(monsterName, questTitle, comment, 0, questTitle) or showMap;
 							end
 						end
-					-- C checks for objective type other than item or monster, e.g. objective, reputation, event
-					--elseif (type == "object") then
-						--GetObjNotes(itemName, questTitle, comment, icon, questTitle);
+					-- C check for objective type other than item or monster, e.g. objective, reputation, event
 					elseif (type ~= "item" and type ~= "monster") then
 						-- C debug
 						DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..type.." quest objective-type not supported yet)");
