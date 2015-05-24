@@ -205,6 +205,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb cnotes | Enable/Disable: Plot comments on map.");
 		WHDB_Print("/whdb update | Enable/Disable: Automatically update notes. (Very slow right now)");
 		WHDB_Print("/whdb copy <character> | Copy characters config to current one.");
+		WHDB_Print("/whdb reset | Reset positon of the Interface.");
 		DEFAULT_CHAT_FRAME:AddMessage("\n");
 		WHDB_Print("Note: All parameters are case sensitive!");
 	elseif (string.sub(input,1,7) == "version") then
@@ -327,10 +328,12 @@ function WHDB_Slash(input)
 		SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
 		SwitchSetting("waypoints");
-	elseif (string.sub(input,1,8) == "cnotes") then
+	elseif (string.sub(input,1,6) == "cnotes") then
 		SwitchSetting("commentNotes");
-	elseif (string.sub(input,1,8) == "update") then
+	elseif (string.sub(input,1,6) == "update") then
 		SwitchSetting("updateNotes");
+	elseif (string.sub(input,1,5) == "reset") then
+		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
 	-- C disable else 
 		-- C disable if (input == nil) then input = ""; end
 		-- C disable WHDB_Print("Unknown command: \""..input.."\"");
