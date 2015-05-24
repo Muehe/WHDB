@@ -1,4 +1,4 @@
-## Interface: 20300 
+## Interface: 11200 
 ## Title: |cFF006699[BSK]|cFF990099 Wowhead DB
 ## Author: UniRing | Bërsërk
 ## Notes: Wowhead quest info and map plotting. (Supports Cartographer and Metamap)
