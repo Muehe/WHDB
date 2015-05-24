@@ -144,17 +144,16 @@ function WHDB_Event(event, arg1)
 	-- C ... here
 	
 	-- C changed to elseif
-	elseif (event == "QUEST_WATCH_UPDATE") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1) then
-		-- WHDB WHDB_Print("QUEST_WATCH_UPDATE");
-		WHDB_PlotUpdate = 1;
+	-- C elseif (event == "QUEST_WATCH_UPDATE") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1) then
+		-- C WHDB_Print("QUEST_WATCH_UPDATE");
+		-- C WHDB_PlotUpdate = 1;
 	elseif (event == "QUEST_LOG_UPDATE") then
-		if ((WHDB_Settings[WHDB_Player]["auto_plot"] == 1) and (WHDB_PlotUpdate == 1) and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1)) then
-			-- WHDB WHDB_Print("Plots updated.");
+		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
-			WHDB_PlotUpdate = 0;
 		end
 	-- C elseif ((event == "UNIT_QUEST_LOG_CHANGED") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1)) then
-		-- WHDB WHDB_Print("UNIT_QUEST_LOG_CHANGED");
+		-- C WHDB_Print("UNIT_QUEST_LOG_CHANGED");
 		-- C if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and arg1 == "player") then
 		-- C 	WHDB_PlotUpdate = 1;
 		-- C end
@@ -880,6 +879,7 @@ end
 function WHDB_DoCleanMap()
 	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 		WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+		CheckSetting("auto_plot")
 		WHDB_Print("Auto plotting disabled.");
 	end
 	WHDB_CleanMap();
@@ -1126,6 +1126,8 @@ end
 function CheckSetting(setting)
 	if (WHDB_Settings[WHDB_Player][setting] == 1) then
 		getglobal(setting):SetChecked(true);
+	else
+		getglobal(setting):SetChecked(false);
 	end
 end
 
