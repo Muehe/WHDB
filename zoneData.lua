@@ -1,4 +1,6 @@
 ﻿zoneData = {
+	[5] = 'Eastern Kingdoms',
+	[6] = 'Kalimdor',
 	[36] = 'Alterac Mountains',
 	[45] = 'Arathi Highlands',
 	[3] = 'Badlands',
