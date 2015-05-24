@@ -1142,10 +1142,19 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
-					zoneName = zoneData[zoneID]
+					zoneName = zoneData[zoneID];
 					for cID, coords in pairs(coordsdata) do
-						coordx = coords[1]
-						coordy = coords[2]
+						if (coords[1] == -1) then
+								for id, data in pairs(instanceData[zoneID]) do
+									noteZone = zoneData[data[1]];
+									coordx = data[2];
+									coordy = data[3];
+									table.insert(WHDB_MAP_NOTES,{noteZone, coordx, coordy, commentTitle, "|cFF00FF00Instance Entry to "..zoneName.."|r\n"..comment, icon});
+								end
+								break;
+							end
+						coordx = coords[1];
+						coordy = coords[2];
 						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, "|cFF0000FFWaypoint|r\n"..comment, 3});
 						showMap = true;
 					end
@@ -1154,10 +1163,19 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 			if (npcData[npcID]["zones"]) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["zones"]) do
 					if (zoneID ~= 5 and zoneID ~= 6) then
-						zoneName = zoneData[zoneID]
+						zoneName = zoneData[zoneID];
 						for cID, coords in pairs(coordsdata) do
-							coordx = coords[1]
-							coordy = coords[2]
+							if (coords[1] == -1) then
+								for id, data in pairs(instanceData[zoneID]) do
+									noteZone = zoneData[data[1]];
+									coordx = data[2];
+									coordy = data[3];
+									table.insert(WHDB_MAP_NOTES,{noteZone, coordx, coordy, commentTitle, "|cFF00FF00Instance Entry to "..zoneName.."|r\n"..comment, icon});
+								end
+								break;
+							end
+							coordx = coords[1];
+							coordy = coords[2];
 							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, "|cFF00FF00Spawnpoint|r\n"..comment, icon});
 							showMap = true;
 						end
