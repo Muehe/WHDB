@@ -693,14 +693,20 @@ end
 Cartographer_Notes:RegisterIcon("QuestionMark", {
     text = "QuestionMark",
     path = "Interface\\GossipFrame\\ActiveQuestIcon",
+	width = 8,
+	height = 8,
 })
 Cartographer_Notes:RegisterIcon("NPC", {
     text = "NPC",
     path = "Interface\\WorldMap\\WorldMapPartyIcon",
+	width = 8,
+	height = 8,
 })
 Cartographer_Notes:RegisterIcon("Waypoint", {
     text = "Waypoint",
     path = "Interface\\WorldMap\\WorldMapPlayerIcon",
+	width = 8,
+	height = 8,
 })
 
 function WHDB_PlotNotesOnMap()
@@ -1237,8 +1243,12 @@ function GetQuestNotes(questLogID)
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
 	-- C debug
 	if (WHDB_Debug == 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("questTitle"..questTitle);
-		DEFAULT_CHAT_FRAME:AddMessage("isComplete"..isComplete);
+		if (questTitle ~= nil) then
+			DEFAULT_CHAT_FRAME:AddMessage("questTitle"..questTitle);
+		end
+		if (iscomplete ~= nil) then
+			DEFAULT_CHAT_FRAME:AddMessage("isComplete"..isComplete);
+		end
 	end
 	local showMap = false;
 	if (not header and questTitle ~= nil) then
