@@ -55,7 +55,7 @@ function WHDB_Event(event, arg1)
 	-- C changed VARIABLES_LOADED to PLAYER_LOGIN
 	if (event == "PLAYER_LOGIN") then
 		if (WHDB_Debug == 1) then 
-			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN"));
+			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN");
 		end
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
@@ -156,7 +156,7 @@ function WHDB_Event(event, arg1)
 	elseif (event == "QUEST_LOG_UPDATE") then
 		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 			if (WHDB_Debug == 1) then
-				DEFAULT_CHAT_FRAME:AddMessage("Event: QUEST_LOG_UPDATE"));
+				DEFAULT_CHAT_FRAME:AddMessage("Event: QUEST_LOG_UPDATE");
 			end
 			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
