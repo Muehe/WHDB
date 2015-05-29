@@ -1016,6 +1016,7 @@ end
 
 function GetQuestEndNotes(questLogID)
 	local questTitle = GetQuestLogTitle(questLogID);
+	SelectQuestLogEntry(questLogID);
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
 	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
@@ -1064,47 +1065,55 @@ end
 -- C TODO check objectives text
 function GetQuestIDs(questName, objectives)
 	local qIDs = {};
-	if (questObjectives == nil) then questObjectives = ''; end
+	if (objectives == nil) then objectives = ''; end
 	-- C debug
-	if (WHDB_Debug == 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("questName: "..questName);
-		DEFAULT_CHAT_FRAME:AddMessage("objectives text: "..objectives);
-	end
-	
-	if ((qData[WHDB_Player_Faction][questName] ~= nil)) then
-		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
-			table.insert(qIDs, n);
-		end
-	end
-	
-	if((qData['Common'][questName] ~= nil)) then
-		for n, o, c in pairs(qData['Common'][questName]['IDs']) do
-			table.insert(qIDs, n);
-		end
+	if (WHDB_Debug == 1) then
+		DEFAULT_CHAT_FRAME:AddMessage("GetQuestIDs(questName, objectives):");
+		DEFAULT_CHAT_FRAME:AddMessage("    questName: "..questName);
+		DEFAULT_CHAT_FRAME:AddMessage("    objectives: "..objectives);
 	end
 	
 	--[[
+	
+	
+	
+	]]--
+	
 	if ((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives == '')) then
-		for n, o in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
 			table.insert(qIDs, n);
 		end
 	elseif((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives ~= '')) then
 		for n, o in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
-			if (o == objectives) then table.insert(qIDs, n); end
+			if (o[1] == objectives) then table.insert(qIDs, n); end
 		end
 	end
 	if ((qData['Common'][questName] ~= nil) and (objectives == '')) then
-		for n, o in pairs(qData['Common'][questName]['IDs']) do
+		for n, o, c in pairs(qData['Common'][questName]['IDs']) do
 			table.insert(qIDs, n);
 		end
 	elseif((qData['Common'][questName] ~= nil) and (objectives ~= '')) then
 		for n, o in pairs(qData['Common'][questName]['IDs']) do
-			if (o == objectives) then table.insert(qIDs, n); end
+			if (o[1] == objectives) then table.insert(qIDs, n); end
 		end
 	end
-	]]--
+	if (table.getn(qIDs) == 0) then
+		if ((qData[WHDB_Player_Faction][questName] ~= nil)) then
+			for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+				table.insert(qIDs, n);
+			end
+		end
+	
+		if((qData['Common'][questName] ~= nil)) then
+			for n, o, c in pairs(qData['Common'][questName]['IDs']) do
+				table.insert(qIDs, n);
+			end
+		end
+	end
 	-- C debug
-	-- C DEFAULT_CHAT_FRAME:AddMessage("Possible questIDs: "..table.getn(qIDs));
+	if (WHDB_Debug == 1) then
+		DEFAULT_CHAT_FRAME:AddMessage("Possible questIDs: "..table.getn(qIDs));
+	end
 	length = table.getn(qIDs);
 	if (length == nil) then return false, false;
 	elseif (length == 1) then return false, qIDs[1];
@@ -1244,18 +1253,20 @@ function GetQuestNotes(questLogID)
 	-- C debug
 	if (WHDB_Debug == 1) then 
 		if (questTitle ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("questTitle"..questTitle);
+			DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes(questLogId):".." questTitle "..questTitle);
 		end
 		if (iscomplete ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("isComplete"..isComplete);
+			DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes(questLogId):".." isComplete "..isComplete);
 		end
 	end
 	local showMap = false;
 	if (not header and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
 		-- C debug
-		if (WHDB_Debug == 1) then 
-			DEFAULT_CHAT_FRAME:AddMessage(numObjectives);
+		if (WHDB_Debug == 1) then
+			if (numObjectives ~= nil) then
+				DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes(questLogId):".." numObjectives"..numObjectives);
+			end
 		end
 		if (numObjectives ~= nil) then
 			for i=1, numObjectives, 1 do
@@ -1278,13 +1289,15 @@ function GetQuestNotes(questLogID)
 					elseif (type ~= "item" and type ~= "monster") then
 						-- C debug
 						if (WHDB_Debug == 1) then 
-							DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..type.." quest objective-type not supported yet)");
+							DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes():"..type.." quest objective-type not supported yet");
 						end
 					end
 				end
 			end
-			if ((not isComplete) and (numObjectives ~= 0) and (WHDB_Settings[WHDB_Player]["commentNotes"] == 1)) then 
-				showMap = GetCommentNotes(questTitle, questLogID) or showMap;
+			if ((not isComplete) and (numObjectives ~= 0) and (WHDB_Settings[WHDB_Player]["commentNotes"] == 1)) then
+				SelectQuestLogEntry(questLogID);
+				local questDescription, questObjectives = GetQuestLogQuestText();
+				showMap = GetCommentNotes(questTitle, questObjectives) or showMap;
 			end
 		end
 		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
