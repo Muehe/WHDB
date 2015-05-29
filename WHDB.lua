@@ -10,6 +10,7 @@
 -- C http://www.wow-one.com/forum/topic/4430-quest-helper-for-1121/page__st__60__p__482768#entry482768
 -- C included some changes from WHDB 2.0 (functionality) and 2.1.1 (data)
 ----------------------------------------------------------------------------------------------------------------------
+WHDB_Debug = 1;
 WHDB_MAP_NOTES = {};
 WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
@@ -53,6 +54,9 @@ end
 function WHDB_Event(event, arg1)
 	-- C changed VARIABLES_LOADED to PLAYER_LOGIN
 	if (event == "PLAYER_LOGIN") then
+		if (WHDB_Debug == 1) then 
+			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN"));
+		end
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
 			Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
@@ -79,7 +83,9 @@ function WHDB_Event(event, arg1)
 		WHDB_Player_Sex = UnitSex("player");
 		WHDB_Player_Class = UnitClass("player");
 		stringX = WHDB_Player_Race..WHDB_Player_Sex..WHDB_Player_Class;
-		DEFAULT_CHAT_FRAME:AddMessage(string.gsub(stringX, "2", "Male"));
+		if (WHDB_Debug == 1) then 
+			DEFAULT_CHAT_FRAME:AddMessage(string.gsub(stringX, "2", "Male"));
+		end
 		
 		-- Initial settings configuration
 		if (WHDB_Settings == nil) then
@@ -149,6 +155,9 @@ function WHDB_Event(event, arg1)
 		-- C WHDB_PlotUpdate = 1;
 	elseif (event == "QUEST_LOG_UPDATE") then
 		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+			if (WHDB_Debug == 1) then
+				DEFAULT_CHAT_FRAME:AddMessage("Event: QUEST_LOG_UPDATE"));
+			end
 			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
 		end
@@ -494,7 +503,9 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		-- C check for objective type other than item or monster, e.g. object, reputation, event
 		elseif (type ~= "item" and type ~= "monster") then
 			-- C debug
-			DEFAULT_CHAT_FRAME:AddMessage("WHDB_QuestLog_UpdateQuestDetails("..type.." quest objective-type not supported yet)");
+			if (WHDB_Debug == 1) then
+				DEFAULT_CHAT_FRAME:AddMessage("WHDB_QuestLog_UpdateQuestDetails("..type.." quest objective-type not supported yet)");
+			end
 		end
 
 		string:SetText(text);
@@ -693,6 +704,9 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 })
 
 function WHDB_PlotNotesOnMap()
+	if (WHDB_Debug == 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotNotesOnMap() called");
+	end
 	if (WHDB_Settings[WHDB_Player]["sortOverlay"] == 1) then
 		sortOverlayingMapNotes();
 	end
@@ -1046,8 +1060,10 @@ function GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (questObjectives == nil) then questObjectives = ''; end
 	-- C debug
-	-- C DEFAULT_CHAT_FRAME:AddMessage("questName: "..questName);
-	-- C DEFAULT_CHAT_FRAME:AddMessage("objectives text: "..objectives);
+	if (WHDB_Debug == 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("questName: "..questName);
+		DEFAULT_CHAT_FRAME:AddMessage("objectives text: "..objectives);
+	end
 	
 	if ((qData[WHDB_Player_Faction][questName] ~= nil)) then
 		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
@@ -1220,13 +1236,17 @@ function GetQuestNotes(questLogID)
 	-- C WHDB_MAP_NOTES = {};
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
 	-- C debug
-	-- C DEFAULT_CHAT_FRAME:AddMessage(questTitle);
-	-- C DEFAULT_CHAT_FRAME:AddMessage(isComplete);
+	if (WHDB_Debug == 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("questTitle"..questTitle);
+		DEFAULT_CHAT_FRAME:AddMessage("isComplete"..isComplete);
+	end
 	local showMap = false;
 	if (not header and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
 		-- C debug
-		-- C DEFAULT_CHAT_FRAME:AddMessage(numObjectives);
+		if (WHDB_Debug == 1) then 
+			DEFAULT_CHAT_FRAME:AddMessage(numObjectives);
+		end
 		if (numObjectives ~= nil) then
 			for i=1, numObjectives, 1 do
 				local text, type, finished = GetQuestLogLeaderBoard(i, questLogID);
@@ -1247,7 +1267,9 @@ function GetQuestNotes(questLogID)
 						--GetObjNotes(itemName, questTitle, comment, icon, questTitle);
 					elseif (type ~= "item" and type ~= "monster") then
 						-- C debug
-						DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..type.." quest objective-type not supported yet)");
+						if (WHDB_Debug == 1) then 
+							DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..type.." quest objective-type not supported yet)");
+						end
 					end
 				end
 			end
