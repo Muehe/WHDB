@@ -12,6 +12,8 @@
 ----------------------------------------------------------------------------------------------------------------------
 WHDB_Debug = 1;
 WHDB_MAP_NOTES = {};
+WHDB_MARKED_NPCS = {};
+WHDB_MARKED_NPCS_SAVE = {};
 WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
 WHDB_Player_Race = "";
@@ -349,6 +351,34 @@ function WHDB_Slash(input)
 	end
 end
 
+function Notes_Changed()
+	if (tablelength(WHDB_MARKED_NPCS_SAVE) ~=  tablelength(WHDB_MARKED_NPCS)) then
+		return true;
+	end
+	local change = false;
+	for n, id in pairs(WHDB_MARKED_NPCS_SAVE) do
+		local found = false;
+		for n2, id2 in pairs(WHDB_MARKED_NPCS) do
+			if (id == id2) then found = true; end
+		end
+		if (found == false) then
+			change = true;
+		end
+	end
+	for n, id in pairs(WHDB_MARKED_NPCS) do
+		local found = false;
+		for n2, id2 in pairs(WHDB_MARKED_NPCS_SAVE) do
+			if (id == id2) then
+				found = true;
+			end
+		end
+		if (found == false) then
+			change = true;
+		end
+	end
+	return change;
+end
+
 function WHDB_PlotAllQuests()
 	local questLogID=1;
 	WHDB_MAP_NOTES = {};
@@ -356,8 +386,21 @@ function WHDB_PlotAllQuests()
 		questLogID = questLogID + 1;
 		GetQuestNotes(questLogID)
 	end
-	WHDB_CleanMap();
-	WHDB_PlotNotesOnMap();
+	
+	if (not Notes_Changed()) then
+		if (WHDB_Debug == 1) then
+			DEFAULT_CHAT_FRAME:AddMessage("No changed notes");
+		end
+		return;
+	else
+		if (WHDB_Debug == 1) then
+			DEFAULT_CHAT_FRAME:AddMessage("Notes updated");
+		end
+		WHDB_MARKED_NPCS_SAVE = WHDB_MARKED_NPCS;
+		WHDB_MARKED_NPCS = {};
+		WHDB_CleanMap();
+		WHDB_PlotNotesOnMap();
+	end
 end
 
 function WHDB_Print( string )
@@ -1169,6 +1212,7 @@ end
 function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 	if (npcName ~= nil) then
 		npcID = GetNPCID(npcName);
+		table.insert(WHDB_MARKED_NPCS, npcID);
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
@@ -1260,7 +1304,7 @@ function GetQuestNotes(questLogID)
 		end
 	end
 	local showMap = false;
-	if (not header and questTitle ~= nil) then
+	if (not isHeader and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
 		-- C debug
 		if (WHDB_Debug == 1) then
