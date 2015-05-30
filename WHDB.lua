@@ -10,7 +10,7 @@
 -- C http://www.wow-one.com/forum/topic/4430-quest-helper-for-1121/page__st__60__p__482768#entry482768
 -- C included some changes from WHDB 2.0 (functionality) and 2.1.1 (data)
 ----------------------------------------------------------------------------------------------------------------------
-WHDB_Debug = 1;
+WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
 WHDB_MARKED_NPCS = {};
 WHDB_MARKED_NPCS_SAVE = {};
@@ -56,7 +56,7 @@ end
 function WHDB_Event(event, arg1)
 	-- C changed VARIABLES_LOADED to PLAYER_LOGIN
 	if (event == "PLAYER_LOGIN") then
-		if (WHDB_Debug == 1) then 
+		if (WHDB_Debug == 2) then 
 			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN");
 		end
 		if (Cartographer_Notes ~= nil) then
@@ -85,7 +85,7 @@ function WHDB_Event(event, arg1)
 		WHDB_Player_Sex = UnitSex("player");
 		WHDB_Player_Class = UnitClass("player");
 		stringX = WHDB_Player_Race..WHDB_Player_Sex..WHDB_Player_Class;
-		if (WHDB_Debug == 1) then 
+		if (WHDB_Debug == 2) then 
 			DEFAULT_CHAT_FRAME:AddMessage(string.gsub(stringX, "2", "Male"));
 		end
 		
@@ -157,7 +157,7 @@ function WHDB_Event(event, arg1)
 		-- C WHDB_PlotUpdate = 1;
 	elseif (event == "QUEST_LOG_UPDATE") then
 		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
-			if (WHDB_Debug == 1) then
+			if (WHDB_Debug == 2) then
 				DEFAULT_CHAT_FRAME:AddMessage("Event: QUEST_LOG_UPDATE");
 			end
 			WHDB_Print("Plots updated.");
@@ -380,6 +380,9 @@ function Notes_Changed()
 end
 
 function WHDB_PlotAllQuests()
+	if (WHDB_Debug > 0) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotAllQuests() called");
+	end
 	local questLogID=1;
 	WHDB_MAP_NOTES = {};
 	while (GetQuestLogTitle(questLogID) ~= nil) do
@@ -388,12 +391,12 @@ function WHDB_PlotAllQuests()
 	end
 	
 	if (not Notes_Changed()) then
-		if (WHDB_Debug == 1) then
+		if (WHDB_Debug == 2) then
 			DEFAULT_CHAT_FRAME:AddMessage("No changed notes");
 		end
 		return;
 	else
-		if (WHDB_Debug == 1) then
+		if (WHDB_Debug == 2) then
 			DEFAULT_CHAT_FRAME:AddMessage("Notes updated");
 		end
 		WHDB_MARKED_NPCS_SAVE = WHDB_MARKED_NPCS;
@@ -546,7 +549,7 @@ function WHDB_QuestLog_UpdateQuestDetails(prefix, doNotScroll)
 		-- C check for objective type other than item or monster, e.g. object, reputation, event
 		elseif (type ~= "item" and type ~= "monster") then
 			-- C debug
-			if (WHDB_Debug == 1) then
+			if (WHDB_Debug == 2) then
 				DEFAULT_CHAT_FRAME:AddMessage("WHDB_QuestLog_UpdateQuestDetails("..type.." quest objective-type not supported yet)");
 			end
 		end
@@ -753,7 +756,7 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 })
 
 function WHDB_PlotNotesOnMap()
-	if (WHDB_Debug == 1) then 
+	if (WHDB_Debug > 0) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotNotesOnMap() called");
 	end
 	if (WHDB_Settings[WHDB_Player]["sortOverlay"] == 1) then
@@ -975,6 +978,9 @@ function WHDB_PopulateZones()
 end
 
 function SearchEndNPC(quest)
+	if (WHDB_Debug > 0) then 
+		DEFAULT_CHAT_FRAME:AddMessage("SearchEndNPC("..quest..") called");
+	end
 	for npc, data in pairs(npcData) do
 		if (data["ends"] ~= nil) then
 			-- C searches whole table instead of just 5 entries now
@@ -1110,17 +1116,9 @@ function GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
 	-- C debug
-	if (WHDB_Debug == 1) then
-		DEFAULT_CHAT_FRAME:AddMessage("GetQuestIDs(questName, objectives):");
-		DEFAULT_CHAT_FRAME:AddMessage("    questName: "..questName);
-		DEFAULT_CHAT_FRAME:AddMessage("    objectives: "..objectives);
+	if (WHDB_Debug > 0) then
+		DEFAULT_CHAT_FRAME:AddMessage("GetQuestIDs("..questName..", "..objectives..")");
 	end
-	
-	--[[
-	
-	
-	
-	]]--
 	
 	if ((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives == '')) then
 		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
@@ -1154,7 +1152,7 @@ function GetQuestIDs(questName, objectives)
 		end
 	end
 	-- C debug
-	if (WHDB_Debug == 1) then
+	if (WHDB_Debug == 2) then
 		DEFAULT_CHAT_FRAME:AddMessage("Possible questIDs: "..table.getn(qIDs));
 	end
 	length = table.getn(qIDs);
@@ -1165,6 +1163,9 @@ end
 
 -- C TODO 19 npc names are used twice. first found is chosen atm
 function GetNPCID(npcName)
+	if (WHDB_Debug > 0) then 
+		DEFAULT_CHAT_FRAME:AddMessage("GetNPCID("..npcName..") called");
+	end
 	for npcid, data in pairs(npcData) do
 		if (data['name'] == npcName) then return npcid; end
 	end
@@ -1292,24 +1293,27 @@ function GetObjNotes(objName, commentTitle, comment, icon, questTitle)
 end
 
 function GetQuestNotes(questLogID)
-	-- C WHDB_MAP_NOTES = {};
+	-- C debug
+	if (WHDB_Debug >0) then
+		DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..questLogId..") called");
+	end
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
 	-- C debug
-	if (WHDB_Debug == 1) then 
+	if (WHDB_Debug == 2) then 
 		if (questTitle ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes(questLogId):".." questTitle "..questTitle);
+			DEFAULT_CHAT_FRAME:AddMessage("    questTitle = "..questTitle);
 		end
-		if (iscomplete ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes(questLogId):".." isComplete "..isComplete);
+		if (isComplete ~= nil) then
+			DEFAULT_CHAT_FRAME:AddMessage("    isComplete = "..isComplete);
 		end
 	end
 	local showMap = false;
 	if (not isHeader and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
 		-- C debug
-		if (WHDB_Debug == 1) then
+		if (WHDB_Debug == 2) then
 			if (numObjectives ~= nil) then
-				DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes(questLogId):".." numObjectives"..numObjectives);
+				DEFAULT_CHAT_FRAME:AddMessage("    numObjectives = "..numObjectives);
 			end
 		end
 		if (numObjectives ~= nil) then
@@ -1332,8 +1336,8 @@ function GetQuestNotes(questLogID)
 						--GetObjNotes(itemName, questTitle, comment, icon, questTitle);
 					elseif (type ~= "item" and type ~= "monster") then
 						-- C debug
-						if (WHDB_Debug == 1) then 
-							DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes():"..type.." quest objective-type not supported yet");
+						if (WHDB_Debug == 2) then 
+							DEFAULT_CHAT_FRAME:AddMessage("    "..type.." quest objective-type not supported yet");
 						end
 					end
 				end
@@ -1345,8 +1349,6 @@ function GetQuestNotes(questLogID)
 			end
 		end
 		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
-		-- C debug
-		-- C DEFAULT_CHAT_FRAME:AddMessage("numObjectives: "..numObjectives);
 		if (isComplete or numObjectives == 0) then
 			GetQuestEndNotes(questLogID);
 		end
