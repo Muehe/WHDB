@@ -265,22 +265,26 @@ function WHDB_Slash(input)
 				local showmax = 1000;
 				for monsterName, monsterDrop in pairs(itemData[itemName]) do
 					npcID = GetNPCID(monsterName)
-					zoneName = zoneData[npcData[npcID]["zone"]];
-					if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
-					WHDB_Print("Dropped by: " .. monsterName);
-					WHDB_Print_Indent(GetNPCDropComment(itemName, monsterName));
-					WHDB_Print_Indent("Zone: " .. zoneName);
-					-- Map plotting
-					local comment = monsterName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
-					if (GetNPCNotes(monsterName, itemName, comment, 0)) then
-						WHDB_ShowMap();
+					if (npcData[npcID] ~= nil) then
+						zoneName = zoneData[npcData[npcID]["zone"]];
+						if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
+						WHDB_Print("Dropped by: " .. monsterName);
+						WHDB_Print_Indent(GetNPCDropComment(itemName, monsterName));
+						WHDB_Print_Indent("Zone: " .. zoneName);
+						-- Map plotting
+						local comment = monsterName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
+						if (GetNPCNotes(monsterName, itemName, comment, 0)) then
+							WHDB_ShowMap();
+						else
+							WHDB_Print_Indent("No locations found for: "..monsterName);
+						end			
+						showmax = showmax - 1;
+						if (showmax == 0) then
+							WHDB_Print("Showing only the 1000 first results.");
+							break;
+						end
 					else
-						WHDB_Print_Indent("No locations found for: "..monsterName);
-					end			
-					showmax = showmax - 1;
-					if (showmax == 0) then
-						WHDB_Print("Showing only the 1000 first results.");
-						break;
+						WHDB_Print("No data for NPC named "..monsterName);
 					end
 				end
 			end
@@ -1064,6 +1068,9 @@ end
 -- C /script GetQuestEndNotes(2); WHDB_PlotNotesOnMap();
 
 function GetQuestEndNotes(questLogID)
+	if (WHDB_Debug > 0) then 
+		DEFAULT_CHAT_FRAME:AddMessage("GetQuestEndNotes("..questLogID..") called");
+	end
 	local questTitle = GetQuestLogTitle(questLogID);
 	SelectQuestLogEntry(questLogID);
 	local questDescription, questObjectives = GetQuestLogQuestText();
@@ -1169,6 +1176,7 @@ function GetNPCID(npcName)
 	for npcid, data in pairs(npcData) do
 		if (data['name'] == npcName) then return npcid; end
 	end
+	return false;
 end
 
 function GetObjID(objName)
@@ -1179,8 +1187,8 @@ function GetObjID(objName)
 		end
 	end
 	
-	if objIDs == {} then return false
-	else return objIDs
+	if objIDs == {} then return false;
+	else return objIDs;
 	end
 end
 
@@ -1212,9 +1220,12 @@ end
 -- C tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
 function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 	if (npcName ~= nil) then
+		if (WHDB_Debug > 0) then 
+			DEFAULT_CHAT_FRAME:AddMessage("GetNPCNotes("..npcName..") called");
+		end
 		npcID = GetNPCID(npcName);
-		table.insert(WHDB_MARKED_NPCS, npcID);
 		if (npcData[npcID] ~= nil) then
+			table.insert(WHDB_MARKED_NPCS, npcID);
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
@@ -1295,7 +1306,7 @@ end
 function GetQuestNotes(questLogID)
 	-- C debug
 	if (WHDB_Debug >0) then
-		DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..questLogId..") called");
+		DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..questLogID..") called");
 	end
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
 	-- C debug
@@ -1322,9 +1333,15 @@ function GetQuestNotes(questLogID)
 				local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
 				if (not finished) then
 					if (type == "monster") then
+						if (WHDB_Debug == 2) then
+							DEFAULT_CHAT_FRAME:AddMessage("    type = monster");
+						end
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
 						showMap = GetNPCNotes(monsterName, questTitle, monsterName.."\n"..GetNPCStatsComment(monsterName), 0, questTitle) or showMap;
 					elseif (type == "item") then
+						if (WHDB_Debug == 2) then
+							DEFAULT_CHAT_FRAME:AddMessage("    type = item");
+						end
 						if (itemData[itemName] ~= nil) then
 							for monsterName, monsterDrop in pairs(itemData[itemName]) do
 								local comment = monsterName..": "..itemName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
@@ -1359,15 +1376,19 @@ end
 -- C returns level and hp values with prefix for provided NPC name as string
 function GetNPCStatsComment(npcName)
 	npcID = GetNPCID(npcName)
-	local level = npcData[npcID]["level"];
-	local hp = npcData[npcID]["hp"];
-	if (level == nil) then
-		level = "Unknown";
+	if (npcData[npcID] ~= nil) then
+		local level = npcData[npcID]["level"];
+		local hp = npcData[npcID]["hp"];
+		if (level == nil) then
+			level = "Unknown";
+		end
+		if (hp == nil) then
+			hp = "Unknown";
+		end
+		return "Level: "..level.."\nHealth: "..hp;
+	else
+		return "NPC not found: "..npcName;
 	end
-	if (hp == nil) then
-		hp = "Unknown";
-	end
-	return "Level: "..level.."\nHealth: "..hp;
 end
 
 -- C returns dropRate value with prefix for provided NPC name as string
