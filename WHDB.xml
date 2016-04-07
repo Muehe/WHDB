@@ -76,16 +76,9 @@
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="SetCN" inherits="RQP_Font" text="Show Comment Notes">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeTo="SetWP" relativePoint="BOTTOMLEFT">
-							<Offset x="0" y="-2"/>
-						</Anchor>
-					</Anchors>
-				</FontString>
 				<FontString name="SetAP" inherits="RQP_Font" text="Auto Plot Notes">
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeTo="SetCN" relativePoint="BOTTOMLEFT">
+						<Anchor point="TOPLEFT" relativeTo="SetWP" relativePoint="BOTTOMLEFT">
 							<Offset x="0" y="-2"/>
 						</Anchor>
 					</Anchors>
