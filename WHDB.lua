@@ -13,21 +13,41 @@ WHDB_Player_Class = "";
 WHDB_Player_Faction = "";
 WHDB_PlotUpdate = 0;
 WHDB_CommentParts = 0;
-WHDB_Version = "Continued-WHDB for Rapid Quest Pack";
+WHDB_Version = "Continued WHDB for Classic WoW";
+
+-- C New Icons from mpq files
+Cartographer_Notes:RegisterIcon("QuestionMark", {
+    text = "QuestionMark",
+    path = "Interface\\GossipFrame\\ActiveQuestIcon",
+	width = 16,
+	height = 16,
+})
+Cartographer_Notes:RegisterIcon("NPC", {
+    text = "NPC",
+    path = "Interface\\WorldMap\\WorldMapPartyIcon",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("Waypoint", {
+    text = "Waypoint",
+    path = "Interface\\WorldMap\\WorldMapPlayerIcon",
+	width = 8,
+	height = 8,
+})
 
 function WHDB_OnMouseDown(arg1)
 	if (arg1 == "LeftButton") then
 		WHDB_Frame:StartMoving();
 	end
-end
+end -- WHDB_OnMouseDown(arg1)
 function WHDB_OnMouseUp(arg1)
 	if (arg1 == "LeftButton") then
 		WHDB_Frame:StopMovingOrSizing();
 	end
-end
+end -- WHDB_OnMouseUp(arg1)
 function WHDB_OnFrameShow()
-	
-end
+	-- ?
+end-- WHDB_OnFrameShow()
 
 function WHDB_Init()
 	this:RegisterEvent("PLAYER_LOGIN");
@@ -36,9 +56,12 @@ function WHDB_Init()
 	this:RegisterEvent("UNIT_QUEST_LOG_CHANGED");
 	SlashCmdList["WHDB"] = WHDB_Slash;
 	SLASH_WHDB1 = "/whdb";
-end
+end -- WHDB_Init()
 
 function WHDB_Event(event, arg1)
+	if (WHDB_Debug > 0) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_Event(event, arg1) called");
+	end
 	if (event == "PLAYER_LOGIN") then
 		if (WHDB_Debug == 2) then 
 			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN");
@@ -102,13 +125,13 @@ function WHDB_Event(event, arg1)
 			WHDB_PlotAllQuests();
 		end
 	end
-end
+end -- WHDB_Event(event, arg1)
 
 function WHDB_ShowUsingInfo()
 	if (Cartographer_Notes ~= nil) then
 		WHDB_Print("Cartographer plotter enabled.");
 	end
-end
+end -- WHDB_ShowUsingInfo()
 
 function WHDB_Slash(input)
 	if (string.sub(input,1,4) == "help" or input == "") then
@@ -156,7 +179,6 @@ function WHDB_Slash(input)
 				end
 				i = j+1;
 			end
-			-- C ... here
 		end
 	elseif (string.sub(input,1,4) == "item") then
 		local itemName = string.sub(input, 6);
@@ -253,7 +275,7 @@ function WHDB_Slash(input)
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
 	end
-end
+end -- WHDB_Slash(input)
 
 function WHDB_PlotAllQuests()
 	if (WHDB_Debug > 0) then 
@@ -267,35 +289,15 @@ function WHDB_PlotAllQuests()
 	end
 	WHDB_CleanMap();
 	WHDB_PlotNotesOnMap();
-end
+end -- WHDB_PlotAllQuests()
 
 function WHDB_Print( string )
 	DEFAULT_CHAT_FRAME:AddMessage("|cAA0000FFC-WHDB:|r " .. string, 0.95, 0.95, 0.5);
-end
+end -- WHDB_Print( string )
 
 function WHDB_Print_Indent( string )
 	DEFAULT_CHAT_FRAME:AddMessage("					   " .. string, 0.95, 0.95, 0.5);
-end
-
--- C New Icons from mpq files
-Cartographer_Notes:RegisterIcon("QuestionMark", {
-    text = "QuestionMark",
-    path = "Interface\\GossipFrame\\ActiveQuestIcon",
-	width = 16,
-	height = 16,
-})
-Cartographer_Notes:RegisterIcon("NPC", {
-    text = "NPC",
-    path = "Interface\\WorldMap\\WorldMapPartyIcon",
-	width = 8,
-	height = 8,
-})
-Cartographer_Notes:RegisterIcon("Waypoint", {
-    text = "Waypoint",
-    path = "Interface\\WorldMap\\WorldMapPlayerIcon",
-	width = 8,
-	height = 8,
-})
+end -- WHDB_Print_Indent( string )
 
 function WHDB_PlotNotesOnMap()
 	if (WHDB_Debug > 0) then 
@@ -340,9 +342,12 @@ function WHDB_PlotNotesOnMap()
 	end
 	WHDB_MAP_NOTES = {}
 	return zone, title, noteID;
-end
+end -- WHDB_PlotNotesOnMap()
 
 function WHDB_GetMapIDFromZone(zoneText)
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetMapIDFromZone(zoneText) called");
+	end
 	for cKey, cName in ipairs{GetMapContinents()} do
 		for zKey,zName in ipairs{GetMapZones(cKey)} do
 			if(zoneText == zName) then
@@ -351,9 +356,12 @@ function WHDB_GetMapIDFromZone(zoneText)
 		end
 	end
 	return -1, zoneText;
-end
+end -- WHDB_GetMapIDFromZone(zoneText)
 
 function WHDB_GetComments(questTitle, questObjectives)
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetComments(questTitle, questObjectives) called");
+	end
 	-- C Update for new functionality
 	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
 	local questCom = "";
@@ -381,19 +389,12 @@ function WHDB_GetComments(questTitle, questObjectives)
 		end
 	end
 	return questCom;
-end
-
-function WHDB_GetReqLevel(questTitle)
-	if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
-		return qData[WHDB_Player_Faction][questTitle]['reqlevel'];
-	elseif (qData['Common'][questTitle] ~= nil) then
-		return qData['Common'][questTitle]['reqlevel'];
-	else
-		return "?";
-	end
-end
+end -- WHDB_GetComments(questTitle, questObjectives)
 
 function WHDB_ShowMap()
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_ShowMap() called");
+	end
 	local ShowMapZone, ShowMapTitle, ShowMapID = WHDB_PlotNotesOnMap();
 	if (MetaMap_ShowLocation ~= nil) then
 		if (ShowMapZone ~= nil and ShowMapID ~= nil) then
@@ -402,7 +403,7 @@ function WHDB_ShowMap()
 	end
 	if (Cartographer) then
 		if (ShowMapZone ~= nil) then
-			WorldMapFrame:Show();								
+			WorldMapFrame:Show();
 			SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 		end
 	end
@@ -410,9 +411,12 @@ function WHDB_ShowMap()
 		WorldMapFrame:Show();
 		SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 	end
-end
+end -- WHDB_ShowMap()
 
 function WHDB_CleanMap()
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_CleanMap() called");
+	end
 	if (MetaMap_DeleteNotes ~= nil) then
 		MetaMap_DeleteNotes("WHDB");
 	end
@@ -425,28 +429,24 @@ function WHDB_CleanMap()
 		MapNotes_DeleteNotesByCreatorAndName("WHDB");
 	end
 	WHDB_Print("Map cleaned.");
-end
+end -- WHDB_CleanMap()
 
 function WHDB_DoCleanMap()
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_DoCleanMap() called");
+	end
 	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 		WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 		CheckSetting("auto_plot")
 		WHDB_Print("Auto plotting disabled.");
 	end
 	WHDB_CleanMap();
-end
-
-function WHDB_SwitchAuto()
-	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 0) then
-		WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
-		WHDB_Print("Auto plotting enabled.");
-		WHDB_PlotAllQuests();
-	else
-		WHDB_DoCleanMap();
-	end
-end
+end -- WHDB_DoCleanMap()
 
 function WHDB_PopulateZones()
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PopulateZones() called");
+	end
 	local numEntries, numQuests = GetNumQuestLogEntries();
 	local lastZone, questLogTitleText, level, questTag, isHeader, isCollapsed, isComplete;
 	for i=1, numEntries, 1 do
@@ -457,7 +457,7 @@ function WHDB_PopulateZones()
 			WHDB_QuestZoneInfo[questLogTitleText] = lastZone;
 		end
 	end
-end
+end -- WHDB_PopulateZones()
 
 function SearchEndNPC(quest)
 	if (WHDB_Debug > 0) then 
@@ -465,14 +465,13 @@ function SearchEndNPC(quest)
 	end
 	for npc, data in pairs(npcData) do
 		if (data["ends"] ~= nil) then
-			-- C searches whole table instead of just 5 entries now
 			for line, entry in pairs(data["ends"]) do
 				if (entry == quest) then return data["name"]; end
 			end
 		end
 	end
 	return nil;
-end
+end -- SearchEndNPC(quest)
 
 function GetQuestEndNotes(questLogID)
 	if (WHDB_Debug > 0) then 
@@ -483,8 +482,10 @@ function GetQuestEndNotes(questLogID)
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
 	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
-	-- C debug
 	-- C DEFAULT_CHAT_FRAME:AddMessage(table.getn(qIDs));
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("    "..table.getn(qIDs));
+	end
 	if (qIDs ~= false) then
 		if (multi ~= false) then
 			local names = {}
@@ -523,13 +524,12 @@ function GetQuestEndNotes(questLogID)
 	else
 		return false;
 	end
-end
+end -- GetQuestEndNotes(questLogID)
 
 -- C TODO check objectives text
 function GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
-	-- C debug
 	if (WHDB_Debug > 0) then
 		DEFAULT_CHAT_FRAME:AddMessage("GetQuestIDs("..questName..", "..objectives..")");
 	end
@@ -565,7 +565,6 @@ function GetQuestIDs(questName, objectives)
 			end
 		end
 	end
-	-- C debug
 	if (WHDB_Debug == 2) then
 		DEFAULT_CHAT_FRAME:AddMessage("Possible questIDs: "..table.getn(qIDs));
 	end
@@ -573,7 +572,7 @@ function GetQuestIDs(questName, objectives)
 	if (length == nil) then return false, false;
 	elseif (length == 1) then return false, qIDs[1];
 	else return length, qIDs; end
-end
+end -- GetQuestIDs(questName, objectives)
 
 -- C TODO 19 npc names are used twice. first found is chosen atm
 function GetNPCID(npcName)
@@ -584,7 +583,7 @@ function GetNPCID(npcName)
 		if (data['name'] == npcName) then return npcid; end
 	end
 	return false;
-end
+end -- GetNPCID(npcName)
 
 function GetObjID(objName)
 	local objIDs = {};
@@ -597,7 +596,7 @@ function GetObjID(objName)
 	if objIDs == {} then return false;
 	else return objIDs;
 	end
-end
+end -- GetObjID(objName)
 
 function SwitchSetting(setting)
 	text = {
@@ -611,7 +610,7 @@ function SwitchSetting(setting)
 		WHDB_Settings[WHDB_Player][setting] = 0;
 		WHDB_Print(text[setting].." disabled.");
 	end
-end
+end -- SwitchSetting(setting)
 
 function CheckSetting(setting)
 	if (WHDB_Settings[WHDB_Player][setting] == 1) then
@@ -619,7 +618,7 @@ function CheckSetting(setting)
 	else
 		getglobal(setting):SetChecked(false);
 	end
-end
+end -- CheckSetting(setting)
 
 -- C tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
 function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
@@ -676,10 +675,13 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 		end
 	end
 	return false;
-end
+end -- GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 
 -- C tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
 function GetObjNotes(objName, commentTitle, comment, icon, questTitle)
+	if (WHDB_Debug > 1) then 
+		DEFAULT_CHAT_FRAME:AddMessage("GetObjNotes(objName, commentTitle, comment, icon, questTitle) called");
+	end
 	if (objName ~= nil) then
 		objIDs = GetObjID(objName); -- C TODO
 		local showMap = false;
@@ -704,15 +706,13 @@ function GetObjNotes(objName, commentTitle, comment, icon, questTitle)
 		return showMap;
 	end
 	return false;
-end
+end -- GetObjNotes(objName, commentTitle, comment, icon, questTitle)
 
 function GetQuestNotes(questLogID)
-	-- C debug
 	if (WHDB_Debug >0) then
 		DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..questLogID..") called");
 	end
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
-	-- C debug
 	if (WHDB_Debug == 2) then 
 		if (questTitle ~= nil) then
 			DEFAULT_CHAT_FRAME:AddMessage("    questTitle = "..questTitle);
@@ -724,7 +724,6 @@ function GetQuestNotes(questLogID)
 	local showMap = false;
 	if (not isHeader and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
-		-- C debug
 		if (WHDB_Debug == 2) then
 			if (numObjectives ~= nil) then
 				DEFAULT_CHAT_FRAME:AddMessage("    numObjectives = "..numObjectives);
@@ -755,7 +754,6 @@ function GetQuestNotes(questLogID)
 					--elseif (type == "object") then
 						--GetObjNotes(itemName, questTitle, comment, icon, questTitle);
 					elseif (type ~= "item" and type ~= "monster") then
-						-- C debug
 						if (WHDB_Debug == 2) then 
 							DEFAULT_CHAT_FRAME:AddMessage("    "..type.." quest objective-type not supported yet");
 						end
@@ -769,7 +767,7 @@ function GetQuestNotes(questLogID)
 		end
 	end
 	return showMap;
-end
+end -- GetQuestNotes(questLogID)
 
 -- C returns level and hp values with prefix for provided NPC name as string
 function GetNPCStatsComment(npcName)
@@ -787,7 +785,7 @@ function GetNPCStatsComment(npcName)
 	else
 		return "NPC not found: "..npcName;
 	end
-end
+end -- GetNPCStatsComment(npcName)
 
 -- C returns dropRate value with prefix for provided NPC name as string
 function GetNPCDropComment(itemName, npcName)
@@ -796,4 +794,4 @@ function GetNPCDropComment(itemName, npcName)
 		dropRate = "Unknown";
 	end
 	return "Drop chance: "..dropRate.."%";
-end
+end -- GetNPCDropComment(itemName, npcName)
