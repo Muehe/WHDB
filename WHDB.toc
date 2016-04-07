@@ -3,7 +3,7 @@
 ## Author: Muehe | UniRing | Bërsërk
 ## Notes: Wowhead quest info and map plotting. (Needs Cartographer)
 ## Version: 0.1
-## RequiredDeps: Cartographer, Cartographer_Notes
-## OptionalDeps:
+## RequiredDeps: Cartographer
+## OptionalDeps: Cartographer_Notes
 ## SavedVariables: WHDB_Settings
 WHDB.xml
