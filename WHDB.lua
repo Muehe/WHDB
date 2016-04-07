@@ -12,8 +12,6 @@
 ----------------------------------------------------------------------------------------------------------------------
 WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
-WHDB_MARKED_NPCS = {};
-WHDB_MARKED_NPCS_SAVE = {};
 WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
 WHDB_Player_Race = "";
@@ -355,34 +353,6 @@ function WHDB_Slash(input)
 	end
 end
 
-function Notes_Changed()
-	if (tablelength(WHDB_MARKED_NPCS_SAVE) ~=  tablelength(WHDB_MARKED_NPCS)) then
-		return true;
-	end
-	local change = false;
-	for n, id in pairs(WHDB_MARKED_NPCS_SAVE) do
-		local found = false;
-		for n2, id2 in pairs(WHDB_MARKED_NPCS) do
-			if (id == id2) then found = true; end
-		end
-		if (found == false) then
-			change = true;
-		end
-	end
-	for n, id in pairs(WHDB_MARKED_NPCS) do
-		local found = false;
-		for n2, id2 in pairs(WHDB_MARKED_NPCS_SAVE) do
-			if (id == id2) then
-				found = true;
-			end
-		end
-		if (found == false) then
-			change = true;
-		end
-	end
-	return change;
-end
-
 function WHDB_PlotAllQuests()
 	if (WHDB_Debug > 0) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotAllQuests() called");
@@ -393,21 +363,8 @@ function WHDB_PlotAllQuests()
 		questLogID = questLogID + 1;
 		GetQuestNotes(questLogID)
 	end
-	
-	if (not Notes_Changed()) then
-		if (WHDB_Debug == 2) then
-			DEFAULT_CHAT_FRAME:AddMessage("No changed notes");
-		end
-		return;
-	else
-		if (WHDB_Debug == 2) then
-			DEFAULT_CHAT_FRAME:AddMessage("Notes updated");
-		end
-		WHDB_MARKED_NPCS_SAVE = WHDB_MARKED_NPCS;
-		WHDB_MARKED_NPCS = {};
-		WHDB_CleanMap();
-		WHDB_PlotNotesOnMap();
-	end
+	WHDB_CleanMap();
+	WHDB_PlotNotesOnMap();
 end
 
 function WHDB_Print( string )
