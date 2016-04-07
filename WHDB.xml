@@ -83,20 +83,6 @@
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="SetUP" inherits="RQP_Font" text="Update Auto Plotted Notes">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeTo="SetAP" relativePoint="BOTTOMLEFT">
-							<Offset x="8" y="-2"/>
-						</Anchor>
-					</Anchors>
-				</FontString>
-				<FontString name="SetSO" inherits="RQP_Font" text="Merge Overlaying Notes (may be slow)">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeTo="SetUP" relativePoint="BOTTOMLEFT">
-							<Offset x="-8" y="-2"/>
-						</Anchor>
-					</Anchors>
-				</FontString>
 			</Layer>
 		</Layers>
 		
@@ -142,24 +128,6 @@
 					</OnClick>
 				</Scripts>
 			</CheckButton>
-			<CheckButton name="commentNotes" inherits="OptionsCheckButtonTemplate">
-				<Size>
-					<AbsDimension x="16" y="16"/>
-				</Size>
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="SetCN">
-						<Offset x="-16" y="1"/>
-					</Anchor> 
-				</Anchors>
-				<Scripts>
-					<OnShow> 
-						CheckSetting("commentNotes");
-					</OnShow>
-					<OnClick> 
-						SwitchSetting("commentNotes");
-					</OnClick>
-				</Scripts>
-			</CheckButton>
 			<CheckButton name="auto_plot" inherits="OptionsCheckButtonTemplate">
 				<Size>
 					<AbsDimension x="16" y="16"/>
@@ -175,42 +143,6 @@
 					</OnShow>
 					<OnClick> 
 						SwitchSetting("auto_plot");
-					</OnClick>
-				</Scripts>
-			</CheckButton>
-			<CheckButton name="updateNotes" inherits="OptionsCheckButtonTemplate">
-				<Size>
-					<AbsDimension x="16" y="16"/>
-				</Size>
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="SetUP">
-						<Offset x="-16" y="1"/>
-					</Anchor> 
-				</Anchors>
-				<Scripts>
-					<OnShow> 
-						CheckSetting("updateNotes");
-					</OnShow>
-					<OnClick> 
-						SwitchSetting("updateNotes");
-					</OnClick>
-				</Scripts>
-			</CheckButton>
-			<CheckButton name="sortOverlay" inherits="OptionsCheckButtonTemplate">
-				<Size>
-					<AbsDimension x="16" y="16"/>
-				</Size>
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="SetSO">
-						<Offset x="-16" y="1"/>
-					</Anchor> 
-				</Anchors>
-				<Scripts>
-					<OnShow> 
-						CheckSetting("sortOverlay");
-					</OnShow>
-					<OnClick> 
-						SwitchSetting("sortOverlay");
 					</OnClick>
 				</Scripts>
 			</CheckButton>

@@ -1,14 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------------
 -- Wowhead DB By: UniRing
 ----------------------------------------------------------------------------------------------------------------------
--- Wowhead DB Continued By: me
--- C = WHDB Continued comment header
--- WHDB = comments on original code, to explain it to myself or disable it
--- C
--- C changes on the original WHDB code by Redshadowz (see link below) have been commented
--- C in order to divide the code in original Rapid Quest Pack, Redshadow's and mine
--- C http://www.wow-one.com/forum/topic/4430-quest-helper-for-1121/page__st__60__p__482768#entry482768
--- C included some changes from WHDB 2.0 (functionality) and 2.1.1 (data)
+-- Wowhead DB Continued By: Muehe
 ----------------------------------------------------------------------------------------------------------------------
 WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
@@ -37,22 +30,15 @@ function WHDB_OnFrameShow()
 end
 
 function WHDB_Init()
-	-- C changed VARIABLES_LOADED to PLAYER_LOGIN
 	this:RegisterEvent("PLAYER_LOGIN");
 	this:RegisterEvent("QUEST_WATCH_UPDATE");
 	this:RegisterEvent("QUEST_LOG_UPDATE");
 	this:RegisterEvent("UNIT_QUEST_LOG_CHANGED");
-	-- C events registered for testing purposes. until ...
-	--this:RegisterEvent("ZONE_CHANGED");
-	--this:RegisterEvent("ZONE_CHANGED_INDOORS");
-	--this:RegisterEvent("ZONE_CHANGED_NEW_AREA");
-	-- C ... here
 	SlashCmdList["WHDB"] = WHDB_Slash;
 	SLASH_WHDB1 = "/whdb";
 end
 
 function WHDB_Event(event, arg1)
-	-- C changed VARIABLES_LOADED to PLAYER_LOGIN
 	if (event == "PLAYER_LOGIN") then
 		if (WHDB_Debug == 2) then 
 			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN");
@@ -63,10 +49,6 @@ function WHDB_Event(event, arg1)
 			WHDB_Print("Cartographer Database Registered.");
 		end
 		WHDB_ShowUsingInfo();
-		
-		--Free the oposite faction database. -- not working in 1.12.1 UnitFactionGroup not init yet
-		-- C Bullshit. UnitFactionGroup is working on some servers, but isn't initialised when VARIABLES_LOADED event triggers,
-		-- C so changed to PLAYER_LOGIN event and modified it a bit (else-if and else). changes until...
 		WHDB_Player_Faction = UnitFactionGroup("player");
 		if (WHDB_Player_Faction == "Alliance") then
 			qData["Horde"] = nil;
@@ -77,7 +59,6 @@ function WHDB_Event(event, arg1)
 		else
 			WHDB_Print("Unable to use UnitFactionGroup(\"player\"). Try making yourself visible and then use the chat-command /reloadUI.");
 		end
-		-- C ... here
 		WHDB_Player = UnitName("player");
 		WHDB_Player_Race = UnitRace("player");
 		WHDB_Player_Sex = UnitSex("player");
@@ -86,73 +67,32 @@ function WHDB_Event(event, arg1)
 		if (WHDB_Debug == 2) then 
 			DEFAULT_CHAT_FRAME:AddMessage(string.gsub(stringX, "2", "Male"));
 		end
-		
-		-- Initial settings configuration
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
 			WHDB_Settings[WHDB_Player] = {};
 			WHDB_Settings[WHDB_Player]["UseColors"] = 1;
-			if (Cartographer_Notes ~= nil or MetaMap_DeleteNotes ~= nil) then
+			if (Cartographer_Notes ~= nil) then
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
 			else
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 			end
 			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
-			WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
-			WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
-			WHDB_Settings[WHDB_Player]["sortOverlay"] = 1;
 		else
 			if (WHDB_Settings[WHDB_Player] == nil) then
 				WHDB_Settings[WHDB_Player] = {};
 				WHDB_Settings[WHDB_Player]["UseColors"] = 1;
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 				WHDB_Settings[WHDB_Player]["waypoints"] = 1;
-				WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
-				WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
-				WHDB_Settings[WHDB_Player]["sortOverlay"] = 1;
 			end
 		end
-		-- New version settings update
-		-- C default to 0, autoplot doesn't work on login (tough strangely on /rl it would)
 		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 			WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 		end
 		if (WHDB_Settings[WHDB_Player]["waypoints"] == nil) then
 			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
 		end
-		if (WHDB_Settings[WHDB_Player]["commentNotes"] == nil) then
-			WHDB_Settings[WHDB_Player]["commentNotes"] = 1;
-		end
-		if (WHDB_Settings[WHDB_Player]["updateNotes"] == nil) then
-			WHDB_Settings[WHDB_Player]["updateNotes"] = 0;
-		end
-		if (WHDB_Settings[WHDB_Player]["sortOverlay"] == nil) then
-			WHDB_Settings[WHDB_Player]["sortOverlay"] = 1;
-		end
-		-- WHDB if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
-		-- WHDB 	WHDB_PlotAllQuests();
-		-- WHDB end
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
-	-- C debug until ...
-	--elseif (event == "ZONE_CHANGED") then
-	--	DEFAULT_CHAT_FRAME:AddMessage("ZONE_CHANGED");
-	--	DEFAULT_CHAT_FRAME:AddMessage(GetRealZoneText());
-	--	DEFAULT_CHAT_FRAME:AddMessage(GetSubZoneText());
-	--elseif (event == "ZONE_CHANGED_INDOORS") then
-	--	DEFAULT_CHAT_FRAME:AddMessage("ZONE_CHANGED_INDOORS");
-	--	DEFAULT_CHAT_FRAME:AddMessage(GetRealZoneText());
-	--	DEFAULT_CHAT_FRAME:AddMessage(GetSubZoneText());
-	--elseif (event == "ZONE_CHANGED_NEW_AREA") then
-	--	DEFAULT_CHAT_FRAME:AddMessage("ZONE_CHANGED_NEW_AREA");
-	--	DEFAULT_CHAT_FRAME:AddMessage(GetRealZoneText());
-	--	DEFAULT_CHAT_FRAME:AddMessage(GetSubZoneText());
-	-- C ... here
-	
-	-- C changed to elseif
-	-- C elseif (event == "QUEST_WATCH_UPDATE") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1) then
-		-- C WHDB_Print("QUEST_WATCH_UPDATE");
-		-- C WHDB_PlotUpdate = 1;
 	elseif (event == "QUEST_LOG_UPDATE") then
 		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 			if (WHDB_Debug == 2) then
@@ -161,43 +101,16 @@ function WHDB_Event(event, arg1)
 			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
 		end
-	-- C elseif ((event == "UNIT_QUEST_LOG_CHANGED") and (WHDB_Settings[WHDB_Player]["updateNotes"] == 1)) then
-		-- C WHDB_Print("UNIT_QUEST_LOG_CHANGED");
-		-- C if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1 and arg1 == "player") then
-		-- C 	WHDB_PlotUpdate = 1;
-		-- C end
 	end
 end
 
 function WHDB_ShowUsingInfo()
-	if (EQL3_QuestLogFrame ~= nil) then
-		WHDB_Print("Using EQL3.");
-	elseif (QuestGuru_QuestLogFrame ~= nil) then
-		WHDB_Print("Using QuestGuru.");
-	else
-		WHDB_Print("Using default quest log.");
-	end
-	if (MetaMap_DeleteNotes ~= nil) then
-		WHDB_Print("MetaMap plotter enabled.");
-	end
 	if (Cartographer_Notes ~= nil) then
 		WHDB_Print("Cartographer plotter enabled.");
-	end
-	if (MapNotes_Data_Notes ~= nil) then
-		WHDB_Print("MapNotes plotter enabled.");
 	end
 end
 
 function WHDB_Slash(input)
-	--local params = {};
-	
-	-- C fixed by exchanging returns from string.gmatch()-function on top
-	-- C with string.sub()-function in the if-statements and writing a
-	-- C workaround in the section for comments display
-	
-	-- WHDB for v in string.gmatch(input, "[^ ]+") do
-	-- WHDB		tinsert(params, v);
-	-- WHDB end
 	if (string.sub(input,1,4) == "help" or input == "") then
 		WHDB_Print("Commands available:");
 		WHDB_Print("-------------------------------------------------------");
@@ -232,12 +145,6 @@ function WHDB_Slash(input)
 			WHDB_Print("Quest Comments");
 			WHDB_Print("---------------------------------------------------");
 			local QuestComments = WHDB_GetComments(questName, '');
-			-- C commented because string.gmatch is not working
-			-- WHDB for v in string.gmatch(QuestComments, "[^\n]+") do
-			-- WHDB	 WHDB_Print(v);
-			-- WHDB end
-			
-			-- C replacement for gmatch code. calls WHDB_Print too much. changes until ...
 			local i = 0;
 			while string.find(QuestComments, "\n", i) ~= nil do
 				j = string.find(QuestComments, "\n", i);
@@ -269,7 +176,6 @@ function WHDB_Slash(input)
 						WHDB_Print("Dropped by: " .. monsterName);
 						WHDB_Print_Indent(GetNPCDropComment(itemName, monsterName));
 						WHDB_Print_Indent("Zone: " .. zoneName);
-						-- Map plotting
 						local comment = monsterName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
 						if (GetNPCNotes(monsterName, itemName, comment, 0)) then
 							WHDB_ShowMap();
@@ -297,7 +203,6 @@ function WHDB_Slash(input)
 					zoneName = zoneData[npcData[npcID]["zone"]];
 					if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
 					WHDB_Print_Indent("Zone: " .. zoneName);
-					-- Map plotting
 					if (GetNPCNotes(monsterName, monsterName, GetNPCStatsComment(monsterName), 0)) then
 						WHDB_ShowMap();
 					end
@@ -347,9 +252,6 @@ function WHDB_Slash(input)
 		SwitchSetting("updateNotes");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
-	-- C disable else 
-		-- C disable if (input == nil) then input = ""; end
-		-- C disable WHDB_Print("Unknown command: \""..input.."\"");
 	end
 end
 
@@ -399,9 +301,6 @@ function WHDB_PlotNotesOnMap()
 	if (WHDB_Debug > 0) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotNotesOnMap() called");
 	end
-	if (WHDB_Settings[WHDB_Player]["sortOverlay"] == 1) then
-		sortOverlayingMapNotes();
-	end
 	
 	local zone = nil;
 	local title = nil;
@@ -418,34 +317,6 @@ function WHDB_PlotNotesOnMap()
 		-- C nData[6] is icon number
 		-- C debug
 		-- C WHDB_Print(nData[1].."\n"..nData[2]..":"..nData[3].."\n"..nData[4].."\n"..nData[5]);
-		if (MetaMapNotes_AddNewNote ~= nil) then
-			if (nData[6] == 0) then
-				local continent, zone = MetaMap_NameToZoneID(nData[1]);
-				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 2, 7, 0, 0, 1);
-			elseif (nData[6] == 1) then
-				local continent, zone = MetaMap_NameToZoneID(nData[1]);
-				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 1, 2, 0, 0, 1);
-			elseif (nData[6] == 2) then
-				local continent, zone = MetaMap_NameToZoneID(nData[1]);
-				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 3, 8, 0, 0, 1);
-			end
-			
-			local continent, zone = MetaMap_NameToZoneID(nData[1]);
-			
-			if (BWP_Destination ~= nil) then
-				if (firstNote == 1) then 
-				BWP_Destination = {};
-				BWP_Destination.name = nData[4];
-				BWP_Destination.x = nData[2]/100;
-				BWP_Destination.y = nData[3]/100;
-				BWP_Destination.zone = MetaMap_ZoneNames[continent][zone];
-				BWPDestText:SetText("("..BWP_Destination.name..")");
-				BWPDistanceText:SetText(BWP_GetDistText())
-				BWP_DisplayFrame:Show();
-				firstNote = 0;
-				end
-			end
-		end
 		if (Cartographer_Notes ~= nil) then
 			if (nData[6] == 0) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "NPC", "WHDB", 'title', nData[4], 'info', nData[5]);			
@@ -457,35 +328,6 @@ function WHDB_PlotNotesOnMap()
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Waypoint", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 4) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);
-			end
-		end
-		if (MapNotes_Data_Notes ~= nil) then
-			local c, z = WHDB_GetMapIDFromZone(nData[1]);
-			if (key ~= -1) then
-				SetMapZoom(c, z);
-				key = MapNotes_GetMapKey();
-				if (MapNotes_Data_Notes[key] ~= nil) then
-					local Id = MapNotes_GetZoneTableSize(MapNotes_Data_Notes[key]) + 1;
-					MapNotes_Data_Notes[key][Id] = {};
-					MapNotes_Data_Notes[key][Id].name = nData[4];
-					MapNotes_Data_Notes[key][Id].ncol = 7;
-					MapNotes_Data_Notes[key][Id].inf1 = nData[5];
-					MapNotes_Data_Notes[key][Id].in1c = 8;
-					MapNotes_Data_Notes[key][Id].inf2 = "";
-					MapNotes_Data_Notes[key][Id].in2c = 8;
-					MapNotes_Data_Notes[key][Id].creator = "WHDB";
-					if (nData[6] == 0) then
-						MapNotes_Data_Notes[key][Id].icon = 7;
-					else
-						MapNotes_Data_Notes[key][Id].icon = 0;
-					end
-					MapNotes_Data_Notes[key][Id].xPos = nData[2]/100;
-					MapNotes_Data_Notes[key][Id].yPos = nData[3]/100;
-				else
-					WHDB_Print("Error: MapNotes can't find the map.");
-				end
-			else
-				WHDB_Print("Error: Map doesn't exist!");
 			end
 		end
 		if (nData[1] ~= nil) then
@@ -632,77 +474,6 @@ function SearchEndNPC(quest)
 	return nil;
 end
 
--- C ######################## new functions below here ########################
-
-function sortOverlayingMapNotes()
-	local ICONS_TEXT = {
-		[0] = '',
-		[1] = '',
-		[2] = '',
-		[3] = ''
-	};
-	if (WHDB_MAP_NOTES ~= {}) then
-		local notes = {};
-		local doneIndex = {};
-		for n, nData in pairs(WHDB_MAP_NOTES) do
-			local done = false;
-			for index, number in pairs(doneIndex) do
-				if (number == n) then done = true; end
-			end
-			if not (done) then
-			-- C legacy check, shouldn't be needed
-			if type(nData[1]) == number then
-				nData[1] = zoneData[nData[1]]
-			end
-			-- C nData[1] = zone name, nData[2] = x coordinate, nData[3] = y coordinate, nData[4] = comment title, nData[5] = comment body, nData[6] = icon number
-			table.insert(doneIndex, n);
-			local temp = {};
-			local multi = false;
-			local icon = nData[6]
-			
-			-- C check for overlaying notes
-			for n2, nData2 in pairs(WHDB_MAP_NOTES) do
-				local done = false;
-				for index, number in pairs(doneIndex) do
-					if (number == n2) then done = true; end
-				end
-				if not (done) then
-					-- C determine here which notes should be merged, only exact match right now
-					if ((nData[1] == nData2[1]) and (nData[2] == nData2[2]) and (nData[3] == nData2[3])) then
-						table.insert(temp, nData2);
-						table.insert(doneIndex, n2);
-						multi = true;
-						if ( nData[6] ~= nData2[6]) then icon = 4; end
-					end
-				end
-			end
-			
-			-- C merge tooltip displays
-			if (multi) then
-				local zone = nData[1];
-				local x = nData[2];
-				local y = nData[3];
-				local length = table.getn(temp) + 1;
-				local commentTitle = "Showing "..length.." notes for this coordinates";
-				local comment = ICONS_TEXT[nData[6]]..nData[4]..":\n"..nData[5].."\n_____________\n";
-				for n, nData3 in pairs(temp) do
-					comment = comment.."\n"..ICONS_TEXT[nData3[6]]..nData3[4]..":\n"..nData3[5].."\n_____________";
-				end
-				local merge = {nData[1], nData[2], nData[3], commentTitle, comment, icon}
-				table.insert(notes, merge);
-			-- C single tooltip
-			else
-				table.insert(notes, nData);
-			end
-			end
-		end
-		WHDB_MAP_NOTES = notes;
-	end
-end
-
--- C ingame test
--- C /script GetQuestEndNotes(2); WHDB_PlotNotesOnMap();
-
 function GetQuestEndNotes(questLogID)
 	if (WHDB_Debug > 0) then 
 		DEFAULT_CHAT_FRAME:AddMessage("GetQuestEndNotes("..questLogID..") called");
@@ -831,9 +602,7 @@ end
 function SwitchSetting(setting)
 	text = {
 		["waypoints"] = "Waypoint plotting",
-		["updateNotes"] = "Automatic note updating",
 		["auto_plot"] = "Auto plotting",
-		["sortOverlay"] = "Merge Overlay",
 	};
 	if (WHDB_Settings[WHDB_Player][setting] == 0) then
 		WHDB_Settings[WHDB_Player][setting] = 1;
@@ -1027,11 +796,4 @@ function GetNPCDropComment(itemName, npcName)
 		dropRate = "Unknown";
 	end
 	return "Drop chance: "..dropRate.."%";
-end
-
--- C from http://stackoverflow.com/questions/2705793/how-to-get-number-of-entries-in-a-lua-table
-function tablelength(T)
-  local count = 0
-  for _ in pairs(T) do count = count + 1 end
-  return count
 end
