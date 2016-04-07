@@ -375,6 +375,131 @@ function WHDB_Print_Indent( string )
 	DEFAULT_CHAT_FRAME:AddMessage("					   " .. string, 0.95, 0.95, 0.5);
 end
 
+-- C New Icons from mpq files
+Cartographer_Notes:RegisterIcon("QuestionMark", {
+    text = "QuestionMark",
+    path = "Interface\\GossipFrame\\ActiveQuestIcon",
+	width = 16,
+	height = 16,
+})
+Cartographer_Notes:RegisterIcon("NPC", {
+    text = "NPC",
+    path = "Interface\\WorldMap\\WorldMapPartyIcon",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("Waypoint", {
+    text = "Waypoint",
+    path = "Interface\\WorldMap\\WorldMapPlayerIcon",
+	width = 8,
+	height = 8,
+})
+
+function WHDB_PlotNotesOnMap()
+	if (WHDB_Debug > 0) then 
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotNotesOnMap() called");
+	end
+	if (WHDB_Settings[WHDB_Player]["sortOverlay"] == 1) then
+		sortOverlayingMapNotes();
+	end
+	
+	local zone = nil;
+	local title = nil;
+	local noteID = nil;
+	
+	local firstNote = 1;
+	
+	for nKey, nData in ipairs(WHDB_MAP_NOTES) do
+		-- C nData[1] is zone name/number
+		-- C nData[2] is x coordinate
+		-- C nData[3] is y coordinate
+		-- C nData[4] is comment title
+		-- C nData[5] is comment body
+		-- C nData[6] is icon number
+		-- C debug
+		-- C WHDB_Print(nData[1].."\n"..nData[2]..":"..nData[3].."\n"..nData[4].."\n"..nData[5]);
+		if (MetaMapNotes_AddNewNote ~= nil) then
+			if (nData[6] == 0) then
+				local continent, zone = MetaMap_NameToZoneID(nData[1]);
+				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 2, 7, 0, 0, 1);
+			elseif (nData[6] == 1) then
+				local continent, zone = MetaMap_NameToZoneID(nData[1]);
+				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 1, 2, 0, 0, 1);
+			elseif (nData[6] == 2) then
+				local continent, zone = MetaMap_NameToZoneID(nData[1]);
+				noteAdded, noteID = MetaMapNotes_AddNewNote(continent,zone, nData[2]/100, nData[3]/100, nData[4], nData[5], "", "WHDB", 3, 8, 0, 0, 1);
+			end
+			
+			local continent, zone = MetaMap_NameToZoneID(nData[1]);
+			
+			if (BWP_Destination ~= nil) then
+				if (firstNote == 1) then 
+				BWP_Destination = {};
+				BWP_Destination.name = nData[4];
+				BWP_Destination.x = nData[2]/100;
+				BWP_Destination.y = nData[3]/100;
+				BWP_Destination.zone = MetaMap_ZoneNames[continent][zone];
+				BWPDestText:SetText("("..BWP_Destination.name..")");
+				BWPDistanceText:SetText(BWP_GetDistText())
+				BWP_DisplayFrame:Show();
+				firstNote = 0;
+				end
+			end
+		end
+		if (Cartographer_Notes ~= nil) then
+			if (nData[6] == 0) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "NPC", "WHDB", 'title', nData[4], 'info', nData[5]);			
+			elseif (nData[6] == 1) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Diamond", "WHDB", 'title', nData[4], 'info', nData[5]);			
+			elseif (nData[6] == 2) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "QuestionMark", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] == 3) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Waypoint", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] == 4) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);
+			end
+		end
+		if (MapNotes_Data_Notes ~= nil) then
+			local c, z = WHDB_GetMapIDFromZone(nData[1]);
+			if (key ~= -1) then
+				SetMapZoom(c, z);
+				key = MapNotes_GetMapKey();
+				if (MapNotes_Data_Notes[key] ~= nil) then
+					local Id = MapNotes_GetZoneTableSize(MapNotes_Data_Notes[key]) + 1;
+					MapNotes_Data_Notes[key][Id] = {};
+					MapNotes_Data_Notes[key][Id].name = nData[4];
+					MapNotes_Data_Notes[key][Id].ncol = 7;
+					MapNotes_Data_Notes[key][Id].inf1 = nData[5];
+					MapNotes_Data_Notes[key][Id].in1c = 8;
+					MapNotes_Data_Notes[key][Id].inf2 = "";
+					MapNotes_Data_Notes[key][Id].in2c = 8;
+					MapNotes_Data_Notes[key][Id].creator = "WHDB";
+					if (nData[6] == 0) then
+						MapNotes_Data_Notes[key][Id].icon = 7;
+					else
+						MapNotes_Data_Notes[key][Id].icon = 0;
+					end
+					MapNotes_Data_Notes[key][Id].xPos = nData[2]/100;
+					MapNotes_Data_Notes[key][Id].yPos = nData[3]/100;
+				else
+					WHDB_Print("Error: MapNotes can't find the map.");
+				end
+			else
+				WHDB_Print("Error: Map doesn't exist!");
+			end
+		end
+		if (nData[1] ~= nil) then
+			zone = nData[1];
+			title = nData[4];
+		end
+	end
+	if table.getn(WHDB_MAP_NOTES) ~= nil then
+		WHDB_Print(table.getn(WHDB_MAP_NOTES).." notes plotted.")
+	end
+	WHDB_MAP_NOTES = {}
+	return zone, title, noteID;
+end
+
 function WHDB_GetMapIDFromZone(zoneText)
 	for cKey, cName in ipairs{GetMapContinents()} do
 		for zKey,zName in ipairs{GetMapZones(cKey)} do
@@ -735,7 +860,6 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 		end
 		npcID = GetNPCID(npcName);
 		if (npcData[npcID] ~= nil) then
-			table.insert(WHDB_MARKED_NPCS, npcID);
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
@@ -868,11 +992,6 @@ function GetQuestNotes(questLogID)
 						end
 					end
 				end
-			end
-			if ((not isComplete) and (numObjectives ~= 0) and (WHDB_Settings[WHDB_Player]["commentNotes"] == 1)) then
-				SelectQuestLogEntry(questLogID);
-				local questDescription, questObjectives = GetQuestLogQuestText();
-				showMap = GetCommentNotes(questTitle, questObjectives) or showMap;
 			end
 		end
 		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
