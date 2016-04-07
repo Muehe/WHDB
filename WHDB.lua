@@ -14,13 +14,18 @@ WHDB_Player_Faction = "";
 WHDB_PlotUpdate = 0;
 WHDB_CommentParts = 0;
 WHDB_Version = "Continued WHDB for Classic WoW";
-
 -- C New Icons from mpq files
 Cartographer_Notes:RegisterIcon("QuestionMark", {
     text = "QuestionMark",
     path = "Interface\\GossipFrame\\ActiveQuestIcon",
 	width = 16,
 	height = 16,
+})
+Cartographer_Notes:RegisterIcon("ExclamationMark", {
+    text = "ExclamationMark",
+    path = "Interface\\GossipFrame\\AvailableQuestIcon",
+	width = 8,
+	height = 8,
 })
 Cartographer_Notes:RegisterIcon("NPC", {
     text = "NPC",
@@ -321,15 +326,17 @@ function WHDB_PlotNotesOnMap()
 		-- C WHDB_Print(nData[1].."\n"..nData[2]..":"..nData[3].."\n"..nData[4].."\n"..nData[5]);
 		if (Cartographer_Notes ~= nil) then
 			if (nData[6] == 0) then
-				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "NPC", "WHDB", 'title', nData[4], 'info', nData[5]);			
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "NPC", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 1) then
-				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Diamond", "WHDB", 'title', nData[4], 'info', nData[5]);			
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Diamond", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 2) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "QuestionMark", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 3) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Waypoint", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 4) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] == 5) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "ExclamationMark", "WHDB", 'title', nData[4], 'info', nData[5]);
 			end
 		end
 		if (nData[1] ~= nil) then
@@ -483,8 +490,10 @@ function GetQuestEndNotes(questLogID)
 	if (questObjectives == nil) then questObjectives = ''; end
 	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
 	-- C DEFAULT_CHAT_FRAME:AddMessage(table.getn(qIDs));
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("    "..table.getn(qIDs));
+	if (WHDB_Debug > 1) then
+		if multi ~= false then
+			DEFAULT_CHAT_FRAME:AddMessage("    "..table.getn(qIDs));
+		end
 	end
 	if (qIDs ~= false) then
 		if (multi ~= false) then
@@ -795,3 +804,25 @@ function GetNPCDropComment(itemName, npcName)
 	end
 	return "Drop chance: "..dropRate.."%";
 end -- GetNPCDropComment(itemName, npcName)
+
+function GetQuestStartNotes(zoneName)
+	zoneID = 0;
+	for id, name in pairs(zoneData) do
+		if zoneName == name then
+			zoneID = id;
+		end
+	end
+	if zoneID ~= 0 then
+		for id, data in pairs(npcData) do
+			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
+				GetNPCNotes(data.name, data.name, "Queststarts", 5, "starts")
+			end
+		end
+		for id, data in pairs(objData) do
+			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
+				GetObjNotes(data.name, data.name, "Queststarts", 5, "starts")
+			end
+		end
+		WHDB_ShowMap();
+	end
+end -- GetQuestStartNotes(zoneName)
