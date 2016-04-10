@@ -1,8 +1,9 @@
-----------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------
 -- Wowhead DB By: UniRing
-----------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------
 -- Wowhead DB Continued By: Muehe
-----------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------
+
 WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
 WHDB_QuestZoneInfo = {};
@@ -14,6 +15,7 @@ WHDB_Player_Faction = "";
 WHDB_PlotUpdate = 0;
 WHDB_CommentParts = 0;
 WHDB_Version = "Continued WHDB for Classic WoW";
+
 -- C New Icons from mpq files
 Cartographer_Notes:RegisterIcon("QuestionMark", {
     text = "QuestionMark",
@@ -45,11 +47,13 @@ function WHDB_OnMouseDown(arg1)
 		WHDB_Frame:StartMoving();
 	end
 end -- WHDB_OnMouseDown(arg1)
+
 function WHDB_OnMouseUp(arg1)
 	if (arg1 == "LeftButton") then
 		WHDB_Frame:StopMovingOrSizing();
 	end
 end -- WHDB_OnMouseUp(arg1)
+
 function WHDB_OnFrameShow()
 	-- ?
 end-- WHDB_OnFrameShow()
@@ -208,7 +212,7 @@ function WHDB_Slash(input)
 							WHDB_ShowMap();
 						else
 							WHDB_Print_Indent("No locations found for: "..monsterName);
-						end			
+						end
 						showmax = showmax - 1;
 						if (showmax == 0) then
 							WHDB_Print("Showing only the 1000 first results.");
@@ -236,7 +240,7 @@ function WHDB_Slash(input)
 				else
 					WHDB_Print("No location found.");
 				end
-			end			
+			end
 		end
 	elseif (string.sub(input,1,3) == "obj") then
 		local objName = string.sub(input, 5);
@@ -248,7 +252,7 @@ function WHDB_Slash(input)
 				else
 					WHDB_Print("No locations found.");
 				end
-			end			
+			end
 		end
 	elseif (string.sub(input,1,5) == "clean") then
 		WHDB_CleanMap();
@@ -322,8 +326,6 @@ function WHDB_PlotNotesOnMap()
 		-- C nData[4] is comment title
 		-- C nData[5] is comment body
 		-- C nData[6] is icon number
-		-- C debug
-		-- C WHDB_Print(nData[1].."\n"..nData[2]..":"..nData[3].."\n"..nData[4].."\n"..nData[5]);
 		if (Cartographer_Notes ~= nil) then
 			if (nData[6] == 0) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "NPC", "WHDB", 'title', nData[4], 'info', nData[5]);
@@ -489,7 +491,6 @@ function GetQuestEndNotes(questLogID)
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
 	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
-	-- C DEFAULT_CHAT_FRAME:AddMessage(table.getn(qIDs));
 	if (WHDB_Debug > 1) then
 		if multi ~= false then
 			DEFAULT_CHAT_FRAME:AddMessage("    "..table.getn(qIDs));
@@ -542,7 +543,6 @@ function GetQuestIDs(questName, objectives)
 	if (WHDB_Debug > 0) then
 		DEFAULT_CHAT_FRAME:AddMessage("GetQuestIDs("..questName..", "..objectives..")");
 	end
-	
 	if ((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives == '')) then
 		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
 			table.insert(qIDs, n);
@@ -567,7 +567,6 @@ function GetQuestIDs(questName, objectives)
 				table.insert(qIDs, n);
 			end
 		end
-	
 		if((qData['Common'][questName] ~= nil)) then
 			for n, o, c in pairs(qData['Common'][questName]['IDs']) do
 				table.insert(qIDs, n);
@@ -601,7 +600,6 @@ function GetObjID(objName)
 			table.insert(objIDs, objID);
 		end
 	end
-	
 	if objIDs == {} then return false;
 	else return objIDs;
 	end
