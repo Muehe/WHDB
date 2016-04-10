@@ -102,7 +102,6 @@ function WHDB_Event(event, arg1)
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
 			WHDB_Settings[WHDB_Player] = {};
-			WHDB_Settings[WHDB_Player]["UseColors"] = 1;
 			if (Cartographer_Notes ~= nil) then
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
 			else
@@ -112,7 +111,6 @@ function WHDB_Event(event, arg1)
 		else
 			if (WHDB_Settings[WHDB_Player] == nil) then
 				WHDB_Settings[WHDB_Player] = {};
-				WHDB_Settings[WHDB_Player]["UseColors"] = 1;
 				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 				WHDB_Settings[WHDB_Player]["waypoints"] = 1;
 			end
@@ -153,11 +151,8 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb mob <npc name> | Show NPC location on map.");
 		WHDB_Print("/whdb obj <object name> | Show object location on map.");
 		WHDB_Print("/whdb clean | Clean map notes.");
-		WHDB_Print("/whdb colors | Enable/Disable: Coloring of text in the quest log.");
 		WHDB_Print("/whdb auto | Enable/Disable: Automatically plot uncompleted objectives on map.");
 		WHDB_Print("/whdb waypoint | Enable/Disable: Plot waypoints on map.");
-		WHDB_Print("/whdb cnotes | Enable/Disable: Plot comments on map.");
-		WHDB_Print("/whdb update | Enable/Disable: Automatically update notes. (Very slow right now)");
 		WHDB_Print("/whdb copy <character> | Copy characters config to current one.");
 		WHDB_Print("/whdb reset | Reset positon of the Interface.");
 		DEFAULT_CHAT_FRAME:AddMessage("\n");
@@ -256,14 +251,6 @@ function WHDB_Slash(input)
 		end
 	elseif (string.sub(input,1,5) == "clean") then
 		WHDB_CleanMap();
-	elseif (string.sub(input,1,6) == "colors") then
-		if (WHDB_Settings[WHDB_Player]["UseColors"] == 0) then
-			WHDB_Settings[WHDB_Player]["UseColors"] = 1;
-			WHDB_Print("Text colors enabled.");
-		else
-			WHDB_Settings[WHDB_Player]["UseColors"] = 0;
-			WHDB_Print("Text colors disabled.");
-		end
 	elseif (string.sub(input,1,4) == "copy") then
 		if (WHDB_Settings[string.sub(input,6)] ~= nil) then
 			for k,v in pairs(WHDB_Settings[string.sub(input,6)]) do
@@ -277,12 +264,9 @@ function WHDB_Slash(input)
 		SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
 		SwitchSetting("waypoints");
-	elseif (string.sub(input,1,6) == "cnotes") then
-		SwitchSetting("commentNotes");
-	elseif (string.sub(input,1,6) == "update") then
-		SwitchSetting("updateNotes");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
+		WHDB_Frame:Show();
 	end
 end -- WHDB_Slash(input)
 
