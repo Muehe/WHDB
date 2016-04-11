@@ -389,20 +389,11 @@ function WHDB_ShowMap()
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_ShowMap() called");
 	end
 	local ShowMapZone, ShowMapTitle, ShowMapID = WHDB_PlotNotesOnMap();
-	if (MetaMap_ShowLocation ~= nil) then
-		if (ShowMapZone ~= nil and ShowMapID ~= nil) then
-			MetaMap_ShowLocation(ShowMapZone, ShowMapTitle, ShowMapID);
-		end
-	end
 	if (Cartographer) then
 		if (ShowMapZone ~= nil) then
 			WorldMapFrame:Show();
 			SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 		end
-	end
-	if (MapNotes_Data_Notes ~= nil) then
-		WorldMapFrame:Show();
-		SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 	end
 end -- WHDB_ShowMap()
 
@@ -410,16 +401,10 @@ function WHDB_CleanMap()
 	if (WHDB_Debug > 1) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_CleanMap() called");
 	end
-	if (MetaMap_DeleteNotes ~= nil) then
-		MetaMap_DeleteNotes("WHDB");
-	end
 	if (Cartographer_Notes ~= nil) then
 		Cartographer_Notes:UnregisterNotesDatabase("WHDB");
 		WHDBDB = {}; WHDBDBH = {};
 		Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
-	end
-	if (MapNotes_Data_Notes ~= nil) then
-		MapNotes_DeleteNotesByCreatorAndName("WHDB");
 	end
 	WHDB_Print("Map cleaned.");
 end -- WHDB_CleanMap()
