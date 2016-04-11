@@ -502,18 +502,18 @@ function GetQuestEndNotes(questLogID)
 					for n, name in pairs(names) do
 						local commentTitle = "END: "..questTitle.." - "..n.."/"..table.getn(names).." NPCs";
 						local comment = name.."\n("..multi.." quests with this name)"
-						GetNPCNotes(name, commentTitle, comment, 2, questTitle);
+						GetNPCNotes(name, commentTitle, comment, 2);
 					end
 				else
 					local name = names[1]
 					local comment = name.."\n(Ends "..multi.." quests with this name)"
-					return GetNPCNotes(name, "END: "..questTitle, comment, 2, questTitle);
+					return GetNPCNotes(name, "END: "..questTitle, comment, 2);
 				end
 			end
 			return true;
 		elseif (multi == false) then
 			local name = SearchEndNPC(qIDs);
-			return GetNPCNotes(name, "END: "..questTitle, name, 2, questTitle);
+			return GetNPCNotes(name, "END: "..questTitle, name, 2);
 		end
 	else
 		return false;
@@ -612,7 +612,7 @@ function CheckSetting(setting)
 end -- CheckSetting(setting)
 
 -- C tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
-function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
+function GetNPCNotes(npcName, commentTitle, comment, icon)
 	if (npcName ~= nil) then
 		if (WHDB_Debug > 0) then 
 			DEFAULT_CHAT_FRAME:AddMessage("GetNPCNotes("..npcName..") called");
@@ -666,12 +666,12 @@ function GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
 		end
 	end
 	return false;
-end -- GetNPCNotes(npcName, commentTitle, comment, icon, questTitle)
+end -- GetNPCNotes(npcName, commentTitle, comment, icon)
 
 -- C tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
-function GetObjNotes(objName, commentTitle, comment, icon, questTitle)
+function GetObjNotes(objName, commentTitle, comment, icon)
 	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("GetObjNotes(objName, commentTitle, comment, icon, questTitle) called");
+		DEFAULT_CHAT_FRAME:AddMessage("GetObjNotes(objName, commentTitle, comment, icon) called");
 	end
 	if (objName ~= nil) then
 		objIDs = GetObjID(objName); -- C TODO
@@ -697,7 +697,7 @@ function GetObjNotes(objName, commentTitle, comment, icon, questTitle)
 		return showMap;
 	end
 	return false;
-end -- GetObjNotes(objName, commentTitle, comment, icon, questTitle)
+end -- GetObjNotes(objName, commentTitle, comment, icon)
 
 function GetQuestNotes(questLogID)
 	if (WHDB_Debug >0) then
@@ -730,7 +730,7 @@ function GetQuestNotes(questLogID)
 							DEFAULT_CHAT_FRAME:AddMessage("    type = monster");
 						end
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
-						showMap = GetNPCNotes(monsterName, questTitle, monsterName.."\n"..GetNPCStatsComment(monsterName), 0, questTitle) or showMap;
+						showMap = GetNPCNotes(monsterName, questTitle, monsterName.."\n"..GetNPCStatsComment(monsterName), 0) or showMap;
 					elseif (type == "item") then
 						if (WHDB_Debug == 2) then
 							DEFAULT_CHAT_FRAME:AddMessage("    type = item");
@@ -738,12 +738,12 @@ function GetQuestNotes(questLogID)
 						if (itemData[itemName] ~= nil) then
 							for monsterName, monsterDrop in pairs(itemData[itemName]) do
 								local comment = monsterName..": "..itemName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
-								showMap = GetNPCNotes(monsterName, questTitle, comment, 0, questTitle) or showMap;
+								showMap = GetNPCNotes(monsterName, questTitle, comment, 0) or showMap;
 							end
 						end
 					-- C checks for objective type other than item or monster, e.g. objective, reputation, event
 					--elseif (type == "object") then
-						--GetObjNotes(itemName, questTitle, comment, icon, questTitle);
+						--GetObjNotes(itemName, questTitle, comment, icon);
 					elseif (type ~= "item" and type ~= "monster") then
 						if (WHDB_Debug == 2) then 
 							DEFAULT_CHAT_FRAME:AddMessage("    "..type.." quest objective-type not supported yet");
@@ -797,12 +797,12 @@ function GetQuestStartNotes(zoneName)
 	if zoneID ~= 0 then
 		for id, data in pairs(npcData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				GetNPCNotes(data.name, data.name, "Queststarts", 5, "starts")
+				GetNPCNotes(data.name, data.name, "Queststarts", 5)
 			end
 		end
 		for id, data in pairs(objData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				GetObjNotes(data.name, data.name, "Queststarts", 5, "starts")
+				GetObjNotes(data.name, data.name, "Queststarts", 5)
 			end
 		end
 		WHDB_ShowMap();
