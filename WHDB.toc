@@ -1,5 +1,5 @@
 ## Interface: 11200 
-## Title: |cFF990099 Wowhead DB
+## Title: |cFF990099Wowheadish DB
 ## Author: Muehe | UniRing | Bërsërk
 ## Notes: Wowhead quest info and map plotting. (Needs Cartographer)
 ## Version: 0.1

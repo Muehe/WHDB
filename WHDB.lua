@@ -17,6 +17,58 @@ WHDB_CommentParts = 0;
 WHDB_Version = "Continued WHDB for Classic WoW";
 
 -- C New Icons from mpq files
+Cartographer.options.args.LookNFeel.args.scale.max = 7;
+
+--[[
+WorldMapFrame:SetScript("OnMouseWheel", function()
+	local up = (arg1 == 1)
+	
+	if IsControlKeyDown() then
+		local scale = self:GetScale()
+		if up then
+			scale = scale + 0.1
+			if scale > 5 then
+				scale = 5
+			end
+		else
+			scale = scale - 0.1
+			if scale < 0.2 then
+				scale = 0.2
+			end
+		end
+		self:SetScale(scale)
+	elseif IsShiftKeyDown() then
+		local alpha = self:GetAlpha()
+		if up then
+			alpha = alpha + 0.1
+			if alpha > 1 then
+				alpha = 1
+			end
+		else
+			alpha = alpha - 0.1
+			if alpha < 0 then
+				alpha = 0
+			end
+		end
+		self:SetAlpha(alpha)
+	elseif IsAltKeyDown() then
+		local scale = Cartographer_Notes:GetIconSize()
+		if up then
+			scale = scale + 0.05
+			if scale > 5 then
+				scale = 5
+			end
+		else
+			scale = scale - 0.05
+			if scale < 0.05 then
+				scale = 0.05
+			end
+		end
+		Cartographer_Notes:SetIconSize(scale)
+	end
+end)
+--]]
+
 Cartographer_Notes:RegisterIcon("QuestionMark", {
     text = "QuestionMark",
     path = "Interface\\GossipFrame\\ActiveQuestIcon",
@@ -63,13 +115,18 @@ function WHDB_Init()
 	this:RegisterEvent("QUEST_WATCH_UPDATE");
 	this:RegisterEvent("QUEST_LOG_UPDATE");
 	this:RegisterEvent("UNIT_QUEST_LOG_CHANGED");
+	this:RegisterEvent("WORLD_MAP_UPDATE");
 	SlashCmdList["WHDB"] = WHDB_Slash;
 	SLASH_WHDB1 = "/whdb";
 end -- WHDB_Init()
 
 function WHDB_Event(event, arg1)
-	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_Event(event, arg1) called");
+	if (WHDB_Debug > 0) then
+		if event then
+			DEFAULT_CHAT_FRAME:AddMessage("WHDB_Event("..event..", arg1) called");
+		else
+			DEFAULT_CHAT_FRAME:AddMessage("WHDB_Event(event, arg1) called");
+		end
 	end
 	if (event == "PLAYER_LOGIN") then
 		if (WHDB_Debug == 2) then 
@@ -121,6 +178,9 @@ function WHDB_Event(event, arg1)
 		if (WHDB_Settings[WHDB_Player]["waypoints"] == nil) then
 			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
 		end
+		if (WHDB_Settings[WHDB_Player]["starts"] == nil) then
+			WHDB_Settings[WHDB_Player]["starts"] = 1;
+		end
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
 	elseif (event == "QUEST_LOG_UPDATE") then
@@ -131,6 +191,11 @@ function WHDB_Event(event, arg1)
 			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
 		end
+	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["starts"] == 1) then
+		if (WHDB_Debug == 2) then 
+			DEFAULT_CHAT_FRAME:AddMessage(zone);
+		end
+		GetQuestStartNotes();
 	end
 end -- WHDB_Event(event, arg1)
 
@@ -296,13 +361,16 @@ function WHDB_PlotNotesOnMap()
 	if (WHDB_Debug > 0) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotNotesOnMap() called");
 	end
-	
+
 	local zone = nil;
 	local title = nil;
 	local noteID = nil;
-	
+
 	local firstNote = 1;
-	
+	if WHDB_MAP_NOTES == {} then
+		return false, false, false
+	end
+
 	for nKey, nData in ipairs(WHDB_MAP_NOTES) do
 		-- C nData[1] is zone name/number
 		-- C nData[2] is x coordinate
@@ -310,7 +378,11 @@ function WHDB_PlotNotesOnMap()
 		-- C nData[4] is comment title
 		-- C nData[5] is comment body
 		-- C nData[6] is icon number
-		if (Cartographer_Notes ~= nil) then
+		local instance = nil;
+		if nData[2] == -1 then
+			instance = true;
+		end
+		if (Cartographer_Notes ~= nil) and (not instance) then
 			if (nData[6] == 0) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "NPC", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 1) then
@@ -392,7 +464,7 @@ function WHDB_ShowMap()
 	if (Cartographer) then
 		if (ShowMapZone ~= nil) then
 			WorldMapFrame:Show();
-			SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
+			--SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
 		end
 	end
 end -- WHDB_ShowMap()
@@ -578,6 +650,7 @@ function SwitchSetting(setting)
 	text = {
 		["waypoints"] = "Waypoint plotting",
 		["auto_plot"] = "Auto plotting",
+		["starts"] = "Quest start plotting"
 	};
 	if (WHDB_Settings[WHDB_Player][setting] == 0) then
 		WHDB_Settings[WHDB_Player][setting] = 1;
@@ -773,11 +846,16 @@ function GetNPCDropComment(itemName, npcName)
 end -- GetNPCDropComment(itemName, npcName)
 
 function GetQuestStartNotes(zoneName)
-	zoneID = 0;
-	for id, name in pairs(zoneData) do
-		if zoneName == name then
-			zoneID = id;
+	local zoneID = 0;
+	if zoneName == nil then
+		zoneID = GetCurrentZoneID();
+	end
+	if (zoneID == 0) and (zoneName) then
+		for k,v in pairs(zoneData) do
+		if v == zoneName then
+			zoneID = k;
 		end
+	end
 	end
 	if zoneID ~= 0 then
 		for id, data in pairs(npcData) do
@@ -790,6 +868,17 @@ function GetQuestStartNotes(zoneName)
 				GetObjNotes(data.name, data.name, "Queststarts", 5)
 			end
 		end
-		WHDB_ShowMap();
+		local _,_,_ = WHDB_PlotNotesOnMap();
 	end
 end -- GetQuestStartNotes(zoneName)
+
+function GetCurrentZoneID()
+	local zoneXY = {GetMapZones(GetCurrentMapContinent())};
+	local zoneName = zoneXY[GetCurrentMapZone()];
+	for k,v in pairs(zoneData) do
+		if v == zoneName then
+			return k;
+		end
+	end
+	return 0;
+end
