@@ -22,7 +22,7 @@ Cartographer.options.args.LookNFeel.args.scale.max = 7;
 --[[
 WorldMapFrame:SetScript("OnMouseWheel", function()
 	local up = (arg1 == 1)
-	
+
 	if IsControlKeyDown() then
 		local scale = self:GetScale()
 		if up then
@@ -129,7 +129,7 @@ function WHDB_Event(event, arg1)
 		end
 	end
 	if (event == "PLAYER_LOGIN") then
-		if (WHDB_Debug == 2) then 
+		if (WHDB_Debug == 2) then
 			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN");
 		end
 		if (Cartographer_Notes ~= nil) then
@@ -192,7 +192,7 @@ function WHDB_Event(event, arg1)
 			WHDB_PlotAllQuests();
 		end
 	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["starts"] == 1) then
-		if (WHDB_Debug == 2) then 
+		if (WHDB_Debug == 2) then
 			DEFAULT_CHAT_FRAME:AddMessage(zone);
 		end
 		GetQuestStartNotes();
