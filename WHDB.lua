@@ -12,8 +12,6 @@ WHDB_Player_Race = "";
 WHDB_Player_Sex = "";
 WHDB_Player_Class = "";
 WHDB_Player_Faction = "";
-WHDB_PlotUpdate = 0;
-WHDB_CommentParts = 0;
 WHDB_Version = "Continued WHDB for Classic WoW";
 
 -- Cartographer related functions and variables
@@ -673,6 +671,9 @@ function SwitchSetting(setting)
 		WHDB_Print(text[setting].." disabled.");
 	end
 	CheckSetting(setting);
+	if (setting == "auto_plot") and (WHDB_Settings[WHDB_Player][setting] == 1) then
+		WHDB_PlotAllQuests();
+	end
 end -- SwitchSetting(setting)
 
 function CheckSetting(setting)
