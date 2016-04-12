@@ -16,64 +16,22 @@ WHDB_PlotUpdate = 0;
 WHDB_CommentParts = 0;
 WHDB_Version = "Continued WHDB for Classic WoW";
 
--- C New Icons from mpq files
-Cartographer.options.args.LookNFeel.args.scale.max = 7;
+-- Cartographer related functions and variables
 
---[[
-WorldMapFrame:SetScript("OnMouseWheel", function()
-	local up = (arg1 == 1)
+-- Overwriting these three seems unnecessary but WTH
+Cartographer.options.args.LookNFeel.args.scale.max = 7; -- Cartographer default: 1
+Cartographer.options.args.Notes.args.size.min = 0.05; -- 0.5
+Cartographer.options.args.Notes.args.size.max = 5; -- 2
 
-	if IsControlKeyDown() then
-		local scale = self:GetScale()
-		if up then
-			scale = scale + 0.1
-			if scale > 5 then
-				scale = 5
-			end
-		else
-			scale = scale - 0.1
-			if scale < 0.2 then
-				scale = 0.2
-			end
-		end
-		self:SetScale(scale)
-	elseif IsShiftKeyDown() then
-		local alpha = self:GetAlpha()
-		if up then
-			alpha = alpha + 0.1
-			if alpha > 1 then
-				alpha = 1
-			end
-		else
-			alpha = alpha - 0.1
-			if alpha < 0 then
-				alpha = 0
-			end
-		end
-		self:SetAlpha(alpha)
-	elseif IsAltKeyDown() then
-		local scale = Cartographer_Notes:GetIconSize()
-		if up then
-			scale = scale + 0.05
-			if scale > 5 then
-				scale = 5
-			end
-		else
-			scale = scale - 0.05
-			if scale < 0.05 then
-				scale = 0.05
-			end
-		end
-		Cartographer_Notes:SetIconSize(scale)
-	end
-end)
---]]
+-- Add Alt-MouseWheel to Cartographer help
+Cartographer:AddToMagnifyingGlass("Alt-MouseWheel to change icon size")
 
+-- New Icons
 Cartographer_Notes:RegisterIcon("QuestionMark", {
     text = "QuestionMark",
     path = "Interface\\GossipFrame\\ActiveQuestIcon",
-	width = 16,
-	height = 16,
+	width = 8,
+	height = 8,
 })
 Cartographer_Notes:RegisterIcon("ExclamationMark", {
     text = "ExclamationMark",
@@ -93,6 +51,57 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 	width = 8,
 	height = 8,
 })
+
+-- Replacement for the script set by Cartographer_LookNFeel:OnEnable() for "OnMouseWheel"
+function WHDB_MapScroll(...)
+	-- This was in Cartographer. Slightly changed.
+	local up = (arg1 == 1)
+
+	if IsControlKeyDown() then
+		local scale = Cartographer_LookNFeel:GetScale()
+		if up then
+			scale = scale + 0.1
+			if scale > 10 then -- 1
+				scale = 10 -- 1
+			end
+		else
+			scale = scale - 0.1
+			if scale < 0.2 then
+				scale = 0.2
+			end
+		end
+		Cartographer_LookNFeel:SetScale(scale)
+	elseif IsShiftKeyDown() then
+		local alpha = Cartographer_LookNFeel:GetAlpha()
+		if up then
+			alpha = alpha + 0.1
+			if alpha > 1 then
+				alpha = 1
+			end
+		else
+			alpha = alpha - 0.1
+			if alpha < 0 then
+				alpha = 0
+			end
+		end
+		Cartographer_LookNFeel:SetAlpha(alpha)
+	-- This was not in Cartographer
+	elseif IsAltKeyDown() then
+		local size = Cartographer_Notes:GetIconSize()
+		if up then
+			size = size + 0.05
+			if size > 5 then
+				size = 5
+			end
+		else
+			size = size - 0.05
+			if size < 0.05 then
+				size = 0.05
+			end
+		end
+		Cartographer_Notes:SetIconSize(size)
+	end
+end -- WHDB_MapScroll(...)
 
 function WHDB_OnMouseDown(arg1)
 	if (arg1 == "LeftButton") then
@@ -138,6 +147,8 @@ function WHDB_Event(event, arg1)
 			WHDB_Print("Cartographer Database Registered.");
 		end
 		WHDB_ShowUsingInfo();
+		-- Replace Cartographer mouse wheel script
+		WorldMapFrame:SetScript("OnMouseWheel", WHDB_MapScroll)
 		WHDB_Player_Faction = UnitFactionGroup("player");
 		if (WHDB_Player_Faction == "Alliance") then
 			qData["Horde"] = nil;
