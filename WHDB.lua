@@ -4,7 +4,7 @@
 -- Wowhead DB Continued By: Muehe
 --------------------------------------------------------
 
-WHDB_Debug = 2;
+WHDB_Debug = 0;
 WHDB_MAP_NOTES = {};
 WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
@@ -229,6 +229,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb clean | Clean map notes.");
 		WHDB_Print("/whdb auto | Enable/Disable: Automatically plot uncompleted objectives on map.");
 		WHDB_Print("/whdb waypoint | Enable/Disable: Plot waypoints on map.");
+		WHDB_Print("/whdb starts | Enable/Disable: Plot quest starts on map.");
 		WHDB_Print("/whdb copy <character> | Copy characters config to current one.");
 		WHDB_Print("/whdb reset | Reset positon of the Interface.");
 		DEFAULT_CHAT_FRAME:AddMessage("\n");
@@ -340,6 +341,8 @@ function WHDB_Slash(input)
 		SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
 		SwitchSetting("waypoints");
+	elseif (string.sub(input,1,6) == "starts") then
+		SwitchSetting("starts");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
 		WHDB_Frame:Show();
@@ -489,7 +492,6 @@ function WHDB_CleanMap()
 		WHDBDB = {}; WHDBDBH = {};
 		Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
 	end
-	WHDB_Print("Map cleaned.");
 end -- WHDB_CleanMap()
 
 function WHDB_DoCleanMap()
@@ -670,6 +672,7 @@ function SwitchSetting(setting)
 		WHDB_Settings[WHDB_Player][setting] = 0;
 		WHDB_Print(text[setting].." disabled.");
 	end
+	CheckSetting(setting);
 end -- SwitchSetting(setting)
 
 function CheckSetting(setting)

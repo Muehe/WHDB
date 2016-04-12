@@ -69,16 +69,23 @@
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="SetWP" inherits="RQP_Font" text="Show Waypoints">
+				<FontString name="SetWaypoints" inherits="RQP_Font" text="Show Waypoints">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="Settings" relativePoint="BOTTOMLEFT">
 							<Offset x="10" y="-2"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="SetAP" inherits="RQP_Font" text="Auto Plot Notes">
+				<FontString name="SetAutoPlot" inherits="RQP_Font" text="Auto Plot Notes">
 					<Anchors>
-						<Anchor point="TOPLEFT" relativeTo="SetWP" relativePoint="BOTTOMLEFT">
+						<Anchor point="TOPLEFT" relativeTo="SetWaypoints" relativePoint="BOTTOMLEFT">
+							<Offset x="0" y="-2"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="SetQuestStarts" inherits="RQP_Font" text="Show Quest Start Notes">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="SetAutoPlot" relativePoint="BOTTOMLEFT">
 							<Offset x="0" y="-2"/>
 						</Anchor>
 					</Anchors>
@@ -115,7 +122,7 @@
 					<AbsDimension x="16" y="16"/>
 				</Size>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="SetWP">
+					<Anchor point="TOPLEFT" relativeTo="SetWaypoints">
 						<Offset x="-16" y="1"/>
 					</Anchor> 
 				</Anchors>
@@ -133,7 +140,7 @@
 					<AbsDimension x="16" y="16"/>
 				</Size>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="SetAP">
+					<Anchor point="TOPLEFT" relativeTo="SetAutoPlot">
 						<Offset x="-16" y="1"/>
 					</Anchor> 
 				</Anchors>
@@ -143,6 +150,24 @@
 					</OnShow>
 					<OnClick> 
 						SwitchSetting("auto_plot");
+					</OnClick>
+				</Scripts>
+			</CheckButton>
+			<CheckButton name="starts" inherits="OptionsCheckButtonTemplate">
+				<Size>
+					<AbsDimension x="16" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="SetQuestStarts">
+						<Offset x="-16" y="1"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnShow> 
+						CheckSetting("starts");
+					</OnShow>
+					<OnClick> 
+						SwitchSetting("starts");
 					</OnClick>
 				</Scripts>
 			</CheckButton>
