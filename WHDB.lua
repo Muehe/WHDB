@@ -868,7 +868,6 @@ function GetQuestNotes(questLogID)
 		end
 	end
 	local showMap = false;
-	local cycle = true;
 	if (not isHeader and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
 		if (WHDB_Debug == 2) then
@@ -910,11 +909,10 @@ function GetQuestNotes(questLogID)
 		end
 		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
 		if (isComplete or numObjectives == 0) then
-			cycle = 
 			GetQuestEndNotes(questLogID);
 		end
 	end
-	if showMap and cycle then
+	if showMap then
 		cycleMarks();
 	end
 	return showMap;
