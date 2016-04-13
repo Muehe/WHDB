@@ -26,29 +26,105 @@ Cartographer:AddToMagnifyingGlass("Alt-MouseWheel to change icon size")
 
 -- New Icons
 Cartographer_Notes:RegisterIcon("QuestionMark", {
-    text = "QuestionMark",
-    path = "Interface\\GossipFrame\\ActiveQuestIcon",
+	text = "QuestionMark",
+	path = "Interface\\GossipFrame\\ActiveQuestIcon",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("ExclamationMark", {
-    text = "ExclamationMark",
-    path = "Interface\\GossipFrame\\AvailableQuestIcon",
+	text = "ExclamationMark",
+	path = "Interface\\GossipFrame\\AvailableQuestIcon",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("NPC", {
-    text = "NPC",
-    path = "Interface\\WorldMap\\WorldMapPartyIcon",
+	text = "NPC",
+	path = "Interface\\WorldMap\\WorldMapPartyIcon",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("Waypoint", {
-    text = "Waypoint",
-    path = "Interface\\WorldMap\\WorldMapPlayerIcon",
+	text = "Waypoint",
+	path = "Interface\\WorldMap\\WorldMapPlayerIcon",
 	width = 8,
 	height = 8,
 })
+
+-- Icons from ShaguDB, thanks fam.
+-- Switched 3 and 7 for better contrast of colors follwing each other
+cMark = "mk1";
+Cartographer_Notes:RegisterIcon("mk1", {
+	text = "Mark 1",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk1",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk2", {
+	text = "Mark 2",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk2",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk3", {
+	text = "Mark 3",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk7",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk4", {
+	text = "Mark 4",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk4",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk5", {
+	text = "Mark 5",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk5",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk6", {
+	text = "Mark 6",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk6",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk7", {
+	text = "Mark 7",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk3",
+	width = 8,
+	height = 8,
+})
+Cartographer_Notes:RegisterIcon("mk8", {
+	text = "Mark 8",
+	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk8",
+	width = 8,
+	height = 8,
+})
+
+function cycleMarks()
+	if cMark == "mk1" then cMark = "mk2";
+	elseif cMark == "mk2" then cMark = "mk3";
+	elseif cMark == "mk3" then cMark = "mk4";
+	elseif cMark == "mk4" then cMark = "mk5";
+	elseif cMark == "mk5" then cMark = "mk6";
+	elseif cMark == "mk6" then cMark = "mk7";
+	elseif cMark == "mk7" then cMark = "mk8";
+	elseif cMark == "mk8" then cMark = "mk1";
+	end
+end
+
+function cycleMarksBack()
+	if cMark == "mk1" then cMark = "mk8";
+	elseif cMark == "mk2" then cMark = "mk7";
+	elseif cMark == "mk3" then cMark = "mk6";
+	elseif cMark == "mk4" then cMark = "mk5";
+	elseif cMark == "mk5" then cMark = "mk4";
+	elseif cMark == "mk6" then cMark = "mk3";
+	elseif cMark == "mk7" then cMark = "mk2";
+	elseif cMark == "mk8" then cMark = "mk1";
+	end
+end
 
 -- Replacement for the script set by Cartographer_LookNFeel:OnEnable() for "OnMouseWheel"
 function WHDB_MapScroll(...)
@@ -407,6 +483,8 @@ function WHDB_PlotNotesOnMap()
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 5) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "ExclamationMark", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] ~= nil) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, nData[6], "WHDB", 'title', nData[4], 'info', nData[5]);
 			end
 		end
 		if (nData[1] ~= nil) then
@@ -629,9 +707,13 @@ function GetQuestIDs(questName, objectives)
 		DEFAULT_CHAT_FRAME:AddMessage("Possible questIDs: "..table.getn(qIDs));
 	end
 	length = table.getn(qIDs);
-	if (length == nil) then return false, false;
-	elseif (length == 1) then return false, qIDs[1];
-	else return length, qIDs; end
+	if (length == nil) then
+		return false, false;
+	elseif (length == 1) then
+		return false, qIDs[1];
+	else
+		return length, qIDs;
+	end
 end -- GetQuestIDs(questName, objectives)
 
 -- C TODO 19 npc names are used twice. first found is chosen atm
@@ -786,6 +868,7 @@ function GetQuestNotes(questLogID)
 		end
 	end
 	local showMap = false;
+	local cycle = true;
 	if (not isHeader and questTitle ~= nil) then
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
 		if (WHDB_Debug == 2) then
@@ -803,7 +886,7 @@ function GetQuestNotes(questLogID)
 							DEFAULT_CHAT_FRAME:AddMessage("    type = monster");
 						end
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
-						showMap = GetNPCNotes(monsterName, questTitle, monsterName.."\n"..GetNPCStatsComment(monsterName), 0) or showMap;
+						showMap = GetNPCNotes(monsterName, questTitle, monsterName.."\n"..GetNPCStatsComment(monsterName), cMark) or showMap;
 					elseif (type == "item") then
 						if (WHDB_Debug == 2) then
 							DEFAULT_CHAT_FRAME:AddMessage("    type = item");
@@ -811,7 +894,7 @@ function GetQuestNotes(questLogID)
 						if (itemData[itemName] ~= nil) then
 							for monsterName, monsterDrop in pairs(itemData[itemName]) do
 								local comment = monsterName..": "..itemName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
-								showMap = GetNPCNotes(monsterName, questTitle, comment, 0) or showMap;
+								showMap = GetNPCNotes(monsterName, questTitle, comment, cMark) or showMap;
 							end
 						end
 					-- C checks for objective type other than item or monster, e.g. objective, reputation, event
@@ -827,8 +910,12 @@ function GetQuestNotes(questLogID)
 		end
 		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
 		if (isComplete or numObjectives == 0) then
+			cycle = 
 			GetQuestEndNotes(questLogID);
 		end
+	end
+	if showMap and cycle then
+		cycleMarks();
 	end
 	return showMap;
 end -- GetQuestNotes(questLogID)
