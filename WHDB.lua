@@ -55,49 +55,49 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 cMark = "mk1";
 Cartographer_Notes:RegisterIcon("mk1", {
 	text = "Mark 1",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk1",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk1",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk2", {
 	text = "Mark 2",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk2",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk2",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk3", {
 	text = "Mark 3",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk7",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk7",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk4", {
 	text = "Mark 4",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk4",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk4",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk5", {
 	text = "Mark 5",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk5",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk5",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk6", {
 	text = "Mark 6",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk6",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk6",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk7", {
 	text = "Mark 7",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk3",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk3",
 	width = 8,
 	height = 8,
 })
 Cartographer_Notes:RegisterIcon("mk8", {
 	text = "Mark 8",
-	path = "Interface\\AddOns\\ShaguDB\\symbols\\mk8",
+	path = "Interface\\AddOns\\WHDB\\symbols\\mk8",
 	width = 8,
 	height = 8,
 })
@@ -263,8 +263,8 @@ function WHDB_Event(event, arg1)
 		if (WHDB_Settings[WHDB_Player]["waypoints"] == nil) then
 			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
 		end
-		if (WHDB_Settings[WHDB_Player]["starts"] == nil) then
-			WHDB_Settings[WHDB_Player]["starts"] = 1;
+		if (WHDB_Settings[WHDB_Player]["questStarts"] == nil) then
+			WHDB_Settings[WHDB_Player]["questStarts"] = 0;
 		end
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
@@ -276,7 +276,7 @@ function WHDB_Event(event, arg1)
 			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
 		end
-	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["starts"] == 1) then
+	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["questStarts"] == 1) then
 		if (WHDB_Debug == 2) then
 			DEFAULT_CHAT_FRAME:AddMessage(zone);
 		end
@@ -415,8 +415,8 @@ function WHDB_Slash(input)
 		SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
 		SwitchSetting("waypoints");
-	elseif (string.sub(input,1,6) == "starts") then
-		SwitchSetting("starts");
+	elseif (string.sub(input,1,6) == "questStarts") then
+		SwitchSetting("questStarts");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
 		WHDB_Frame:Show();
@@ -743,7 +743,7 @@ function SwitchSetting(setting)
 	text = {
 		["waypoints"] = "Waypoint plotting",
 		["auto_plot"] = "Auto plotting",
-		["starts"] = "Quest start plotting"
+		["questStarts"] = "Quest start plotting"
 	};
 	if (WHDB_Settings[WHDB_Player][setting] == 0) then
 		WHDB_Settings[WHDB_Player][setting] = 1;
@@ -981,4 +981,9 @@ function GetCurrentZoneID()
 		end
 	end
 	return 0;
+end
+
+function GetSelectionQuestNotes()
+	GetQuestNotes(GetQuestLogSelection())
+	WHDB_PlotNotesOnMap();
 end
