@@ -6,6 +6,7 @@
 
 WHDB_Debug = 0;
 WHDB_MAP_NOTES = {};
+WHDB_Notes = 0;
 WHDB_QuestZoneInfo = {};
 WHDB_Player = "";
 WHDB_Player_Race = "";
@@ -114,17 +115,6 @@ function cycleMarks()
 	end
 end
 
-function cycleMarksBack()
-	if cMark == "mk1" then cMark = "mk8";
-	elseif cMark == "mk2" then cMark = "mk7";
-	elseif cMark == "mk3" then cMark = "mk6";
-	elseif cMark == "mk4" then cMark = "mk5";
-	elseif cMark == "mk5" then cMark = "mk4";
-	elseif cMark == "mk6" then cMark = "mk3";
-	elseif cMark == "mk7" then cMark = "mk2";
-	elseif cMark == "mk8" then cMark = "mk1";
-	end
-end
 
 -- Replacement for the script set by Cartographer_LookNFeel:OnEnable() for "OnMouseWheel"
 function WHDB_MapScroll(...)
@@ -177,6 +167,8 @@ function WHDB_MapScroll(...)
 	end
 end -- WHDB_MapScroll(...)
 
+-- End of Cartographer stuff
+
 function WHDB_OnMouseDown(arg1)
 	if (arg1 == "LeftButton") then
 		WHDB_Frame:StartMoving();
@@ -218,9 +210,8 @@ function WHDB_Event(event, arg1)
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
 			Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
-			WHDB_Print("Cartographer Database Registered.");
+			if (WHDB_Debug > 0) then WHDB_Print("Cartographer Database Registered."); end
 		end
-		WHDB_ShowUsingInfo();
 		-- Replace Cartographer mouse wheel script
 		WorldMapFrame:SetScript("OnMouseWheel", WHDB_MapScroll)
 		WHDB_Player_Faction = UnitFactionGroup("player");
@@ -273,7 +264,6 @@ function WHDB_Event(event, arg1)
 			if (WHDB_Debug == 2) then
 				DEFAULT_CHAT_FRAME:AddMessage("Event: QUEST_LOG_UPDATE");
 			end
-			WHDB_Print("Plots updated.");
 			WHDB_PlotAllQuests();
 		end
 	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["questStarts"] == 1) then
@@ -283,12 +273,6 @@ function WHDB_Event(event, arg1)
 		GetQuestStartNotes();
 	end
 end -- WHDB_Event(event, arg1)
-
-function WHDB_ShowUsingInfo()
-	if (Cartographer_Notes ~= nil) then
-		WHDB_Print("Cartographer plotter enabled.");
-	end
-end -- WHDB_ShowUsingInfo()
 
 function WHDB_Slash(input)
 	if (string.sub(input,1,4) == "help" or input == "") then
@@ -437,13 +421,13 @@ function WHDB_PlotAllQuests()
 	WHDB_PlotNotesOnMap();
 end -- WHDB_PlotAllQuests()
 
-function WHDB_Print( string )
-	DEFAULT_CHAT_FRAME:AddMessage("|cAA0000FFC-WHDB:|r " .. string, 0.95, 0.95, 0.5);
-end -- WHDB_Print( string )
+function WHDB_Print( str )
+	DEFAULT_CHAT_FRAME:AddMessage("|c110000AAWHDB:|r " .. str, 0.95, 0.95, 0.5);
+end -- WHDB_Print( str )
 
-function WHDB_Print_Indent( string )
-	DEFAULT_CHAT_FRAME:AddMessage("					   " .. string, 0.95, 0.95, 0.5);
-end -- WHDB_Print_Indent( string )
+function WHDB_Print_Indent( str )
+	DEFAULT_CHAT_FRAME:AddMessage("					   " .. str, 0.95, 0.95, 0.5);
+end -- WHDB_Print_Indent( str )
 
 function WHDB_PlotNotesOnMap()
 	if (WHDB_Debug > 0) then 
@@ -493,7 +477,11 @@ function WHDB_PlotNotesOnMap()
 		end
 	end
 	if table.getn(WHDB_MAP_NOTES) ~= nil then
-		WHDB_Print(table.getn(WHDB_MAP_NOTES).." notes plotted.")
+		local notes = table.getn(WHDB_MAP_NOTES);
+		if notes ~= WHDB_Notes then
+			WHDB_Print(notes.." notes plotted.");
+			WHDB_Notes = notes;
+		end
 	end
 	WHDB_MAP_NOTES = {}
 	return zone, title, noteID;
@@ -800,14 +788,13 @@ function GetNPCNotes(npcName, commentTitle, comment, icon)
 					if (zoneID ~= 5 and zoneID ~= 6) then
 						zoneName = zoneData[zoneID];
 						for cID, coords in pairs(coordsdata) do
-							if (coords[1] == -1) then
+							if (coords[1] == -1) and (instanceData[zoneID]) then
 								for id, data in pairs(instanceData[zoneID]) do
 									noteZone = zoneData[data[1]];
 									coordx = data[2];
 									coordy = data[3];
 									table.insert(WHDB_MAP_NOTES,{noteZone, coordx, coordy, commentTitle, "|cFF00FF00Instance Entry to "..zoneName.."|r\n"..comment, icon});
 								end
-								break;
 							end
 							coordx = coords[1];
 							coordy = coords[2];
