@@ -778,7 +778,7 @@ function GetNPCNotes(npcName, commentTitle, comment, icon)
 							end
 						coordx = coords[1];
 						coordy = coords[2];
-						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, "|cFF0000FFWaypoint|r\n"..comment, 3});
+						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, comment, 3});
 						showMap = true;
 					end
 				end
@@ -798,7 +798,7 @@ function GetNPCNotes(npcName, commentTitle, comment, icon)
 							end
 							coordx = coords[1];
 							coordy = coords[2];
-							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, "|cFF00FF00Spawnpoint|r\n"..comment, icon});
+							table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, comment, icon});
 							showMap = true;
 						end
 					end
@@ -841,6 +841,30 @@ function GetObjNotes(objName, commentTitle, comment, icon)
 	return false;
 end -- GetObjNotes(objName, commentTitle, comment, icon)
 
+function GetItemNotes(itemName, commentTitle, comment, icon)
+	if (itemData[itemName]) then
+		local showMap = false;
+		if (itemData[itemName].npcs) then
+			for key, value in pairs(itemData[itemName].npcs) do
+				if npcData[value[1]] then
+					showMap = GetNPCNotes(npcData[value[1]].name, commentTitle, comment..npcData[value[1]].name.."\nDropchance: "..value[2], icon) or showMap;
+				end
+			end
+		end
+		if (itemData[itemName].objects) then
+			for key, value in pairs(itemData[itemName].objects) do
+				if objData[value[1]] then
+					showMap = GetObjNotes(objData[value[1]].name, commentTitle, comment..objData[value[1]].name.."\nDropchance: "..value[2], icon) or showMap;
+				end
+			end
+		end
+		-- TODO: itemData[itemName].items
+		return showMap;
+	else
+		return false;
+	end
+end -- GetItemNotes(itemName, commentTitle, comment, icon)
+
 function GetQuestNotes(questLogID)
 	if (WHDB_Debug >0) then
 		DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..questLogID..") called");
@@ -872,20 +896,22 @@ function GetQuestNotes(questLogID)
 							DEFAULT_CHAT_FRAME:AddMessage("    type = monster");
 						end
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
-						showMap = GetNPCNotes(monsterName, questTitle, monsterName.."\n"..GetNPCStatsComment(monsterName), cMark) or showMap;
+						local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
+						showMap = GetNPCNotes(monsterName, questTitle, comment..GetNPCStatsComment(monsterName), cMark) or showMap;
 					elseif (type == "item") then
 						if (WHDB_Debug == 2) then
 							DEFAULT_CHAT_FRAME:AddMessage("    type = item");
 						end
 						if (itemData[itemName] ~= nil) then
-							for monsterName, monsterDrop in pairs(itemData[itemName]) do
-								local comment = monsterName..": "..itemName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
-								showMap = GetNPCNotes(monsterName, questTitle, comment, cMark) or showMap;
-							end
+							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
+							showMap = GetItemNotes(itemName, questTitle, comment, cMark) or showMap;
 						end
-					-- C checks for objective type other than item or monster, e.g. objective, reputation, event
-					--elseif (type == "object") then
-						--GetObjNotes(itemName, questTitle, comment, icon);
+					-- checks for objective type other than item or monster, e.g. objective, reputation, event
+					-- TODO: object check is WIP, most objects can't be found easily by checking item name
+					elseif (type == "object") then
+						local i, j, objectName = strfind(itemName, "(.*) ")
+						local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
+						showMap = GetObjNotes(objectName, questTitle, comment, cMark) or showMap;
 					elseif (type ~= "item" and type ~= "monster") then
 						if (WHDB_Debug == 2) then 
 							DEFAULT_CHAT_FRAME:AddMessage("    "..type.." quest objective-type not supported yet");
@@ -894,7 +920,7 @@ function GetQuestNotes(questLogID)
 				end
 			end
 		end
-		-- C added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
+		-- added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
 		if (isComplete or numObjectives == 0) then
 			GetQuestEndNotes(questLogID);
 		end
@@ -945,6 +971,7 @@ function GetQuestStartNotes(zoneName)
 	end
 	end
 	if zoneID ~= 0 then
+		-- TODO: add quests to tooltip and add hide option to right click menu
 		for id, data in pairs(npcData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
 				GetNPCNotes(data.name, data.name, "Queststarts", 5)
