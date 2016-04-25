@@ -965,10 +965,10 @@ function GetQuestStartNotes(zoneName)
 	end
 	if (zoneID == 0) and (zoneName) then
 		for k,v in pairs(zoneData) do
-		if v == zoneName then
-			zoneID = k;
+			if v == zoneName then
+				zoneID = k;
+			end
 		end
-	end
 	end
 	if zoneID ~= 0 then
 		-- TODO: add quests to tooltip and add hide option to right click menu

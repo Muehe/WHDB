@@ -1,9 +1,11 @@
 ## Interface: 11200 
 ## Title: |cFF990099Wowheadish DB
-## Author: Muehe | UniRing | Bërsërk
-## Notes: Wowhead quest info and map plotting. (Needs Cartographer)
+## Author: Muehe
+## Notes: Wowheadish quest info and map plotting.
 ## Version: 0.1
 ## RequiredDeps: Cartographer
-## OptionalDeps: Cartographer_Notes
+## OptionalDeps: 
 ## SavedVariables: WHDB_Settings
+## SavedVariablesPerCharacter: 
+## X-Notes: Original Wowhead DB by: UniRing | Bërsërk
 WHDB.xml
