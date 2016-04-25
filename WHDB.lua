@@ -15,16 +15,7 @@ WHDB_Player_Class = "";
 WHDB_Player_Faction = "";
 WHDB_Version = "Continued WHDB for Classic WoW";
 
--- Cartographer related functions and variables
-
--- Overwriting these three seems unnecessary but WTH
-Cartographer.options.args.LookNFeel.args.scale.max = 7; -- Cartographer default: 1
-Cartographer.options.args.Notes.args.size.min = 0.05; -- 0.5
-Cartographer.options.args.Notes.args.size.max = 5; -- 2
-
--- Add Alt-MouseWheel to Cartographer help
-Cartographer:AddToMagnifyingGlass("Alt-MouseWheel to change icon size")
-
+-- Cartographer related stuff
 -- New Icons
 Cartographer_Notes:RegisterIcon("QuestionMark", {
 	text = "QuestionMark",
@@ -115,58 +106,6 @@ function cycleMarks()
 	end
 end
 
-
--- Replacement for the script set by Cartographer_LookNFeel:OnEnable() for "OnMouseWheel"
-function WHDB_MapScroll(...)
-	-- This was in Cartographer. Slightly changed.
-	local up = (arg1 == 1)
-
-	if IsControlKeyDown() then
-		local scale = Cartographer_LookNFeel:GetScale()
-		if up then
-			scale = scale + 0.1
-			if scale > 10 then -- 1
-				scale = 10 -- 1
-			end
-		else
-			scale = scale - 0.1
-			if scale < 0.2 then
-				scale = 0.2
-			end
-		end
-		Cartographer_LookNFeel:SetScale(scale)
-	elseif IsShiftKeyDown() then
-		local alpha = Cartographer_LookNFeel:GetAlpha()
-		if up then
-			alpha = alpha + 0.1
-			if alpha > 1 then
-				alpha = 1
-			end
-		else
-			alpha = alpha - 0.1
-			if alpha < 0 then
-				alpha = 0
-			end
-		end
-		Cartographer_LookNFeel:SetAlpha(alpha)
-	-- This was not in Cartographer
-	elseif IsAltKeyDown() then
-		local size = Cartographer_Notes:GetIconSize()
-		if up then
-			size = size + 0.05
-			if size > 5 then
-				size = 5
-			end
-		else
-			size = size - 0.05
-			if size < 0.05 then
-				size = 0.05
-			end
-		end
-		Cartographer_Notes:SetIconSize(size)
-	end
-end -- WHDB_MapScroll(...)
-
 -- End of Cartographer stuff
 
 function WHDB_OnMouseDown(arg1)
@@ -212,8 +151,6 @@ function WHDB_Event(event, arg1)
 			Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
 			if (WHDB_Debug > 0) then WHDB_Print("Cartographer Database Registered."); end
 		end
-		-- Replace Cartographer mouse wheel script
-		WorldMapFrame:SetScript("OnMouseWheel", WHDB_MapScroll)
 		WHDB_Player_Faction = UnitFactionGroup("player");
 		if (WHDB_Player_Faction == "Alliance") then
 			qData["Horde"] = nil;
