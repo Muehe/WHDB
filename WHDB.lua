@@ -29,14 +29,14 @@ Cartographer:AddToMagnifyingGlass("Alt-MouseWheel to change icon size")
 Cartographer_Notes:RegisterIcon("QuestionMark", {
 	text = "QuestionMark",
 	path = "Interface\\GossipFrame\\ActiveQuestIcon",
-	width = 8,
-	height = 8,
+	width = 12,
+	height = 12,
 })
 Cartographer_Notes:RegisterIcon("ExclamationMark", {
 	text = "ExclamationMark",
 	path = "Interface\\GossipFrame\\AvailableQuestIcon",
-	width = 8,
-	height = 8,
+	width = 12,
+	height = 12,
 })
 Cartographer_Notes:RegisterIcon("NPC", {
 	text = "NPC",
@@ -634,20 +634,20 @@ function GetQuestEndNotes(questLogID)
 			if (table.getn(names) > 0) then
 				if (table.getn(names) > 1) then
 					for n, name in pairs(names) do
-						local commentTitle = "END: "..questTitle.." - "..n.."/"..table.getn(names).." NPCs";
+						local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(names).." NPCs";
 						local comment = name.."\n("..multi.." quests with this name)"
-						GetNPCNotes(name, commentTitle, comment, 2);
+						GetNPCNotes(name, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
 					local name = names[1]
 					local comment = name.."\n(Ends "..multi.." quests with this name)"
-					return GetNPCNotes(name, "END: "..questTitle, comment, 2);
+					return GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 				end
 			end
 			return true;
 		elseif (multi == false) then
 			local name = SearchEndNPC(qIDs);
-			return GetNPCNotes(name, "END: "..questTitle, name, 2);
+			return GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 		end
 	else
 		return false;
@@ -847,14 +847,15 @@ function GetItemNotes(itemName, commentTitle, comment, icon)
 		if (itemData[itemName].npcs) then
 			for key, value in pairs(itemData[itemName].npcs) do
 				if npcData[value[1]] then
-					showMap = GetNPCNotes(npcData[value[1]].name, commentTitle, comment..npcData[value[1]].name.."\nDropchance: "..value[2], icon) or showMap;
+					local statsComment = npcData[value[1]].name.."\n"..GetNPCStatsComment(npcData[value[1]].name);
+					showMap = GetNPCNotes(npcData[value[1]].name, commentTitle, comment..statsComment.."\nDrop chance: "..value[2].."%", icon) or showMap;
 				end
 			end
 		end
 		if (itemData[itemName].objects) then
 			for key, value in pairs(itemData[itemName].objects) do
 				if objData[value[1]] then
-					showMap = GetObjNotes(objData[value[1]].name, commentTitle, comment..objData[value[1]].name.."\nDropchance: "..value[2], icon) or showMap;
+					showMap = GetObjNotes(objData[value[1]].name, commentTitle, comment..objData[value[1]].name.."\nDrop chance: "..value[2].."%", icon) or showMap;
 				end
 			end
 		end
@@ -931,12 +932,12 @@ function GetQuestNotes(questLogID)
 	return showMap;
 end -- GetQuestNotes(questLogID)
 
--- C returns level and hp values with prefix for provided NPC name as string
+-- returns level and hp values with prefix for provided NPC name as string
 function GetNPCStatsComment(npcName)
 	npcID = GetNPCID(npcName)
 	if (npcData[npcID] ~= nil) then
-		local level = npcData[npcID]["level"];
-		local hp = npcData[npcID]["hp"];
+		local level = npcData[npcID].level;
+		local hp = npcData[npcID].hp;
 		if (level == nil) then
 			level = "Unknown";
 		end
@@ -949,7 +950,8 @@ function GetNPCStatsComment(npcName)
 	end
 end -- GetNPCStatsComment(npcName)
 
--- C returns dropRate value with prefix for provided NPC name as string
+-- returns dropRate value with prefix for provided NPC name as string
+-- TODO: fix for new item data
 function GetNPCDropComment(itemName, npcName)
 	local dropRate = itemData[itemName][npcName];
 	if (dropRate == "" or dropRate == nil) then
