@@ -121,7 +121,7 @@ function WHDB_OnMouseUp(arg1)
 end -- WHDB_OnMouseUp(arg1)
 
 function WHDB_OnFrameShow()
-	-- ?
+	WHDB_Frame:SetFrameStrata("HIGH");
 end-- WHDB_OnFrameShow()
 
 function WHDB_Init()

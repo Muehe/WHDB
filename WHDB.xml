@@ -12,7 +12,7 @@
 	</Font>
 	<Frame name="WHDB_Frame" parent="UIParent" movable="true" toplevel="true" enableMouse="true" frameStrata="LOW" hidden="true">
 		<Size>
-			<AbsDimension x="256" y="256"/>
+			<AbsDimension x="256" y="136"/>
 		</Size>
 		
 		<Anchors>
@@ -65,7 +65,7 @@
 				<FontString name="Settings" inherits="RQP_Font" text="Settings:">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="MapButtons" relativePoint="TOPLEFT">
-							<Offset x="0" y="-58"/>
+							<Offset x="0" y="-64"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
@@ -95,6 +95,9 @@
 		
 		<Frames>
 			<Button name="CleanMap" inherits="OptionsButtonTemplate" text="Clean Map">
+				<Size>
+					<AbsDimension x="80" y="24"/>
+				</Size>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="MapButtons" relativePoint="BOTTOMLEFT">
 						<Offset x="5" y="-2"/>
@@ -105,6 +108,9 @@
 				</Scripts>
 			</Button>
 			<Button name="PlotAll" inherits="OptionsButtonTemplate" text="Show All">
+				<Size>
+					<AbsDimension x="80" y="24"/>
+				</Size>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="CleanMap" relativePoint="BOTTOMLEFT">
 						<Offset x="0" y="-2"/>
@@ -118,6 +124,9 @@
 				</Scripts>
 			</Button>
 			<Button name="PlotSelected" inherits="OptionsButtonTemplate" text="Show Selected">
+				<Size>
+					<AbsDimension x="124" y="24"/>
+				</Size>
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="PlotAll" relativePoint="TOPRIGHT">
 						<Offset x="5" y="0"/>
