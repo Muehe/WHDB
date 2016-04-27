@@ -134,7 +134,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick> 
-						GetSelectionQuestNotes()
+						WHDB_GetSelectionQuestNotes()
 						WorldMapFrame:Show();
 					</OnClick>
 				</Scripts>
@@ -150,10 +150,10 @@
 				</Anchors>
 				<Scripts>
 					<OnShow> 
-						CheckSetting("waypoints");
+						WHDB_CheckSetting("waypoints");
 					</OnShow>
 					<OnClick> 
-						SwitchSetting("waypoints");
+						WHDB_SwitchSetting("waypoints");
 					</OnClick>
 				</Scripts>
 			</CheckButton>
@@ -168,10 +168,10 @@
 				</Anchors>
 				<Scripts>
 					<OnShow> 
-						CheckSetting("auto_plot");
+						WHDB_CheckSetting("auto_plot");
 					</OnShow>
 					<OnClick> 
-						SwitchSetting("auto_plot");
+						WHDB_SwitchSetting("auto_plot");
 					</OnClick>
 				</Scripts>
 			</CheckButton>
@@ -186,10 +186,10 @@
 				</Anchors>
 				<Scripts>
 					<OnShow> 
-						CheckSetting("questStarts");
+						WHDB_CheckSetting("questStarts");
 					</OnShow>
 					<OnClick> 
-						SwitchSetting("questStarts");
+						WHDB_SwitchSetting("questStarts");
 					</OnClick>
 				</Scripts>
 			</CheckButton>

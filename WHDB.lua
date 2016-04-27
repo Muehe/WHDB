@@ -94,7 +94,7 @@ Cartographer_Notes:RegisterIcon("mk8", {
 	height = 8,
 })
 
-function cycleMarks()
+function WHDB_cycleMarks()
 	if cMark == "mk1" then cMark = "mk2";
 	elseif cMark == "mk2" then cMark = "mk3";
 	elseif cMark == "mk3" then cMark = "mk4";
@@ -104,7 +104,7 @@ function cycleMarks()
 	elseif cMark == "mk7" then cMark = "mk8";
 	elseif cMark == "mk8" then cMark = "mk1";
 	end
-end
+end -- WHDB_cycleMarks()
 
 -- End of Cartographer stuff
 
@@ -207,7 +207,7 @@ function WHDB_Event(event, arg1)
 		if (WHDB_Debug == 2) then
 			DEFAULT_CHAT_FRAME:AddMessage(zone);
 		end
-		GetQuestStartNotes();
+		WHDB_GetQuestStartNotes();
 	end
 end -- WHDB_Event(event, arg1)
 
@@ -267,15 +267,15 @@ function WHDB_Slash(input)
 			if (itemData[itemName] ~= nil) then
 				local showmax = 1000;
 				for monsterName, monsterDrop in pairs(itemData[itemName]) do
-					npcID = GetNPCID(monsterName)
+					npcID = WHDB_GetNPCID(monsterName)
 					if (npcData[npcID] ~= nil) then
 						zoneName = zoneData[npcData[npcID]["zone"]];
 						if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
 						WHDB_Print("Dropped by: " .. monsterName);
-						WHDB_Print_Indent(GetNPCDropComment(itemName, monsterName));
+						WHDB_Print_Indent(WHDB_GetNPCDropComment(itemName, monsterName));
 						WHDB_Print_Indent("Zone: " .. zoneName);
-						local comment = monsterName.."\n"..GetNPCDropComment(itemName, monsterName).."\n"..GetNPCStatsComment(monsterName);
-						if (GetNPCNotes(monsterName, itemName, comment, 0)) then
+						local comment = monsterName.."\n"..WHDB_GetNPCDropComment(itemName, monsterName).."\n"..WHDB_GetNPCStatsComment(monsterName);
+						if (WHDB_GetNPCNotes(monsterName, itemName, comment, 0)) then
 							WHDB_ShowMap();
 						else
 							WHDB_Print_Indent("No locations found for: "..monsterName);
@@ -296,12 +296,12 @@ function WHDB_Slash(input)
 		if (monsterName ~= "") then
 			WHDB_Print("Location for: "..monsterName);
 			if (monsterName ~= nil) then
-				npcID = GetNPCID(monsterName)
+				npcID = WHDB_GetNPCID(monsterName)
 				if (npcData[npcID] ~= nil) then
 					zoneName = zoneData[npcData[npcID]["zone"]];
 					if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
 					WHDB_Print_Indent("Zone: " .. zoneName);
-					if (GetNPCNotes(monsterName, monsterName, GetNPCStatsComment(monsterName), 0)) then
+					if (WHDB_GetNPCNotes(monsterName, monsterName, WHDB_GetNPCStatsComment(monsterName), 0)) then
 						WHDB_ShowMap();
 					end
 				else
@@ -314,7 +314,7 @@ function WHDB_Slash(input)
 		if (objName ~= "") then
 			WHDB_Print("Locations for: "..objName);
 			if (objName ~= nil) then
-				if (GetObjNotes(objName, objName, "This object can be found here", 0)) then
+				if (WHDB_GetObjNotes(objName, objName, "This object can be found here", 0)) then
 					WHDB_ShowMap();
 				else
 					WHDB_Print("No locations found.");
@@ -333,11 +333,11 @@ function WHDB_Slash(input)
 			WHDB_Print("There are no settings for this character.");
 		end
 	elseif (string.sub(input,1,4) == "auto") then
-		SwitchSetting("auto_plot");
+		WHDB_SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
-		SwitchSetting("waypoints");
+		WHDB_SwitchSetting("waypoints");
 	elseif (string.sub(input,1,6) == "questStarts") then
-		SwitchSetting("questStarts");
+		WHDB_SwitchSetting("questStarts");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
 		WHDB_Frame:Show();
@@ -352,7 +352,7 @@ function WHDB_PlotAllQuests()
 	WHDB_MAP_NOTES = {};
 	while (GetQuestLogTitle(questLogID) ~= nil) do
 		questLogID = questLogID + 1;
-		GetQuestNotes(questLogID)
+		WHDB_GetQuestNotes(questLogID)
 	end
 	WHDB_CleanMap();
 	WHDB_PlotNotesOnMap();
@@ -443,7 +443,7 @@ function WHDB_GetComments(questTitle, questObjectives)
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetComments(questTitle, questObjectives) called");
 	end
 	-- C Update for new functionality
-	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
+	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
 	local questCom = "";
 	if (qIDs) then
 		if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
@@ -501,7 +501,7 @@ function WHDB_DoCleanMap()
 	end
 	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 		WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
-		CheckSetting("auto_plot")
+		WHDB_CheckSetting("auto_plot")
 		WHDB_Print("Auto plotting disabled.");
 	end
 	WHDB_CleanMap();
@@ -523,9 +523,9 @@ function WHDB_PopulateZones()
 	end
 end -- WHDB_PopulateZones()
 
-function SearchEndNPC(quest)
+function WHDB_SearchEndNPC(quest)
 	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("SearchEndNPC("..quest..") called");
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_SearchEndNPC("..quest..") called");
 	end
 	for npc, data in pairs(npcData) do
 		if (data["ends"] ~= nil) then
@@ -535,17 +535,17 @@ function SearchEndNPC(quest)
 		end
 	end
 	return nil;
-end -- SearchEndNPC(quest)
+end -- WHDB_SearchEndNPC(quest)
 
-function GetQuestEndNotes(questLogID)
+function WHDB_GetQuestEndNotes(questLogID)
 	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("GetQuestEndNotes("..questLogID..") called");
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetQuestEndNotes("..questLogID..") called");
 	end
 	local questTitle = GetQuestLogTitle(questLogID);
 	SelectQuestLogEntry(questLogID);
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
-	local multi, qIDs = GetQuestIDs(questTitle, questObjectives);
+	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
 	if (WHDB_Debug > 1) then
 		if multi ~= false then
 			DEFAULT_CHAT_FRAME:AddMessage("    "..table.getn(qIDs));
@@ -555,7 +555,7 @@ function GetQuestEndNotes(questLogID)
 		if (multi ~= false) then
 			local names = {}
 			for n, qID in pairs(qIDs) do
-				local name = SearchEndNPC(qID);
+				local name = WHDB_SearchEndNPC(qID);
 				if (name) then
 					local done = false;
 					for n, nameIn in pairs(names) do
@@ -573,30 +573,30 @@ function GetQuestEndNotes(questLogID)
 					for n, name in pairs(names) do
 						local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(names).." NPCs";
 						local comment = name.."\n("..multi.." quests with this name)"
-						GetNPCNotes(name, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+						WHDB_GetNPCNotes(name, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
 					local name = names[1]
 					local comment = name.."\n(Ends "..multi.." quests with this name)"
-					return GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+					return WHDB_GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 				end
 			end
 			return true;
 		elseif (multi == false) then
-			local name = SearchEndNPC(qIDs);
-			return GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+			local name = WHDB_SearchEndNPC(qIDs);
+			return WHDB_GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 		end
 	else
 		return false;
 	end
-end -- GetQuestEndNotes(questLogID)
+end -- WHDB_GetQuestEndNotes(questLogID)
 
 -- C TODO check objectives text
-function GetQuestIDs(questName, objectives)
+function WHDB_GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
 	if (WHDB_Debug > 0) then
-		DEFAULT_CHAT_FRAME:AddMessage("GetQuestIDs("..questName..", "..objectives..")");
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetQuestIDs("..questName..", "..objectives..")");
 	end
 	if ((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives == '')) then
 		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
@@ -639,20 +639,20 @@ function GetQuestIDs(questName, objectives)
 	else
 		return length, qIDs;
 	end
-end -- GetQuestIDs(questName, objectives)
+end -- WHDB_GetQuestIDs(questName, objectives)
 
 -- C TODO 19 npc names are used twice. first found is chosen atm
-function GetNPCID(npcName)
+function WHDB_GetNPCID(npcName)
 	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("GetNPCID("..npcName..") called");
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetNPCID("..npcName..") called");
 	end
 	for npcid, data in pairs(npcData) do
 		if (data['name'] == npcName) then return npcid; end
 	end
 	return false;
-end -- GetNPCID(npcName)
+end -- WHDB_GetNPCID(npcName)
 
-function GetObjID(objName)
+function WHDB_GetObjID(objName)
 	local objIDs = {};
 	for objID, data in pairs(objData) do
 		if (data['name'] == objName) then 
@@ -662,9 +662,9 @@ function GetObjID(objName)
 	if objIDs == {} then return false;
 	else return objIDs;
 	end
-end -- GetObjID(objName)
+end -- WHDB_GetObjID(objName)
 
-function SwitchSetting(setting)
+function WHDB_SwitchSetting(setting)
 	text = {
 		["waypoints"] = "Waypoint plotting",
 		["auto_plot"] = "Auto plotting",
@@ -677,27 +677,27 @@ function SwitchSetting(setting)
 		WHDB_Settings[WHDB_Player][setting] = 0;
 		WHDB_Print(text[setting].." disabled.");
 	end
-	CheckSetting(setting);
+	WHDB_CheckSetting(setting);
 	if (setting == "auto_plot") and (WHDB_Settings[WHDB_Player][setting] == 1) then
 		WHDB_PlotAllQuests();
 	end
-end -- SwitchSetting(setting)
+end -- WHDB_SwitchSetting(setting)
 
-function CheckSetting(setting)
+function WHDB_CheckSetting(setting)
 	if (WHDB_Settings[WHDB_Player][setting] == 1) then
 		getglobal(setting):SetChecked(true);
 	else
 		getglobal(setting):SetChecked(false);
 	end
-end -- CheckSetting(setting)
+end -- WHDB_CheckSetting(setting)
 
 -- C tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
-function GetNPCNotes(npcName, commentTitle, comment, icon)
+function WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 	if (npcName ~= nil) then
 		if (WHDB_Debug > 0) then 
-			DEFAULT_CHAT_FRAME:AddMessage("GetNPCNotes("..npcName..") called");
+			DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetNPCNotes("..npcName..") called");
 		end
-		npcID = GetNPCID(npcName);
+		npcID = WHDB_GetNPCID(npcName);
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
@@ -745,15 +745,15 @@ function GetNPCNotes(npcName, commentTitle, comment, icon)
 		end
 	end
 	return false;
-end -- GetNPCNotes(npcName, commentTitle, comment, icon)
+end -- WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 
 -- C tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
-function GetObjNotes(objName, commentTitle, comment, icon)
+function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
 	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("GetObjNotes(objName, commentTitle, comment, icon) called");
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetObjNotes(objName, commentTitle, comment, icon) called");
 	end
 	if (objName ~= nil) then
-		objIDs = GetObjID(objName); -- C TODO
+		objIDs = WHDB_GetObjID(objName); -- C TODO
 		local showMap = false;
 		local count = 0;
 		for n, objID in pairs(objIDs) do
@@ -776,23 +776,23 @@ function GetObjNotes(objName, commentTitle, comment, icon)
 		return showMap;
 	end
 	return false;
-end -- GetObjNotes(objName, commentTitle, comment, icon)
+end -- WHDB_GetObjNotes(objName, commentTitle, comment, icon)
 
-function GetItemNotes(itemName, commentTitle, comment, icon)
+function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 	if (itemData[itemName]) then
 		local showMap = false;
 		if (itemData[itemName].npcs) then
 			for key, value in pairs(itemData[itemName].npcs) do
 				if npcData[value[1]] then
-					local statsComment = npcData[value[1]].name.."\n"..GetNPCStatsComment(npcData[value[1]].name);
-					showMap = GetNPCNotes(npcData[value[1]].name, commentTitle, comment..statsComment.."\nDrop chance: "..value[2].."%", icon) or showMap;
+					local statsComment = npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(npcData[value[1]].name);
+					showMap = WHDB_GetNPCNotes(npcData[value[1]].name, commentTitle, comment..statsComment.."\nDrop chance: "..value[2].."%", icon) or showMap;
 				end
 			end
 		end
 		if (itemData[itemName].objects) then
 			for key, value in pairs(itemData[itemName].objects) do
 				if objData[value[1]] then
-					showMap = GetObjNotes(objData[value[1]].name, commentTitle, comment..objData[value[1]].name.."\nDrop chance: "..value[2].."%", icon) or showMap;
+					showMap = WHDB_GetObjNotes(objData[value[1]].name, commentTitle, comment..objData[value[1]].name.."\nDrop chance: "..value[2].."%", icon) or showMap;
 				end
 			end
 		end
@@ -801,11 +801,11 @@ function GetItemNotes(itemName, commentTitle, comment, icon)
 	else
 		return false;
 	end
-end -- GetItemNotes(itemName, commentTitle, comment, icon)
+end -- WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 
-function GetQuestNotes(questLogID)
+function WHDB_GetQuestNotes(questLogID)
 	if (WHDB_Debug >0) then
-		DEFAULT_CHAT_FRAME:AddMessage("GetQuestNotes("..questLogID..") called");
+		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetQuestNotes("..questLogID..") called");
 	end
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
 	if (WHDB_Debug == 2) then 
@@ -835,21 +835,21 @@ function GetQuestNotes(questLogID)
 						end
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
 						local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
-						showMap = GetNPCNotes(monsterName, questTitle, comment..GetNPCStatsComment(monsterName), cMark) or showMap;
+						showMap = WHDB_GetNPCNotes(monsterName, questTitle, comment..WHDB_GetNPCStatsComment(monsterName), cMark) or showMap;
 					elseif (type == "item") then
 						if (WHDB_Debug == 2) then
 							DEFAULT_CHAT_FRAME:AddMessage("    type = item");
 						end
 						if (itemData[itemName] ~= nil) then
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-							showMap = GetItemNotes(itemName, questTitle, comment, cMark) or showMap;
+							showMap = WHDB_GetItemNotes(itemName, questTitle, comment, cMark) or showMap;
 						end
 					-- checks for objective type other than item or monster, e.g. objective, reputation, event
 					-- TODO: object check is WIP, most objects can't be found easily by checking item name
 					elseif (type == "object") then
 						local i, j, objectName = strfind(itemName, "(.*) ")
 						local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-						showMap = GetObjNotes(objectName, questTitle, comment, cMark) or showMap;
+						showMap = WHDB_GetObjNotes(objectName, questTitle, comment, cMark) or showMap;
 					elseif (type ~= "item" and type ~= "monster") then
 						if (WHDB_Debug == 2) then 
 							DEFAULT_CHAT_FRAME:AddMessage("    "..type.." quest objective-type not supported yet");
@@ -860,18 +860,18 @@ function GetQuestNotes(questLogID)
 		end
 		-- added numObjectives condition due to some quests not showing "isComplete" though having nothing to do but turn it in
 		if (isComplete or numObjectives == 0) then
-			GetQuestEndNotes(questLogID);
+			WHDB_GetQuestEndNotes(questLogID);
 		end
 	end
 	if showMap then
-		cycleMarks();
+		WHDB_cycleMarks();
 	end
 	return showMap;
-end -- GetQuestNotes(questLogID)
+end -- WHDB_GetQuestNotes(questLogID)
 
 -- returns level and hp values with prefix for provided NPC name as string
-function GetNPCStatsComment(npcName)
-	npcID = GetNPCID(npcName)
+function WHDB_GetNPCStatsComment(npcName)
+	npcID = WHDB_GetNPCID(npcName)
 	if (npcData[npcID] ~= nil) then
 		local level = npcData[npcID].level;
 		local hp = npcData[npcID].hp;
@@ -885,22 +885,22 @@ function GetNPCStatsComment(npcName)
 	else
 		return "NPC not found: "..npcName;
 	end
-end -- GetNPCStatsComment(npcName)
+end -- WHDB_GetNPCStatsComment(npcName)
 
 -- returns dropRate value with prefix for provided NPC name as string
 -- TODO: fix for new item data
-function GetNPCDropComment(itemName, npcName)
+function WHDB_GetNPCDropComment(itemName, npcName)
 	local dropRate = itemData[itemName][npcName];
 	if (dropRate == "" or dropRate == nil) then
 		dropRate = "Unknown";
 	end
 	return "Drop chance: "..dropRate.."%";
-end -- GetNPCDropComment(itemName, npcName)
+end -- WHDB_GetNPCDropComment(itemName, npcName)
 
-function GetQuestStartNotes(zoneName)
+function WHDB_GetQuestStartNotes(zoneName)
 	local zoneID = 0;
 	if zoneName == nil then
-		zoneID = GetCurrentZoneID();
+		zoneID = WHDB_GetCurrentZoneID();
 	end
 	if (zoneID == 0) and (zoneName) then
 		for k,v in pairs(zoneData) do
@@ -913,19 +913,19 @@ function GetQuestStartNotes(zoneName)
 		-- TODO: add quests to tooltip and add hide option to right click menu
 		for id, data in pairs(npcData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				GetNPCNotes(data.name, data.name, "Queststarts", 5)
+				WHDB_GetNPCNotes(data.name, data.name, "Queststarts", 5)
 			end
 		end
 		for id, data in pairs(objData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				GetObjNotes(data.name, data.name, "Queststarts", 5)
+				WHDB_GetObjNotes(data.name, data.name, "Queststarts", 5)
 			end
 		end
 		local _,_,_ = WHDB_PlotNotesOnMap();
 	end
-end -- GetQuestStartNotes(zoneName)
+end -- WHDB_GetQuestStartNotes(zoneName)
 
-function GetCurrentZoneID()
+function WHDB_GetCurrentZoneID()
 	local zoneXY = {GetMapZones(GetCurrentMapContinent())};
 	local zoneName = zoneXY[GetCurrentMapZone()];
 	for k,v in pairs(zoneData) do
@@ -936,7 +936,7 @@ function GetCurrentZoneID()
 	return 0;
 end
 
-function GetSelectionQuestNotes()
-	GetQuestNotes(GetQuestLogSelection())
+function WHDB_GetSelectionQuestNotes()
+	WHDB_GetQuestNotes(GetQuestLogSelection())
 	WHDB_PlotNotesOnMap();
 end
