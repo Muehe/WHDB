@@ -569,7 +569,11 @@ function WHDB_GetQuestEndNotes(questLogID)
 			return true;
 		elseif (multi == false) then
 			local name = WHDB_SearchEndNPC(qIDs);
-			return WHDB_GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+			if name then
+				return WHDB_GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+			else
+				return false;
+			end
 		end
 	else
 		return false;
