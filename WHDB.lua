@@ -442,7 +442,7 @@ function WHDB_GetComments(questTitle, questObjectives)
 	if (WHDB_Debug > 1) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetComments(questTitle, questObjectives) called");
 	end
-	-- C Update for new functionality
+	-- Update for new functionality
 	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
 	local questCom = "";
 	if (qIDs) then
@@ -495,6 +495,7 @@ function WHDB_CleanMap()
 	end
 end -- WHDB_CleanMap()
 
+-- called from xml
 function WHDB_DoCleanMap()
 	if (WHDB_Debug > 1) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_DoCleanMap() called");
@@ -506,22 +507,6 @@ function WHDB_DoCleanMap()
 	end
 	WHDB_CleanMap();
 end -- WHDB_DoCleanMap()
-
-function WHDB_PopulateZones()
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PopulateZones() called");
-	end
-	local numEntries, numQuests = GetNumQuestLogEntries();
-	local lastZone, questLogTitleText, level, questTag, isHeader, isCollapsed, isComplete;
-	for i=1, numEntries, 1 do
-		questLogTitleText, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(i);
-		if (isHeader) then
-			lastZone = questLogTitleText;
-		else
-			WHDB_QuestZoneInfo[questLogTitleText] = lastZone;
-		end
-	end
-end -- WHDB_PopulateZones()
 
 function WHDB_SearchEndNPC(quest)
 	if (WHDB_Debug > 0) then 
@@ -591,7 +576,7 @@ function WHDB_GetQuestEndNotes(questLogID)
 	end
 end -- WHDB_GetQuestEndNotes(questLogID)
 
--- C TODO check objectives text
+-- TODO check objectives text
 function WHDB_GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
@@ -641,7 +626,7 @@ function WHDB_GetQuestIDs(questName, objectives)
 	end
 end -- WHDB_GetQuestIDs(questName, objectives)
 
--- C TODO 19 npc names are used twice. first found is chosen atm
+-- TODO 19 npc names are used twice. first found is chosen atm
 function WHDB_GetNPCID(npcName)
 	if (WHDB_Debug > 0) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetNPCID("..npcName..") called");
@@ -691,7 +676,7 @@ function WHDB_CheckSetting(setting)
 	end
 end -- WHDB_CheckSetting(setting)
 
--- C tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
+-- tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
 function WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 	if (npcName ~= nil) then
 		if (WHDB_Debug > 0) then 
@@ -747,7 +732,7 @@ function WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 	return false;
 end -- WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 
--- C tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
+-- tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
 function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
 	if (WHDB_Debug > 1) then 
 		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetObjNotes(objName, commentTitle, comment, icon) called");
@@ -934,9 +919,10 @@ function WHDB_GetCurrentZoneID()
 		end
 	end
 	return 0;
-end
+end -- WHDB_GetCurrentZoneID()
 
+-- called from xml
 function WHDB_GetSelectionQuestNotes()
 	WHDB_GetQuestNotes(GetQuestLogSelection())
 	WHDB_PlotNotesOnMap();
-end
+end -- WHDB_GetSelectionQuestNotes()
