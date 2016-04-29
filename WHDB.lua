@@ -228,7 +228,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb help | This help.");
 		WHDB_Print("/whdb version | Show WHDB version.");
 		WHDB_Print("/whdb com <quest name> | Get quest comments by name.");
-		WHDB_Print("/whdb item <item name> | Show item drop info on map.");
+		WHDB_Print("NEEDS FIX /whdb item <item name> | Show item drop info on map.");
 		WHDB_Print("/whdb mob <npc name> | Show NPC location on map.");
 		WHDB_Print("/whdb obj <object name> | Show object location on map.");
 		WHDB_Print("/whdb clean | Clean map notes.");
@@ -666,10 +666,15 @@ function WHDB_CheckSetting(setting)
 end -- WHDB_CheckSetting(setting)
 
 -- tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
-function WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
-	if (npcName ~= nil) then
-		WHDB_Debug_Print(2, "WHDB_GetNPCNotes("..npcName..") called");
-		npcID = WHDB_GetNPCID(npcName);
+function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
+	if (npcNameOrID ~= nil) then
+		WHDB_Debug_Print(2, "WHDB_GetNPCNotes("..npcNameOrID..") called");
+		local npcID;
+		if (type(npcNameOrID) == "string") then
+			npcID = WHDB_GetNPCID(npcNameOrID);
+		else
+			npcID = npcNameOrID;
+		end
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
 			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
@@ -717,7 +722,7 @@ function WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 		end
 	end
 	return false;
-end -- WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
+end -- WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 
 -- tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
 function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
@@ -755,8 +760,8 @@ function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 		if (itemData[itemName].npcs) then
 			for key, value in pairs(itemData[itemName].npcs) do
 				if npcData[value[1]] then
-					local statsComment = npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(npcData[value[1]].name);
-					showMap = WHDB_GetNPCNotes(npcData[value[1]].name, commentTitle, comment..statsComment.."\nDrop chance: "..value[2].."%", icon) or showMap;
+					local statsComment = npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(value[1]);
+					showMap = WHDB_GetNPCNotes(value[1], commentTitle, comment..statsComment.."\nDrop chance: "..value[2].."%", icon) or showMap;
 				end
 			end
 		end
@@ -795,7 +800,8 @@ function WHDB_GetQuestNotes(questLogID)
 						WHDB_Debug_Print(2, "    type = monster");
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
 						local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
-						showMap = WHDB_GetNPCNotes(monsterName, questTitle, comment..WHDB_GetNPCStatsComment(monsterName), cMark) or showMap;
+						local npcID = WHDB_GetNPCID(monsterName);
+						showMap = WHDB_GetNPCNotes(npcID, questTitle, comment..WHDB_GetNPCStatsComment(npcID), cMark) or showMap;
 					elseif (type == "item") then
 						WHDB_Debug_Print(2, "    type = item");
 						if (itemData[itemName] ~= nil) then
@@ -826,9 +832,14 @@ function WHDB_GetQuestNotes(questLogID)
 end -- WHDB_GetQuestNotes(questLogID)
 
 -- returns level and hp values with prefix for provided NPC name as string
-function WHDB_GetNPCStatsComment(npcName)
-	WHDB_Debug_Print(2, "WHDB_GetNPCStatsComment("..npcName..") called");
-	npcID = WHDB_GetNPCID(npcName)
+function WHDB_GetNPCStatsComment(npcNameOrID)
+	WHDB_Debug_Print(2, "WHDB_GetNPCStatsComment("..npcNameOrID..") called");
+	local npcID;
+	if (type(npcNameOrID) == "string") then
+		npcID = WHDB_GetNPCID(npcNameOrID);
+	else
+		npcID = npcNameOrID;
+	end
 	if (npcData[npcID] ~= nil) then
 		local level = npcData[npcID].level;
 		local hp = npcData[npcID].hp;
@@ -840,14 +851,15 @@ function WHDB_GetNPCStatsComment(npcName)
 		end
 		return "Level: "..level.."\nHealth: "..hp;
 	else
-		return "NPC not found: "..npcName;
+		WHDB_Debug_Print(2, "    NPC not found: "..npcNameOrID);
+		return "NPC not found: "..npcNameOrID;
 	end
-end -- WHDB_GetNPCStatsComment(npcName)
+end -- WHDB_GetNPCStatsComment(npcNameOrID)
 
 -- returns dropRate value with prefix for provided NPC name as string
 -- TODO: fix for new item data
-function WHDB_GetNPCDropComment(itemName, npcName)
-	WHDB_Debug_Print(2, "WHDB_GetNPCDropComment("..itemName..", "..npcName..") called");
+function WHDB_GetNPCDropComment(itemName, npcID)
+	WHDB_Debug_Print(2, "WHDB_GetNPCDropComment("..itemName..", "..npcID..") called");
 	local dropRate = itemData[itemName][npcName];
 	if (dropRate == "" or dropRate == nil) then
 		dropRate = "Unknown";
