@@ -858,8 +858,8 @@ end -- WHDB_GetNPCStatsComment(npcNameOrID)
 
 -- returns dropRate value with prefix for provided NPC name as string
 -- TODO: fix for new item data
-function WHDB_GetNPCDropComment(itemName, npcID)
-	WHDB_Debug_Print(2, "WHDB_GetNPCDropComment("..itemName..", "..npcID..") called");
+function WHDB_GetNPCDropComment(itemName, npcName)
+	WHDB_Debug_Print(2, "WHDB_GetNPCDropComment("..itemName..", "..npcName..") called");
 	local dropRate = itemData[itemName][npcName];
 	if (dropRate == "" or dropRate == nil) then
 		dropRate = "Unknown";
