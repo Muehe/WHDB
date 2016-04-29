@@ -4,7 +4,7 @@
 -- Wowhead DB Continued By: Muehe
 --------------------------------------------------------
 
-WHDB_Debug = 0;
+WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
 WHDB_QuestZoneInfo = {};
@@ -108,6 +108,30 @@ end -- WHDB_cycleMarks()
 
 -- End of Cartographer stuff
 
+-- Debug print function. Credits to Questie.
+function WHDB_Debug_Print(...)
+	local debugWin = 0;
+	local name, shown;
+	for i=1, NUM_CHAT_WINDOWS do
+		name,_,_,_,_,_,shown = GetChatWindowInfo(i);
+		if (string.lower(name) == "whdbdebug") then debugWin = i; break; end
+	end
+	if (debugWin == 0) or (WHDB_Debug == 0) or (arg[1] > WHDB_Debug) then return end
+	local out = "";
+	for i = 2, arg.n, 1 do
+		if (i > 2) then out = out .. ", "; end
+		local t = type(arg[i]);
+		if (t == "string") then
+			out = out .. '"'..arg[i]..'"';
+		elseif (t == "number") then
+			out = out .. arg[i];
+		else
+			out = out .. "nil";
+		end
+	end
+	getglobal("ChatFrame"..debugWin):AddMessage(out, 1.0, 1.0, 0.3);
+end
+
 function WHDB_OnMouseDown(arg1)
 	if (arg1 == "LeftButton") then
 		WHDB_Frame:StartMoving();
@@ -135,21 +159,13 @@ function WHDB_Init()
 end -- WHDB_Init()
 
 function WHDB_Event(event, arg1)
-	if (WHDB_Debug > 0) then
-		if event then
-			DEFAULT_CHAT_FRAME:AddMessage("WHDB_Event("..event..", arg1) called");
-		else
-			DEFAULT_CHAT_FRAME:AddMessage("WHDB_Event(event, arg1) called");
-		end
-	end
+	WHDB_Debug_Print(2, "WHDB_Event(event, arg1) called");
 	if (event == "PLAYER_LOGIN") then
-		if (WHDB_Debug == 2) then
-			DEFAULT_CHAT_FRAME:AddMessage("Event: PLAYER_LOGIN");
-		end
+		WHDB_Debug_Print(1, "Event: PLAYER_LOGIN");
 		if (Cartographer_Notes ~= nil) then
 			WHDBDB = {}; WHDBDBH = {};
 			Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
-			if (WHDB_Debug > 0) then WHDB_Print("Cartographer Database Registered."); end
+			WHDB_Debug_Print(1, "Cartographer Database Registered.");
 		end
 		WHDB_Player_Faction = UnitFactionGroup("player");
 		if (WHDB_Player_Faction == "Alliance") then
@@ -166,9 +182,7 @@ function WHDB_Event(event, arg1)
 		WHDB_Player_Sex = UnitSex("player");
 		WHDB_Player_Class = UnitClass("player");
 		stringX = WHDB_Player_Race..WHDB_Player_Sex..WHDB_Player_Class;
-		if (WHDB_Debug == 2) then 
-			DEFAULT_CHAT_FRAME:AddMessage(string.gsub(stringX, "2", "Male"));
-		end
+		WHDB_Debug_Print(2, string.gsub(stringX, "2", "Male"));
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
 			WHDB_Settings[WHDB_Player] = {};
@@ -198,15 +212,11 @@ function WHDB_Event(event, arg1)
 		WHDB_Print("WHDB Loaded.");
 	elseif (event == "QUEST_LOG_UPDATE") then
 		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
-			if (WHDB_Debug == 2) then
-				DEFAULT_CHAT_FRAME:AddMessage("Event: QUEST_LOG_UPDATE");
-			end
+			WHDB_Debug_Print(2, "Event: QUEST_LOG_UPDATE");
 			WHDB_PlotAllQuests();
 		end
 	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["questStarts"] == 1) then
-		if (WHDB_Debug == 2) then
-			DEFAULT_CHAT_FRAME:AddMessage(zone);
-		end
+		WHDB_Debug_Print(2, zone);
 		WHDB_GetQuestStartNotes();
 	end
 end -- WHDB_Event(event, arg1)
@@ -345,9 +355,7 @@ function WHDB_Slash(input)
 end -- WHDB_Slash(input)
 
 function WHDB_PlotAllQuests()
-	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotAllQuests() called");
-	end
+	WHDB_Debug_Print(2, "WHDB_PlotAllQuests() called");
 	local questLogID=1;
 	WHDB_MAP_NOTES = {};
 	while (GetQuestLogTitle(questLogID) ~= nil) do
@@ -367,9 +375,7 @@ function WHDB_Print_Indent( str )
 end -- WHDB_Print_Indent( str )
 
 function WHDB_PlotNotesOnMap()
-	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_PlotNotesOnMap() called");
-	end
+	WHDB_Debug_Print(2, "WHDB_PlotNotesOnMap() called");
 
 	local zone = nil;
 	local title = nil;
@@ -425,9 +431,7 @@ function WHDB_PlotNotesOnMap()
 end -- WHDB_PlotNotesOnMap()
 
 function WHDB_GetMapIDFromZone(zoneText)
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetMapIDFromZone(zoneText) called");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetMapIDFromZone(zoneText) called");
 	for cKey, cName in ipairs{GetMapContinents()} do
 		for zKey,zName in ipairs{GetMapZones(cKey)} do
 			if(zoneText == zName) then
@@ -439,9 +443,7 @@ function WHDB_GetMapIDFromZone(zoneText)
 end -- WHDB_GetMapIDFromZone(zoneText)
 
 function WHDB_GetComments(questTitle, questObjectives)
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetComments(questTitle, questObjectives) called");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetComments(questTitle, questObjectives) called");
 	-- Update for new functionality
 	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
 	local questCom = "";
@@ -472,9 +474,7 @@ function WHDB_GetComments(questTitle, questObjectives)
 end -- WHDB_GetComments(questTitle, questObjectives)
 
 function WHDB_ShowMap()
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_ShowMap() called");
-	end
+	WHDB_Debug_Print(2, "WHDB_ShowMap() called");
 	local ShowMapZone, ShowMapTitle, ShowMapID = WHDB_PlotNotesOnMap();
 	if (Cartographer) then
 		if (ShowMapZone ~= nil) then
@@ -485,9 +485,7 @@ function WHDB_ShowMap()
 end -- WHDB_ShowMap()
 
 function WHDB_CleanMap()
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_CleanMap() called");
-	end
+	WHDB_Debug_Print(2, "WHDB_CleanMap() called");
 	if (Cartographer_Notes ~= nil) then
 		Cartographer_Notes:UnregisterNotesDatabase("WHDB");
 		WHDBDB = {}; WHDBDBH = {};
@@ -497,9 +495,7 @@ end -- WHDB_CleanMap()
 
 -- called from xml
 function WHDB_DoCleanMap()
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_DoCleanMap() called");
-	end
+	WHDB_Debug_Print(2, "WHDB_DoCleanMap() called");
 	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
 		WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
 		WHDB_CheckSetting("auto_plot")
@@ -509,9 +505,7 @@ function WHDB_DoCleanMap()
 end -- WHDB_DoCleanMap()
 
 function WHDB_SearchEndNPC(quest)
-	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_SearchEndNPC("..quest..") called");
-	end
+	WHDB_Debug_Print(2, "WHDB_SearchEndNPC("..quest..") called");
 	for npc, data in pairs(npcData) do
 		if (data["ends"] ~= nil) then
 			for line, entry in pairs(data["ends"]) do
@@ -523,18 +517,14 @@ function WHDB_SearchEndNPC(quest)
 end -- WHDB_SearchEndNPC(quest)
 
 function WHDB_GetQuestEndNotes(questLogID)
-	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetQuestEndNotes("..questLogID..") called");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetQuestEndNotes("..questLogID..") called");
 	local questTitle = GetQuestLogTitle(questLogID);
 	SelectQuestLogEntry(questLogID);
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
 	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
-	if (WHDB_Debug > 1) then
-		if multi ~= false then
-			DEFAULT_CHAT_FRAME:AddMessage("    "..table.getn(qIDs));
-		end
+	if multi ~= false then
+		WHDB_Debug_Print(2, "    "..table.getn(qIDs));
 	end
 	if (qIDs ~= false) then
 		if (multi ~= false) then
@@ -584,9 +574,7 @@ end -- WHDB_GetQuestEndNotes(questLogID)
 function WHDB_GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
-	if (WHDB_Debug > 0) then
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetQuestIDs("..questName..", "..objectives..")");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetQuestIDs("..questName..", "..objectives..")");
 	if ((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives == '')) then
 		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
 			table.insert(qIDs, n);
@@ -617,9 +605,7 @@ function WHDB_GetQuestIDs(questName, objectives)
 			end
 		end
 	end
-	if (WHDB_Debug == 2) then
-		DEFAULT_CHAT_FRAME:AddMessage("Possible questIDs: "..table.getn(qIDs));
-	end
+	WHDB_Debug_Print(2, "Possible questIDs: ", table.getn(qIDs));
 	length = table.getn(qIDs);
 	if (length == nil) then
 		return false, false;
@@ -632,9 +618,7 @@ end -- WHDB_GetQuestIDs(questName, objectives)
 
 -- TODO 19 npc names are used twice. first found is chosen atm
 function WHDB_GetNPCID(npcName)
-	if (WHDB_Debug > 0) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetNPCID("..npcName..") called");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetNPCID("..npcName..") called");
 	for npcid, data in pairs(npcData) do
 		if (data['name'] == npcName) then return npcid; end
 	end
@@ -642,6 +626,7 @@ function WHDB_GetNPCID(npcName)
 end -- WHDB_GetNPCID(npcName)
 
 function WHDB_GetObjID(objName)
+	WHDB_Debug_Print(2, "WHDB_GetObjID("..objName..") called");
 	local objIDs = {};
 	for objID, data in pairs(objData) do
 		if (data['name'] == objName) then 
@@ -683,9 +668,7 @@ end -- WHDB_CheckSetting(setting)
 -- tries to get locations for an NPC and inserts them in WHDB_MAP_NOTES if found
 function WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 	if (npcName ~= nil) then
-		if (WHDB_Debug > 0) then 
-			DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetNPCNotes("..npcName..") called");
-		end
+		WHDB_Debug_Print(2, "WHDB_GetNPCNotes("..npcName..") called");
 		npcID = WHDB_GetNPCID(npcName);
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
@@ -738,9 +721,7 @@ end -- WHDB_GetNPCNotes(npcName, commentTitle, comment, icon)
 
 -- tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
 function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
-	if (WHDB_Debug > 1) then 
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetObjNotes(objName, commentTitle, comment, icon) called");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetObjNotes(objName, commentTitle, comment, icon) called");
 	if (objName ~= nil) then
 		objIDs = WHDB_GetObjID(objName); -- C TODO
 		local showMap = false;
@@ -768,6 +749,7 @@ function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
 end -- WHDB_GetObjNotes(objName, commentTitle, comment, icon)
 
 function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
+	WHDB_Debug_Print(2, "WHDB_GetItemNotes("..itemName..") called");
 	if (itemData[itemName]) then
 		local showMap = false;
 		if (itemData[itemName].npcs) then
@@ -793,28 +775,16 @@ function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 end -- WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 
 function WHDB_GetQuestNotes(questLogID)
-	if (WHDB_Debug >0) then
-		DEFAULT_CHAT_FRAME:AddMessage("WHDB_GetQuestNotes("..questLogID..") called");
-	end
+	WHDB_Debug_Print(2, "WHDB_GetQuestNotes("..questLogID..") called");
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
-	if (WHDB_Debug == 2) then 
-		if (questTitle ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("    questTitle = "..questTitle);
-		end
-		if (level ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("    level = "..level);
-		end
-		if (isComplete ~= nil) then
-			DEFAULT_CHAT_FRAME:AddMessage("    isComplete = "..isComplete);
-		end
-	end
 	local showMap = false;
 	if (not isHeader and questTitle ~= nil) then
+		WHDB_Debug_Print(2, "    questTitle = ", questTitle);
+		WHDB_Debug_Print(2, "    level = ", level);
+		WHDB_Debug_Print(2, "    isComplete = ", isComplete);
 		local numObjectives = GetNumQuestLeaderBoards(questLogID);
-		if (WHDB_Debug == 2) then
-			if (numObjectives ~= nil) then
-				DEFAULT_CHAT_FRAME:AddMessage("    numObjectives = "..numObjectives);
-			end
+		if (numObjectives ~= nil) then
+			WHDB_Debug_Print(2, "    numObjectives = "..numObjectives);
 		end
 		if (numObjectives ~= nil) then
 			for i=1, numObjectives, 1 do
@@ -822,16 +792,12 @@ function WHDB_GetQuestNotes(questLogID)
 				local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
 				if (not finished) then
 					if (type == "monster") then
-						if (WHDB_Debug == 2) then
-							DEFAULT_CHAT_FRAME:AddMessage("    type = monster");
-						end
+						WHDB_Debug_Print(2, "    type = monster");
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
 						local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
 						showMap = WHDB_GetNPCNotes(monsterName, questTitle, comment..WHDB_GetNPCStatsComment(monsterName), cMark) or showMap;
 					elseif (type == "item") then
-						if (WHDB_Debug == 2) then
-							DEFAULT_CHAT_FRAME:AddMessage("    type = item");
-						end
+						WHDB_Debug_Print(2, "    type = item");
 						if (itemData[itemName] ~= nil) then
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
 							showMap = WHDB_GetItemNotes(itemName, questTitle, comment, cMark) or showMap;
@@ -843,9 +809,7 @@ function WHDB_GetQuestNotes(questLogID)
 						local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
 						showMap = WHDB_GetObjNotes(objectName, questTitle, comment, cMark) or showMap;
 					elseif (type ~= "item" and type ~= "monster") then
-						if (WHDB_Debug == 2) then 
-							DEFAULT_CHAT_FRAME:AddMessage("    "..type.." quest objective-type not supported yet");
-						end
+						WHDB_Debug_Print(1, "    "..type.." quest objective-type not supported yet");
 					end
 				end
 			end
@@ -863,6 +827,7 @@ end -- WHDB_GetQuestNotes(questLogID)
 
 -- returns level and hp values with prefix for provided NPC name as string
 function WHDB_GetNPCStatsComment(npcName)
+	WHDB_Debug_Print(2, "WHDB_GetNPCStatsComment("..npcName..") called");
 	npcID = WHDB_GetNPCID(npcName)
 	if (npcData[npcID] ~= nil) then
 		local level = npcData[npcID].level;
@@ -882,6 +847,7 @@ end -- WHDB_GetNPCStatsComment(npcName)
 -- returns dropRate value with prefix for provided NPC name as string
 -- TODO: fix for new item data
 function WHDB_GetNPCDropComment(itemName, npcName)
+	WHDB_Debug_Print(2, "WHDB_GetNPCDropComment("..itemName..", "..npcName..") called");
 	local dropRate = itemData[itemName][npcName];
 	if (dropRate == "" or dropRate == nil) then
 		dropRate = "Unknown";
