@@ -801,6 +801,9 @@ function WHDB_GetQuestNotes(questLogID)
 		if (questTitle ~= nil) then
 			DEFAULT_CHAT_FRAME:AddMessage("    questTitle = "..questTitle);
 		end
+		if (level ~= nil) then
+			DEFAULT_CHAT_FRAME:AddMessage("    level = "..level);
+		end
 		if (isComplete ~= nil) then
 			DEFAULT_CHAT_FRAME:AddMessage("    isComplete = "..isComplete);
 		end
