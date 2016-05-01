@@ -5,6 +5,7 @@
 --------------------------------------------------------
 
 WHDB_Debug = 2;
+WHDB_MinDropChance = 0;
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
 WHDB_QuestZoneInfo = {};
@@ -289,7 +290,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb help | This help.");
 		WHDB_Print("/whdb version | Show WHDB version.");
 		WHDB_Print("/whdb com <quest name> | Get quest comments by name.");
-		WHDB_Print("NEEDS FIX /whdb item <item name> | Show item drop info on map.");
+		WHDB_Print("/whdb item <item name> | Show item drop info on map.");
 		WHDB_Print("/whdb mob <npc name> | Show NPC location on map.");
 		WHDB_Print("/whdb obj <object name> | Show object location on map.");
 		WHDB_Print("/whdb clean | Clean map notes.");
@@ -333,33 +334,10 @@ function WHDB_Slash(input)
 			_, _, _, itemName = string.find(itemName, "^|c%x+|H(.+)|h%[(.+)%]")
 		end
 		WHDB_Print("Drops for: "..itemName);
-		WHDB_Print("---------------------------------------------------");
 		if (itemName ~= "") then
 			if (itemData[itemName] ~= nil) then
-				local showmax = 1000;
-				for monsterName, monsterDrop in pairs(itemData[itemName]) do
-					npcID = WHDB_GetNPCID(monsterName)
-					if (npcData[npcID] ~= nil) then
-						zoneName = zoneData[npcData[npcID]["zone"]];
-						if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
-						WHDB_Print("Dropped by: " .. monsterName);
-						WHDB_Print_Indent(WHDB_GetNPCDropComment(itemName, monsterName));
-						WHDB_Print_Indent("Zone: " .. zoneName);
-						local comment = monsterName.."\n"..WHDB_GetNPCDropComment(itemName, monsterName).."\n"..WHDB_GetNPCStatsComment(monsterName);
-						if (WHDB_GetNPCNotes(monsterName, itemName, comment, 0)) then
-							WHDB_ShowMap();
-						else
-							WHDB_Print_Indent("No locations found for: "..monsterName);
-						end
-						showmax = showmax - 1;
-						if (showmax == 0) then
-							WHDB_Print("Showing only the 1000 first results.");
-							break;
-						end
-					else
-						WHDB_Print("No data for NPC named "..monsterName);
-					end
-				end
+				WHDB_GetItemNotes(itemName, itemName, "", 0);
+				WHDB_PlotNotesOnMap();
 			end
 		end
 	elseif (string.sub(input,1,3) == "mob") then
@@ -821,15 +799,28 @@ function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 		if (itemData[itemName].npcs) then
 			for key, value in pairs(itemData[itemName].npcs) do
 				if npcData[value[1]] then
-					local statsComment = npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(value[1]);
-					showMap = WHDB_GetNPCNotes(value[1], commentTitle, comment..statsComment.."\nDrop chance: "..value[2].."%", icon) or showMap;
+					local show = true;
+					if (WHDB_MinDropChance > 0) and (value[2] < WHDB_MinDropChance) then
+						show = false;
+					end
+					if show then
+						local dropComment = "Drop chance: "..value[2].."%\n".."Dropped by:\n"..npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(value[1]);
+						showMap = WHDB_GetNPCNotes(value[1], commentTitle, comment..dropComment, icon) or showMap;
+					end
 				end
 			end
 		end
 		if (itemData[itemName].objects) then
 			for key, value in pairs(itemData[itemName].objects) do
 				if objData[value[1]] then
-					showMap = WHDB_GetObjNotes(objData[value[1]].name, commentTitle, comment..objData[value[1]].name.."\nDrop chance: "..value[2].."%", icon) or showMap;
+					local show = true;
+					if (WHDB_MinDropChance > 0) and (value[2] < WHDB_MinDropChance) then
+						show = false;
+					end
+					if show then
+						local dropComment = "Drop chance: "..value[2].."%\n".."Dropped by:\n"..objData[value[1]].name;
+						showMap = WHDB_GetObjNotes(objData[value[1]].name, commentTitle, comment..dropComment, icon) or showMap;
+					end
 				end
 			end
 		end
@@ -860,9 +851,11 @@ function WHDB_GetQuestNotes(questLogID)
 					if (type == "monster") then
 						WHDB_Debug_Print(2, "    type = monster");
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
-						local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
-						local npcID = WHDB_GetNPCID(monsterName);
-						showMap = WHDB_GetNPCNotes(npcID, questTitle, comment..WHDB_GetNPCStatsComment(npcID), cMark) or showMap;
+						if monsterName then
+							local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
+							local npcID = WHDB_GetNPCID(monsterName);
+							showMap = WHDB_GetNPCNotes(npcID, questTitle, comment..WHDB_GetNPCStatsComment(npcID), cMark) or showMap;
+						end
 					elseif (type == "item") then
 						WHDB_Debug_Print(2, "    type = item");
 						if (itemData[itemName] ~= nil) then
