@@ -291,6 +291,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb version | Show WHDB version.");
 		WHDB_Print("/whdb com <quest name> | Get quest comments by name.");
 		WHDB_Print("/whdb item <item name> | Show item drop info on map.");
+		WHDB_Print("/whdb min [0, 101] | Minimum drop chance for items. 0 shows all, 101 none.");
 		WHDB_Print("/whdb mob <npc name> | Show NPC location on map.");
 		WHDB_Print("/whdb obj <object name> | Show object location on map.");
 		WHDB_Print("/whdb clean | Clean map notes.");
@@ -339,6 +340,18 @@ function WHDB_Slash(input)
 				WHDB_GetItemNotes(itemName, itemName, "", 0);
 				WHDB_PlotNotesOnMap();
 			end
+		end
+	elseif (string.sub(input,1,3) == "min") then
+		number = tonumber(string.sub(input, 5));
+		if number then
+			local value = abs(number);
+			if value > 101 then
+				value = 101;
+			end
+			WHDB_MinDropChance = value;
+			WHDB_Print("Minimum Drop Chance set to: "..value.."%");
+		else
+			WHDB_Print("Minimum Drop Chance is: "..WHDB_MinDropChance.."%")
 		end
 	elseif (string.sub(input,1,3) == "mob") then
 		local monsterName = string.sub(input, 5);
