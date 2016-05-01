@@ -351,7 +351,7 @@ function WHDB_Slash(input)
 			WHDB_MinDropChance = value;
 			WHDB_Print("Minimum Drop Chance set to: "..value.."%");
 		else
-			WHDB_Print("Minimum Drop Chance is: "..WHDB_MinDropChance.."%")
+			WHDB_Print("Minimum Drop Chance is: "..WHDB_MinDropChance.."%");
 		end
 	elseif (string.sub(input,1,3) == "mob") then
 		local monsterName = string.sub(input, 5);
