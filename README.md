@@ -32,3 +32,14 @@ Can be used with Questie and ShaguDB (ShaguDB is a little buggy due to using Car
 **cmangos/classicdb** for the data used in this addon.
 
 **Eric Mauser** creator of ShaguDB, an addon quite like mine (also forked from WHDB), of which I was unaware when starting to improve the old WHDB. Some of his stuff was incorporated into this addon (e.g. the beautiful icons).
+
+# Screenshots:
+
+Everything on one glimpse? Small Map, big icons:
+<img src="http://i.imgur.com/mWP0DTm.jpg" alt="Small Map, big icons"/>
+
+Map to full? Single Quest Display:
+<img src="http://i.imgur.com/nhWVyXX.jpg" alt="Single Quest Display"/>
+
+Want too see more? Big Map, Small Icons:
+<img src="http://i.imgur.com/E4whTVu.jpg" alt="Big Map, Small Icons"/>
