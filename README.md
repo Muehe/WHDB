@@ -1,7 +1,7 @@
 # WHDB
 Continued WHDB addon for classic WoW
 
-Somewhere in beta phase. No warranties. Requires Cartographer addon (using the modified WHDB version of Cartographer is advised but not required).
+Somewhere in beta phase. No warranties. Requires Cartographer addon (using the [modified WHDB version of Cartographer](https://github.com/Muehe/Cartographer) is advised but not required).
 
 # Description:
 
@@ -12,7 +12,7 @@ Can be used with Questie and ShaguDB (ShaguDB is a little buggy due to using Car
 # Installation Instructions:
 
  1. Download WHDB
- 2. Download modified Cartographer (optional if you already have the original, but adds some convienient features).
+ 2. Download modified [Cartographer](https://github.com/Muehe/Cartographer) (optional if you already have the original, but adds some convienient features).
  3. Copy or move the WHDB and Cartographer folders into WOW_FOLDER\Interface\Addons\
  4. If you have Questie installed and want the Questie Notes to only show on the world and continent maps do the following:
   * Go to WOW_FOLDER\Interface\Addons\\!Questie\Modules and open the QuestieNotes.lua file
