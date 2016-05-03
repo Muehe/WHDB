@@ -45,50 +45,50 @@ Cartographer_Notes:RegisterIcon("Waypoint", {
 
 -- Icons from ShaguDB, thanks fam.
 -- Switched 3 and 7 for better contrast of colors follwing each other
-cMark = "mk1";
-Cartographer_Notes:RegisterIcon("mk1", {
+WHDB_cMark = "WHDB_mk1";
+Cartographer_Notes:RegisterIcon("WHDB_mk1", {
 	text = "Mark 1",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk1",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk2", {
+Cartographer_Notes:RegisterIcon("WHDB_mk2", {
 	text = "Mark 2",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk2",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk3", {
+Cartographer_Notes:RegisterIcon("WHDB_mk3", {
 	text = "Mark 3",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk7",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk4", {
+Cartographer_Notes:RegisterIcon("WHDB_mk4", {
 	text = "Mark 4",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk4",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk5", {
+Cartographer_Notes:RegisterIcon("WHDB_mk5", {
 	text = "Mark 5",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk5",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk6", {
+Cartographer_Notes:RegisterIcon("WHDB_mk6", {
 	text = "Mark 6",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk6",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk7", {
+Cartographer_Notes:RegisterIcon("WHDB_mk7", {
 	text = "Mark 7",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk3",
 	width = 8,
 	height = 8,
 })
-Cartographer_Notes:RegisterIcon("mk8", {
+Cartographer_Notes:RegisterIcon("WHDB_mk8", {
 	text = "Mark 8",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk8",
 	width = 8,
@@ -96,14 +96,15 @@ Cartographer_Notes:RegisterIcon("mk8", {
 })
 
 function WHDB_cycleMarks()
-	if cMark == "mk1" then cMark = "mk2";
-	elseif cMark == "mk2" then cMark = "mk3";
-	elseif cMark == "mk3" then cMark = "mk4";
-	elseif cMark == "mk4" then cMark = "mk5";
-	elseif cMark == "mk5" then cMark = "mk6";
-	elseif cMark == "mk6" then cMark = "mk7";
-	elseif cMark == "mk7" then cMark = "mk8";
-	elseif cMark == "mk8" then cMark = "mk1";
+	if WHDB_cMark == "WHDB_mk1" then WHDB_cMark = "WHDB_mk2";
+	elseif WHDB_cMark == "WHDB_mk2" then WHDB_cMark = "WHDB_mk3";
+	elseif WHDB_cMark == "WHDB_mk3" then WHDB_cMark = "WHDB_mk4";
+	elseif WHDB_cMark == "WHDB_mk4" then WHDB_cMark = "WHDB_mk5";
+	elseif WHDB_cMark == "WHDB_mk5" then WHDB_cMark = "WHDB_mk6";
+	elseif WHDB_cMark == "WHDB_mk6" then WHDB_cMark = "WHDB_mk7";
+	elseif WHDB_cMark == "WHDB_mk7" then WHDB_cMark = "WHDB_mk8";
+	elseif WHDB_cMark == "WHDB_mk8" then WHDB_cMark = "WHDB_mk1";
+	else WHDB_cMark = "WHDB_mk1";
 	end
 end -- WHDB_cycleMarks()
 
@@ -922,20 +923,20 @@ function WHDB_GetQuestNotes(questLogID)
 						if monsterName then
 							local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
 							local npcID = WHDB_GetNPCID(monsterName);
-							showMap = WHDB_GetNPCNotes(npcID, questTitle, comment..WHDB_GetNPCStatsComment(npcID), cMark) or showMap;
+							showMap = WHDB_GetNPCNotes(npcID, questTitle, comment..WHDB_GetNPCStatsComment(npcID), WHDB_cMark) or showMap;
 						end
 					elseif (type == "item") then
 						WHDB_Debug_Print(2, "    type = item");
 						if (itemData[itemName] ~= nil) then
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-							showMap = WHDB_GetItemNotes(itemName, questTitle, comment, cMark) or showMap;
+							showMap = WHDB_GetItemNotes(itemName, questTitle, comment, WHDB_cMark) or showMap;
 						end
 					-- checks for objective type other than item or monster, e.g. objective, reputation, event
 					-- TODO: object check is WIP, most objects can't be found easily by checking item name
 					elseif (type == "object") then
 						local i, j, objectName = strfind(itemName, "(.*) ")
 						local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-						showMap = WHDB_GetObjNotes(objectName, questTitle, comment, cMark) or showMap;
+						showMap = WHDB_GetObjNotes(objectName, questTitle, comment, WHDB_cMark) or showMap;
 					elseif (type ~= "item" and type ~= "monster") then
 						WHDB_Debug_Print(1, "    "..type.." quest objective-type not supported yet");
 					end
