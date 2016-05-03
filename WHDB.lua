@@ -556,17 +556,29 @@ function WHDB_DoCleanMap()
 	WHDB_CleanMap();
 end -- WHDB_DoCleanMap()
 
-function WHDB_SearchEndNPC(quest)
-	WHDB_Debug_Print(2, "WHDB_SearchEndNPC("..quest..") called");
+function WHDB_SearchEndNPC(questID)
+	WHDB_Debug_Print(2, "WHDB_SearchEndNPC("..questID..") called");
 	for npc, data in pairs(npcData) do
 		if (data["ends"] ~= nil) then
 			for line, entry in pairs(data["ends"]) do
-				if (entry == quest) then return data["name"]; end
+				if (entry == questID) then return npc; end
 			end
 		end
 	end
 	return nil;
-end -- WHDB_SearchEndNPC(quest)
+end -- WHDB_SearchEndNPC(questID)
+
+function WHDB_SearchEndObj(questID)
+	WHDB_Debug_Print(2, "WHDB_SearchEndObj("..questID..") called");
+	for obj, data in pairs(objData) do
+		if (data["ends"] ~= nil) then
+			for line, entry in pairs(data["ends"]) do
+				if (entry == questID) then return obj; end
+			end
+		end
+	end
+	return nil;
+end -- WHDB_SearchEndObj(questID)
 
 function WHDB_GetQuestEndNotes(questLogID)
 	WHDB_Debug_Print(2, "WHDB_GetQuestEndNotes("..questLogID..") called");
@@ -580,41 +592,79 @@ function WHDB_GetQuestEndNotes(questLogID)
 	end
 	if (qIDs ~= false) then
 		if (multi ~= false) then
-			local names = {}
+			local npcIDs = {}
 			for n, qID in pairs(qIDs) do
-				local name = WHDB_SearchEndNPC(qID);
-				if (name) then
+				local npcID = WHDB_SearchEndNPC(qID);
+				if (npcID) then
 					local done = false;
-					for n, nameIn in pairs(names) do
-						if (name == nameIn) then 
+					for n, IDInside in pairs(npcIDs) do
+						if (npcID == IDInsidemn) then 
 							done = true;
 						end
 					end
 					if not (done) then
-						table.insert(names, name);
+						table.insert(npcIDs, npcID);
 					end
 				end
 			end
-			if (table.getn(names) > 0) then
-				if (table.getn(names) > 1) then
-					for n, name in pairs(names) do
-						local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(names).." NPCs";
-						local comment = name.."\n("..multi.." quests with this name)"
-						WHDB_GetNPCNotes(name, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+			if (table.getn(npcIDs) > 0) then
+				if (table.getn(npcIDs) > 1) then
+					for n, npcID in pairs(npcIDs) do
+						local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(npcIDs).." NPCs";
+						local comment = npcData[npcID].name.."\n("..multi.." quests with this name)"
+						WHDB_GetNPCNotes(npcID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
-					local name = names[1]
-					local comment = name.."\n(Ends "..multi.." quests with this name)"
-					return WHDB_GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+					local npcID = npcIDs[1]
+					local comment = npcData[npcID].name.."\n(Ends "..multi.." quests with this name)"
+					return WHDB_GetNPCNotes(npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+				end
+			else
+				local objIDs = {}
+					for n, qID in pairs(qIDs) do
+					local objID = WHDB_SearchEndObj(qID);
+					if (objID) then
+						local done = false;
+						for n, IDInside in pairs(objIDs) do
+							if (objID == IDInside) then 
+								done = true;
+							end
+						end
+						if not (done) then
+							table.insert(objIDs, objID);
+						end
+					end
+				end
+				if (table.getn(objIDs) > 0) then
+					if (table.getn(objIDs) > 1) then
+						for n, objID in pairs(objIDs) do
+							local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(objIDs).." NPCs";
+							local comment = objData[objID].name.."\n("..multi.." quests with this name)"
+							WHDB_GetObjNotes(objID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+						end
+					else
+						local objID = objIDs[1]
+						local comment = objData[objID].name.."\n(Ends "..multi.." quests with this name)"
+						return WHDB_GetObjNotes(objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+					end
+				else
+					return false;
 				end
 			end
 			return true;
 		elseif (multi == false) then
-			local name = WHDB_SearchEndNPC(qIDs);
-			if name then
-				return WHDB_GetNPCNotes(name, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+			local npcID = WHDB_SearchEndNPC(qIDs);
+			if npcID and npcData[npcID] then
+				local name = npcData[npcID].name;
+				return WHDB_GetNPCNotes(npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 			else
-				return false;
+				local objID = WHDB_SearchEndObj(qIDs);
+				if objID and objData[objID] then
+					local name = objData[objID].name;
+					return WHDB_GetObjNotes(objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+				else
+					return false;
+				end
 			end
 		end
 	else
@@ -777,10 +827,15 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 end -- WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 
 -- tries to get locations for an (ingame) object and inserts them in WHDB_MAP_NOTES if found
-function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
-	WHDB_Debug_Print(2, "WHDB_GetObjNotes(objName, commentTitle, comment, icon) called");
-	if (objName ~= nil) then
-		objIDs = WHDB_GetObjID(objName); -- C TODO
+function WHDB_GetObjNotes(objNameOrID, commentTitle, comment, icon)
+	WHDB_Debug_Print(2, "WHDB_GetObjNotes(objNameOrID, commentTitle, comment, icon) called");
+	if (objNameOrID ~= nil) then
+		local objIDs;
+		if (type(objNameOrID) == "string") then
+			objIDs = WHDB_GetObjID(objNameOrID);
+		else
+			objIDs = {objNameOrID};
+		end
 		local showMap = false;
 		local count = 0;
 		for n, objID in pairs(objIDs) do
@@ -803,7 +858,7 @@ function WHDB_GetObjNotes(objName, commentTitle, comment, icon)
 		return showMap;
 	end
 	return false;
-end -- WHDB_GetObjNotes(objName, commentTitle, comment, icon)
+end -- WHDB_GetObjNotes(objNameOrID, commentTitle, comment, icon)
 
 function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 	WHDB_Debug_Print(2, "WHDB_GetItemNotes("..itemName..") called");
