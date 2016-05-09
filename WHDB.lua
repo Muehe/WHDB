@@ -299,7 +299,6 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb auto | Enable/Disable: Automatically plot uncompleted objectives on map.");
 		WHDB_Print("/whdb waypoint | Enable/Disable: Plot waypoints on map.");
 		WHDB_Print("/whdb starts | Enable/Disable: Plot quest starts on map.");
-		WHDB_Print("/whdb copy <character> | Copy characters config to current one.");
 		WHDB_Print("/whdb reset | Reset positon of the Interface.");
 		DEFAULT_CHAT_FRAME:AddMessage("\n");
 		WHDB_Print("Note: All parameters are case sensitive!");
@@ -386,15 +385,6 @@ function WHDB_Slash(input)
 		end
 	elseif (string.sub(input,1,5) == "clean") then
 		WHDB_CleanMap();
-	elseif (string.sub(input,1,4) == "copy") then
-		if (WHDB_Settings[string.sub(input,6)] ~= nil) then
-			for k,v in pairs(WHDB_Settings[string.sub(input,6)]) do
-				WHDB_Settings[WHDB_Player][k] = v;
-			end
-			WHDB_Print("Settings loaded.");
-		else
-			WHDB_Print("There are no settings for this character.");
-		end
 	elseif (string.sub(input,1,4) == "auto") then
 		WHDB_SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
