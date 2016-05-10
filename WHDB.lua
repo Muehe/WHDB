@@ -342,7 +342,7 @@ function WHDB_Slash(input)
 		end
 		WHDB_Print("Drops for: "..itemName);
 		if (itemName ~= "") then
-			if (itemData[itemName] ~= nil) then
+			if ((itemLookup[itemName]) and (itemData[itemLookup[itemName]])) then
 				WHDB_GetItemNotes(itemName, itemName, "", 0);
 				WHDB_PlotNotesOnMap();
 			end
@@ -864,44 +864,68 @@ function WHDB_GetObjNotes(objNameOrID, commentTitle, comment, icon)
 	return false;
 end -- WHDB_GetObjNotes(objNameOrID, commentTitle, comment, icon)
 
-function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
-	WHDB_Debug_Print(2, "WHDB_GetItemNotes("..itemName..") called");
-	if (itemData[itemName]) then
+function WHDB_GetItemNotes(itemNameOrID, commentTitle, comment, icon)
+	WHDB_Debug_Print(2, "WHDB_GetItemNotes("..itemNameOrID..") called");
+	local itemID = 0;
+	if (type(itemNameOrID) == "number") then
+		itemID = itemNameOrID;
+	elseif (type(itemNameOrID) == "string") then
+		itemID = itemLookup[itemNameOrID];
+	end
+	-- if recursively called
+	if (type(commentTitle) == "number") then
+		for name, id in pairs(itemLookup) do
+			if (id == commentTitle) then
+				commentTitle = name;
+				break;
+			end
+		end
+	end
+	if (itemData[itemID]) then
 		local showMap = false;
-		if (itemData[itemName].npcs) then
-			for key, value in pairs(itemData[itemName].npcs) do
+		if (itemData[itemID].npcs) then
+			for key, value in pairs(itemData[itemID].npcs) do
 				if npcData[value[1]] then
 					local show = true;
 					if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
 						show = false;
 					end
 					if show then
-						local dropComment = "Drop chance: "..value[2].."%\n".."Dropped by:\n"..npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(value[1]);
+						local dropComment = "Dropped by (Chance "..value[2].."%):\n"..npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(value[1]);
 						showMap = WHDB_GetNPCNotes(value[1], commentTitle, comment..dropComment, icon) or showMap;
 					end
 				end
 			end
 		end
-		if (itemData[itemName].objects) then
-			for key, value in pairs(itemData[itemName].objects) do
+		if (itemData[itemID].objects) then
+			for key, value in pairs(itemData[itemID].objects) do
 				if objData[value[1]] then
 					local show = true;
 					if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
 						show = false;
 					end
 					if show then
-						local dropComment = "Drop chance: "..value[2].."%\n".."Dropped by:\n"..objData[value[1]].name;
+						local dropComment = "Contained in (Chance "..value[2].."%):\n"..objData[value[1]].name;
 						showMap = WHDB_GetObjNotes(objData[value[1]].name, commentTitle, comment..dropComment, icon) or showMap;
 					end
 				end
 			end
 		end
-		-- TODO: itemData[itemName].items
+		if (itemData[itemID].items) then
+			for key, value in pairs(itemData[itemID].items) do
+				local show = true;
+				if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
+					show = false;
+				end
+				local dropComment = "|cFF00FF00"..value[2].."% chance of containing "..commentTitle.."|r\n"
+				showMap = WHDB_GetItemNotes(value[1], value[1], dropComment..comment, icon) or showMap;
+			end
+		end
 		return showMap;
 	else
 		return false;
 	end
-end -- WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
+end -- WHDB_GetItemNotes(itemNameOrID, commentTitle, comment, icon)
 
 function WHDB_GetQuestNotes(questLogID)
 	WHDB_Debug_Print(2, "WHDB_GetQuestNotes("..questLogID..") called");
@@ -930,7 +954,7 @@ function WHDB_GetQuestNotes(questLogID)
 						end
 					elseif (type == "item") then
 						WHDB_Debug_Print(2, "    type = item");
-						if (itemData[itemName] ~= nil) then
+						if ((itemLookup[itemName]) and (itemData[itemLookup[itemName]])) then
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
 							showMap = WHDB_GetItemNotes(itemName, questTitle, comment, WHDB_cMark) or showMap;
 						end
