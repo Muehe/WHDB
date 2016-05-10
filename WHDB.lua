@@ -5,15 +5,8 @@
 --------------------------------------------------------
 
 WHDB_Debug = 2;
-WHDB_MinDropChance = 0;
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
-WHDB_QuestZoneInfo = {};
-WHDB_Player = "";
-WHDB_Player_Race = "";
-WHDB_Player_Sex = "";
-WHDB_Player_Class = "";
-WHDB_Player_Faction = "";
 WHDB_Version = "Continued WHDB for Classic WoW";
 
 -- Cartographer related stuff
@@ -185,7 +178,7 @@ function WHDB_Debug_Print(...)
 		if (i > 2) then out = out .. ", "; end
 		local t = type(arg[i]);
 		if (t == "string") then
-			out = out .. '"'..arg[i]..'"';
+			out = out..arg[i];
 		elseif (t == "number") then
 			out = out .. arg[i];
 		else
@@ -230,55 +223,68 @@ function WHDB_Event(event, arg1)
 			Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
 			WHDB_Debug_Print(1, "Cartographer Database Registered.");
 		end
-		WHDB_Player_Faction = UnitFactionGroup("player");
-		if (WHDB_Player_Faction == "Alliance") then
+		if (WHDB_Settings == nil) then
+			WHDB_Settings = {};
+			if (Cartographer_Notes ~= nil) then
+				WHDB_Settings["auto_plot"] = 1;
+			else
+				WHDB_Settings["auto_plot"] = 0;
+			end
+		end
+		if (WHDB_Settings["minDropChance"] == nil) then
+			WHDB_Settings["minDropChance"] = 0;
+		end
+		if (WHDB_Settings["auto_plot"] == nil) then
+			WHDB_Settings["auto_plot"] = 0;
+		end
+		if (WHDB_Settings["waypoints"] == nil) then
+			WHDB_Settings["waypoints"] = 0;
+		end
+		if (WHDB_Settings["questStarts"] == nil) then
+			WHDB_Settings["questStarts"] = 0;
+		end
+		if (WHDB_Settings["player"] == nil) then
+			WHDB_Settings["player"] = UnitName("player");
+		end
+		if (WHDB_Settings["race"] == nil) then
+			WHDB_Settings["race"] = UnitRace("player");
+		end
+		if (WHDB_Settings["sex"] == nil) then
+			local temp = UnitSex("player");
+			if (temp == 3) then
+				WHDB_Settings["sex"] = "Female";
+			elseif (temp == 2) then
+				WHDB_Settings["sex"] = "Male";
+			else
+				WHDB_Settings["sex"] = nil;
+			end
+		end
+		if (WHDB_Settings["class"] == nil) then
+			WHDB_Settings["class"] = UnitClass("player");
+		end
+		if (WHDB_Settings["faction"] == nil) then
+			local temp = UnitFactionGroup("player");
+			if (temp) then
+				WHDB_Settings["faction"] = temp;
+			end
+		end
+		if (WHDB_Settings["faction"] == "Alliance") then
 			qData["Horde"] = nil;
 			WHDB_Print("Horde data cleared.");
-		elseif (WHDB_Player_Faction == "Horde") then
+		elseif (WHDB_Settings["faction"] == "Horde") then
 			qData["Alliance"] = nil;
 			WHDB_Print("Alliance data cleared.");
 		else
 			WHDB_Print("Unable to use UnitFactionGroup(\"player\"). Try making yourself visible and then use the chat-command /reloadUI.");
 		end
-		WHDB_Player = UnitName("player");
-		WHDB_Player_Race = UnitRace("player");
-		WHDB_Player_Sex = UnitSex("player");
-		WHDB_Player_Class = UnitClass("player");
-		stringX = WHDB_Player_Race..WHDB_Player_Sex..WHDB_Player_Class;
-		WHDB_Debug_Print(2, string.gsub(stringX, "2", "Male"));
-		if (WHDB_Settings == nil) then
-			WHDB_Settings = {};
-			WHDB_Settings[WHDB_Player] = {};
-			if (Cartographer_Notes ~= nil) then
-				WHDB_Settings[WHDB_Player]["auto_plot"] = 1;
-			else
-				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
-			end
-			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
-		else
-			if (WHDB_Settings[WHDB_Player] == nil) then
-				WHDB_Settings[WHDB_Player] = {};
-				WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
-				WHDB_Settings[WHDB_Player]["waypoints"] = 1;
-			end
-		end
-		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
-			WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
-		end
-		if (WHDB_Settings[WHDB_Player]["waypoints"] == nil) then
-			WHDB_Settings[WHDB_Player]["waypoints"] = 1;
-		end
-		if (WHDB_Settings[WHDB_Player]["questStarts"] == nil) then
-			WHDB_Settings[WHDB_Player]["questStarts"] = 0;
-		end
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
 	elseif (event == "QUEST_LOG_UPDATE") then
-		if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
+		if (WHDB_Settings.auto_plot == 1) then
 			WHDB_Debug_Print(2, "Event: QUEST_LOG_UPDATE");
 			WHDB_PlotAllQuests();
 		end
-	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings[WHDB_Player]["questStarts"] == 1) then
+	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings.questStarts == 1) then
 		WHDB_Debug_Print(2, zone);
 		WHDB_GetQuestStartNotes();
 	end
@@ -348,10 +354,10 @@ function WHDB_Slash(input)
 			if value > 101 then
 				value = 101;
 			end
-			WHDB_MinDropChance = value;
+			WHDB_Settings.minDropChance = value;
 			WHDB_Print("Minimum Drop Chance set to: "..value.."%");
 		else
-			WHDB_Print("Minimum Drop Chance is: "..WHDB_MinDropChance.."%");
+			WHDB_Print("Minimum Drop Chance is: "..WHDB_Settings.minDropChance.."%");
 		end
 	elseif (string.sub(input,1,3) == "mob") then
 		local monsterName = string.sub(input, 5);
@@ -389,7 +395,7 @@ function WHDB_Slash(input)
 		WHDB_SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
 		WHDB_SwitchSetting("waypoints");
-	elseif (string.sub(input,1,6) == "questStarts") then
+	elseif (string.sub(input,1,6) == "starts") then
 		WHDB_SwitchSetting("questStarts");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
@@ -491,8 +497,8 @@ function WHDB_GetComments(questTitle, questObjectives)
 	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
 	local questCom = "";
 	if (qIDs) then
-		if (qData[WHDB_Player_Faction][questTitle] ~= nil) then
-			for id, oc in pairs(qData[WHDB_Player_Faction][questTitle]['IDs']) do
+		if (qData[WHDB_Settings.faction][questTitle] ~= nil) then
+			for id, oc in pairs(qData[WHDB_Settings.faction][questTitle]['IDs']) do
 				if (oc[2] ~= nil) then
 					for n, comment in pairs(oc[2]) do
 						questCom = questCom .. comment .."\n____________________\n"; 
@@ -539,10 +545,15 @@ end -- WHDB_CleanMap()
 -- called from xml
 function WHDB_DoCleanMap()
 	WHDB_Debug_Print(2, "WHDB_DoCleanMap() called");
-	if (WHDB_Settings[WHDB_Player]["auto_plot"] == 1) then
-		WHDB_Settings[WHDB_Player]["auto_plot"] = 0;
+	if (WHDB_Settings.auto_plot == 1) then
+		WHDB_Settings.auto_plot = 0;
 		WHDB_CheckSetting("auto_plot")
 		WHDB_Print("Auto plotting disabled.");
+	end
+	if (WHDB_Settings.questStarts == 1) then
+		WHDB_Settings.questStarts = 0;
+		WHDB_CheckSetting("questStarts")
+		WHDB_Print("Quest start plotting disabled.");
 	end
 	WHDB_CleanMap();
 end -- WHDB_DoCleanMap()
@@ -668,12 +679,12 @@ function WHDB_GetQuestIDs(questName, objectives)
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
 	WHDB_Debug_Print(2, "WHDB_GetQuestIDs("..questName..", "..objectives..")");
-	if ((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives == '')) then
-		for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+	if ((qData[WHDB_Settings.faction][questName] ~= nil) and (objectives == '')) then
+		for n, o, c in pairs(qData[WHDB_Settings.faction][questName]['IDs']) do
 			table.insert(qIDs, n);
 		end
-	elseif((qData[WHDB_Player_Faction][questName] ~= nil) and (objectives ~= '')) then
-		for n, o in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+	elseif((qData[WHDB_Settings.faction][questName] ~= nil) and (objectives ~= '')) then
+		for n, o in pairs(qData[WHDB_Settings.faction][questName]['IDs']) do
 			if (o[1] == objectives) then table.insert(qIDs, n); end
 		end
 	end
@@ -687,8 +698,8 @@ function WHDB_GetQuestIDs(questName, objectives)
 		end
 	end
 	if (table.getn(qIDs) == 0) then
-		if ((qData[WHDB_Player_Faction][questName] ~= nil)) then
-			for n, o, c in pairs(qData[WHDB_Player_Faction][questName]['IDs']) do
+		if ((qData[WHDB_Settings.faction][questName] ~= nil)) then
+			for n, o, c in pairs(qData[WHDB_Settings.faction][questName]['IDs']) do
 				table.insert(qIDs, n);
 			end
 		end
@@ -737,21 +748,23 @@ function WHDB_SwitchSetting(setting)
 		["auto_plot"] = "Auto plotting",
 		["questStarts"] = "Quest start plotting"
 	};
-	if (WHDB_Settings[WHDB_Player][setting] == 0) then
-		WHDB_Settings[WHDB_Player][setting] = 1;
+	if (WHDB_Settings[setting] == 0) then
+		WHDB_Settings[setting] = 1;
 		WHDB_Print(text[setting].." enabled.");
 	else
-		WHDB_Settings[WHDB_Player][setting] = 0;
+		WHDB_Settings[setting] = 0;
 		WHDB_Print(text[setting].." disabled.");
 	end
 	WHDB_CheckSetting(setting);
-	if (setting == "auto_plot") and (WHDB_Settings[WHDB_Player][setting] == 1) then
+	if (setting == "auto_plot") and (WHDB_Settings[setting] == 1) then
 		WHDB_PlotAllQuests();
+	elseif (setting == "auto_plot") and (WHDB_Settings[setting] == 0) then
+		WHDB_CleanMap();
 	end
 end -- WHDB_SwitchSetting(setting)
 
 function WHDB_CheckSetting(setting)
-	if (WHDB_Settings[WHDB_Player][setting] == 1) then
+	if (WHDB_Settings[setting] == 1) then
 		getglobal(setting):SetChecked(true);
 	else
 		getglobal(setting):SetChecked(false);
@@ -770,7 +783,7 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 		end
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
-			if (npcData[npcID]["waypoints"] and WHDB_Settings[WHDB_Player]["waypoints"] == 1) then
+			if (npcData[npcID]["waypoints"] and WHDB_Settings.waypoints == 1) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
 					zoneName = zoneData[zoneID];
 					for cID, coords in pairs(coordsdata) do
@@ -859,7 +872,7 @@ function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 			for key, value in pairs(itemData[itemName].npcs) do
 				if npcData[value[1]] then
 					local show = true;
-					if (WHDB_MinDropChance > 0) and (value[2] < WHDB_MinDropChance) then
+					if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
 						show = false;
 					end
 					if show then
@@ -873,7 +886,7 @@ function WHDB_GetItemNotes(itemName, commentTitle, comment, icon)
 			for key, value in pairs(itemData[itemName].objects) do
 				if objData[value[1]] then
 					local show = true;
-					if (WHDB_MinDropChance > 0) and (value[2] < WHDB_MinDropChance) then
+					if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
 						show = false;
 					end
 					if show then
