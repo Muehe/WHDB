@@ -108,6 +108,25 @@
 					<OnClick> WHDB_DoCleanMap(); </OnClick>
 				</Scripts>
 			</Button>
+			<Button name="ShowSearch" inherits="OptionsButtonTemplate" text="Show Search GUI">
+				<Size>
+					<AbsDimension x="124" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="CleanMap" relativePoint="TOPRIGHT">
+						<Offset x="5" y="0"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnClick> 
+						if (DBGUI:IsShown()) then
+							DBGUI:Hide()
+						else
+							DBGUI:Show()
+						end
+					</OnClick>
+				</Scripts>
+			</Button>
 			<Button name="PlotAll" inherits="OptionsButtonTemplate" text="Show All">
 				<Size>
 					<AbsDimension x="80" y="24"/>

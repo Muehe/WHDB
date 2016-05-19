@@ -134,7 +134,7 @@ DBGUI.titleVendor:SetFont("Fonts\\FRIZQT__.TTF", 12)
 DBGUI.titleVendor:SetWidth(200)
 DBGUI.titleVendor:SetPoint("TOPRIGHT", 0, -55)
 DBGUI.titleVendor:SetTextColor(1,1,1,0.3)
-DBGUI.titleVendor:SetText("Vendor")
+DBGUI.titleVendor:SetText("Vendor (disabled)")
 -- }}}
 -- {{{ Seperatorline: 1
 DBGUI.vertLine1 = CreateFrame("Frame", nil, DBGUI)
@@ -248,7 +248,7 @@ DBGUI.minimapButton:SetScript("OnDragStop", function()
     DBGUI.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDBMinimapPosition)),(80*sin(WHDBMinimapPosition))-52)
   end)
 
-DBGUI.minimapButton:SetFrameStrata('LOW')
+DBGUI.minimapButton:SetFrameStrata('HIGH')
 DBGUI.minimapButton:SetWidth(31)
 DBGUI.minimapButton:SetHeight(31)
 DBGUI.minimapButton:SetFrameLevel(9)
@@ -256,10 +256,10 @@ DBGUI.minimapButton:SetHighlightTexture('Interface\\Minimap\\UI-Minimap-ZoomButt
 DBGUI.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDBMinimapPosition)),(80*sin(WHDBMinimapPosition))-52)
 DBGUI.minimapButton:SetScript("OnClick", function()
     if ( arg1 == "LeftButton" ) then
-      if (DBGUI:IsShown()) then
-        DBGUI:Hide()
+      if (WHDB_Frame:IsShown()) then
+        WHDB_Frame:Hide()
       else
-        DBGUI:Show()
+        WHDB_Frame:Show()
       end
     end
   end)
@@ -407,9 +407,10 @@ function DBGUI_ShowFavourites()
       DBGUI_SpawnButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
       DBGUI_SpawnButtons["Button_"..i]:SetText(DBGUI_Favourites["spawn"][i])
       DBGUI_SpawnButtons["Button_"..i]:SetScript("OnClick", function(self)
-          WHDB_MAP_NOTES = {};
-          WHDB_searchMonster(this:GetText(),nil)
-          WHDB_ShowMap();
+			WHDB_MAP_NOTES = {};
+			local name = this:GetText()
+			WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name), 0);
+			WHDB_ShowMap();
         end)
     end
 
@@ -424,9 +425,10 @@ function DBGUI_ShowFavourites()
       DBGUI_ItemButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
       DBGUI_ItemButtons["Button_"..i]:SetText(DBGUI_Favourites["item"][i])
       DBGUI_ItemButtons["Button_"..i]:SetScript("OnClick", function(self)
-          WHDB_MAP_NOTES = {};
-          WHDB_searchItem(this:GetText(),nil)
-          WHDB_ShowMap();
+			WHDB_MAP_NOTES = {};
+			local name = this:GetText();
+			WHDB_GetItemNotes(name, name, "", 0)
+			WHDB_ShowMap();
         end)
     end
 
@@ -441,9 +443,11 @@ function DBGUI_ShowFavourites()
       DBGUI_VendorButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
       DBGUI_VendorButtons["Button_"..i]:SetText(DBGUI_Favourites["vendor"][i])
       DBGUI_VendorButtons["Button_"..i]:SetScript("OnClick", function(self)
+			--[[
           WHDB_MAP_NOTES = {};
           WHDB_searchVendor(this:GetText(),nil)
           WHDB_ShowMap();
+			--]]
         end)
     end
   end
