@@ -208,14 +208,15 @@ function WHDB_Event(event, arg1)
 			end
 		end
 		if (WHDB_Settings["faction"] == "Alliance") then
-			qData["Horde"] = nil;
+			deleteFaction("H");
 			WHDB_Print("Horde data cleared.");
 		elseif (WHDB_Settings["faction"] == "Horde") then
-			qData["Alliance"] = nil;
+			deleteFaction("A");
 			WHDB_Print("Alliance data cleared.");
 		else
 			WHDB_Print("Unable to use UnitFactionGroup(\"player\"). Try making yourself visible and then use the chat-command /reloadUI.");
 		end
+		fillQuestLookup();
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
 	elseif (event == "QUEST_LOG_UPDATE") then
@@ -430,37 +431,6 @@ function WHDB_GetMapIDFromZone(zoneText)
 	return -1, zoneText;
 end -- WHDB_GetMapIDFromZone(zoneText)
 
-function WHDB_GetComments(questTitle, questObjectives)
-	WHDB_Debug_Print(2, "WHDB_GetComments(questTitle, questObjectives) called");
-	-- Update for new functionality
-	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
-	local questCom = "";
-	if (qIDs) then
-		if (qData[WHDB_Settings.faction][questTitle] ~= nil) then
-			for id, oc in pairs(qData[WHDB_Settings.faction][questTitle]['IDs']) do
-				if (oc[2] ~= nil) then
-					for n, comment in pairs(oc[2]) do
-						questCom = questCom .. comment .."\n____________________\n"; 
-					end
-				end
-			end
-		end
-		if (qData['Common'][questTitle] ~= nil) then
-			for id, oc in pairs(qData['Common'][questTitle]['IDs']) do
-				if (oc[2] ~= nil) then
-					for n, comment in pairs(oc[2]) do
-						questCom = questCom .. comment .."\n____________________\n"; 
-					end
-				end
-			end
-		end
-		if (questCom == "") then
-			questCom = "No comments for this quest.\n\n";
-		end
-	end
-	return questCom;
-end -- WHDB_GetComments(questTitle, questObjectives)
-
 function WHDB_ShowMap()
 	WHDB_Debug_Print(2, "WHDB_ShowMap() called");
 	local ShowMapZone, ShowMapTitle, ShowMapID = WHDB_PlotNotesOnMap();
@@ -529,14 +499,16 @@ function WHDB_GetQuestEndNotes(questLogID)
 	SelectQuestLogEntry(questLogID);
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
-	local multi, qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
-	if multi ~= false then
-		WHDB_Debug_Print(2, "    "..table.getn(qIDs));
+	local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
+	if qIDs ~= false then
+		WHDB_Debug_Print(2, "    "..type(qIDs));
 	end
 	if (qIDs ~= false) then
-		if (multi ~= false) then
+		if (type(qIDs) == "table") then
+			local multi = 0;
 			local npcIDs = {}
 			for n, qID in pairs(qIDs) do
+				multi = multi + 1;
 				local npcID = WHDB_SearchEndNPC(qID);
 				if (npcID) then
 					local done = false;
@@ -595,7 +567,7 @@ function WHDB_GetQuestEndNotes(questLogID)
 				end
 			end
 			return true;
-		elseif (multi == false) then
+		elseif (type(qIDs) == "number") then
 			local npcID = WHDB_SearchEndNPC(qIDs);
 			if npcID and npcData[npcID] then
 				local name = npcData[npcID].name;
@@ -617,47 +589,40 @@ end -- WHDB_GetQuestEndNotes(questLogID)
 
 -- TODO check objectives text
 function WHDB_GetQuestIDs(questName, objectives)
+	if not qLookup[questName] then
+		return false;
+	end
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
-	WHDB_Debug_Print(2, "WHDB_GetQuestIDs("..questName..", "..objectives..")");
-	if ((qData[WHDB_Settings.faction][questName] ~= nil) and (objectives == '')) then
-		for n, o, c in pairs(qData[WHDB_Settings.faction][questName]['IDs']) do
-			table.insert(qIDs, n);
+	WHDB_Debug_Print(2, "WHDB_GetQuestIDs('"..questName.."', '"..objectives.."')");
+	if (WHDB_GetTableLength(qLookup[questName]) == 1) then
+		for k, v in pairs(qLookup[questName]) do
+			WHDB_Debug_Print(2, "    Possible questIDs: 1");
+			return k;
 		end
-	elseif((qData[WHDB_Settings.faction][questName] ~= nil) and (objectives ~= '')) then
-		for n, o in pairs(qData[WHDB_Settings.faction][questName]['IDs']) do
-			if (o[1] == objectives) then table.insert(qIDs, n); end
-		end
-	end
-	if ((qData['Common'][questName] ~= nil) and (objectives == '')) then
-		for n, o, c in pairs(qData['Common'][questName]['IDs']) do
-			table.insert(qIDs, n);
-		end
-	elseif((qData['Common'][questName] ~= nil) and (objectives ~= '')) then
-		for n, o in pairs(qData['Common'][questName]['IDs']) do
-			if (o[1] == objectives) then table.insert(qIDs, n); end
-		end
-	end
-	if (table.getn(qIDs) == 0) then
-		if ((qData[WHDB_Settings.faction][questName] ~= nil)) then
-			for n, o, c in pairs(qData[WHDB_Settings.faction][questName]['IDs']) do
-				table.insert(qIDs, n);
+	else
+		if (objectives ~= '') then
+			for k, v in pairs(qLookup[questName]) do
+				if v == objectives then -- implicit nil ~= string 
+					table.insert(qIDs, k);
+				end
 			end
 		end
-		if((qData['Common'][questName] ~= nil)) then
-			for n, o, c in pairs(qData['Common'][questName]['IDs']) do
-				table.insert(qIDs, n);
+		-- This was an else, but that could miss some cases I think, so changed to if.
+		if (table.getn(qIDs) == 0) then
+			for k, v in pairs(qLookup[questName]) do
+				table.insert(qIDs, k);
 			end
 		end
 	end
-	WHDB_Debug_Print(2, "Possible questIDs: ", table.getn(qIDs));
+	WHDB_Debug_Print(2, "    Possible questIDs: ", table.getn(qIDs));
 	length = table.getn(qIDs);
 	if (length == nil) then
-		return false, false;
+		return false;
 	elseif (length == 1) then
-		return false, qIDs[1];
+		return qIDs[1];
 	else
-		return length, qIDs;
+		return qIDs;
 	end
 end -- WHDB_GetQuestIDs(questName, objectives)
 
@@ -1002,3 +967,15 @@ function WHDB_GetSelectionQuestNotes()
 	WHDB_GetQuestNotes(GetQuestLogSelection())
 	WHDB_PlotNotesOnMap();
 end -- WHDB_GetSelectionQuestNotes()
+
+function WHDB_GetTableLength(tab)
+	if tab then
+		local count = 0;
+		for k, v in pairs(tab) do
+			count = count + 1;
+		end
+		return count;
+	else
+		return 0;
+	end
+end -- WHDB_GetTableLength()
