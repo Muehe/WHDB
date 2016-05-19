@@ -103,67 +103,6 @@ end -- WHDB_cycleMarks()
 
 -- End of Cartographer stuff
 
--- MinimapButton. Credits to ShaguDB.
-
--- {{{ Minimap
-WHDB_MMB = CreateFrame("Frame",nil,UIParent)
-WHDB_MMB:RegisterEvent("PLAYER_ENTERING_WORLD");
-WHDB_MMB:SetScript("OnEvent", function(self, event, ...)
-	WHDB_MMB.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDB_MinimapPosition)),(80*sin(WHDB_MinimapPosition))-52)
-end)
-
-WHDB_MMB.minimapButton = CreateFrame('Button', "WHDB_Minimap", Minimap)
-if (WHDB_MinimapPosition == nil) then
-	WHDB_MinimapPosition = 60
-end
-
-WHDB_MMB.minimapButton:SetMovable(true)
-WHDB_MMB.minimapButton:EnableMouse(true)
-WHDB_MMB.minimapButton:RegisterForDrag('LeftButton')
-WHDB_MMB.minimapButton:SetScript("OnDragStop", function()
-    local xpos,ypos = GetCursorPosition()
-    local xmin,ymin = Minimap:GetLeft(), Minimap:GetBottom()
-
-    xpos = xmin-xpos/UIParent:GetScale()+70
-    ypos = ypos/UIParent:GetScale()-ymin-70
-
-    WHDB_MinimapPosition = math.deg(math.atan2(ypos,xpos))
-    WHDB_MMB.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDB_MinimapPosition)),(80*sin(WHDB_MinimapPosition))-52)
-  end)
-
-WHDB_MMB.minimapButton:SetFrameStrata('HIGH')
-WHDB_MMB.minimapButton:SetWidth(31)
-WHDB_MMB.minimapButton:SetHeight(31)
-WHDB_MMB.minimapButton:SetFrameLevel(9)
-WHDB_MMB.minimapButton:SetHighlightTexture('Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight')
-WHDB_MMB.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDB_MinimapPosition)),(80*sin(WHDB_MinimapPosition))-52)
-WHDB_MMB.minimapButton:SetScript("OnClick", function()
-    if ( arg1 == "LeftButton" ) then
-      if (WHDB_Frame:IsShown()) then
-        WHDB_Frame:Hide()
-      else
-        WHDB_Frame:Show()
-      end
-    end
-  end)
-
--- {{{ Highlight
-WHDB_MMB.minimapButton.overlay = WHDB_MMB.minimapButton:CreateTexture(nil, 'OVERLAY')
-WHDB_MMB.minimapButton.overlay:SetWidth(53)
-WHDB_MMB.minimapButton.overlay:SetHeight(53)
-WHDB_MMB.minimapButton.overlay:SetTexture('Interface\\Minimap\\MiniMap-TrackingBorder')
-WHDB_MMB.minimapButton.overlay:SetPoint('TOPLEFT', 0,0)
--- }}}
--- {{{ Icon
-WHDB_MMB.minimapButton.icon = WHDB_MMB.minimapButton:CreateTexture(nil, 'BACKGROUND')
-WHDB_MMB.minimapButton.icon:SetWidth(20)
-WHDB_MMB.minimapButton.icon:SetHeight(20)
-WHDB_MMB.minimapButton.icon:SetTexture('Interface\\GossipFrame\\AvailableQuestIcon')
-WHDB_MMB.minimapButton.icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
-WHDB_MMB.minimapButton.icon:SetPoint('CENTER',1,1)
--- }}}
--- }}}
-
 -- Debug print function. Credits to Questie.
 function WHDB_Debug_Print(...)
 	local debugWin = 0;
@@ -463,7 +402,7 @@ function WHDB_PlotNotesOnMap()
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, nData[6], "WHDB", 'title', nData[4], 'info', nData[5]);
 			end
 		end
-		if (nData[1] ~= nil) then
+		if (nData[1] ~= nil) and (not instance) then
 			zone = nData[1];
 			title = nData[4];
 		end
@@ -528,7 +467,9 @@ function WHDB_ShowMap()
 	if (Cartographer) then
 		if (ShowMapZone ~= nil) then
 			WorldMapFrame:Show();
-			--SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
+			if (ShowMapZone) then
+				SetMapZoom(WHDB_GetMapIDFromZone(ShowMapZone));
+			end
 		end
 	end
 end -- WHDB_ShowMap()

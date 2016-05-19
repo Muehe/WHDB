@@ -5,7 +5,7 @@
 ## RequiredDeps: Cartographer
 ## OptionalDeps: 
 ## SavedVariables: 
-## SavedVariablesPerCharacter: WHDB_Settings
+## SavedVariablesPerCharacter: WHDB_Settings WHDBMinimapPosition DBGUI_Favourites
 ## X-Category: Map
 ## X-Notes: Original Wowhead DB by: UniRing | Bërsërk
 ## X-Website: https://www.github.com/Muehe/WHDB

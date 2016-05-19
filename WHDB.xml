@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
 	<script file="WHDB.lua"/>
+	<script file="WHDB_GUI.lua"/>
 	<script file="zoneData.lua"/>
 	<script file="itemData.lua"/>
 	<script file="npcData.lua"/>
