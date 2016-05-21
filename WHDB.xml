@@ -11,7 +11,7 @@
 			<AbsValue val="11"/>
 		</FontHeight>
 	</Font>
-	<Frame name="WHDB_Frame" parent="UIParent" movable="true" toplevel="true" enableMouse="true" frameStrata="LOW" hidden="true">
+	<Frame name="WHDB_Frame" parent="UIParent" movable="true" toplevel="true" enableMouse="true" frameStrata="HIGH" hidden="true">
 		<Size>
 			<AbsDimension x="256" y="136"/>
 		</Size>
