@@ -1,6 +1,6 @@
 DBGUI_SpawnButtons = {}
 DBGUI_ItemButtons = {}
-DBGUI_VendorButtons = {}
+DBGUI_QuestButtons = {}
 DBGUI_FavouritesEdit = {}
 -- {{{ Favourite List
 if DBGUI_Favourites == nil then
@@ -35,7 +35,7 @@ if DBGUI_Favourites == nil then
       [12] = '',
       [13] = '',
     },
-    ["vendor"] = {
+    ["quest"] = {
       [1] = '',
       [2] = '',
       [3] = '',
@@ -127,14 +127,14 @@ DBGUI.titleItem:SetPoint("TOP", 0, -55)
 DBGUI.titleItem:SetTextColor(1,1,1,0.3)
 DBGUI.titleItem:SetText("Loot")
 -- }}}
--- {{{ Header: Vendor
-DBGUI.titleVendor = DBGUI:CreateFontString("Status", "LOW", "GameFontNormal")
-DBGUI.titleVendor:SetFontObject(GameFontWhite)
-DBGUI.titleVendor:SetFont("Fonts\\FRIZQT__.TTF", 12)
-DBGUI.titleVendor:SetWidth(200)
-DBGUI.titleVendor:SetPoint("TOPRIGHT", 0, -55)
-DBGUI.titleVendor:SetTextColor(1,1,1,0.3)
-DBGUI.titleVendor:SetText("Vendor (disabled)")
+-- {{{ Header: Quest
+DBGUI.titleQuest = DBGUI:CreateFontString("Status", "LOW", "GameFontNormal")
+DBGUI.titleQuest:SetFontObject(GameFontWhite)
+DBGUI.titleQuest:SetFont("Fonts\\FRIZQT__.TTF", 12)
+DBGUI.titleQuest:SetWidth(200)
+DBGUI.titleQuest:SetPoint("TOPRIGHT", 0, -55)
+DBGUI.titleQuest:SetTextColor(1,1,1,0.3)
+DBGUI.titleQuest:SetText("Quest (Button disabled)")
 -- }}}
 -- {{{ Seperatorline: 1
 DBGUI.vertLine1 = CreateFrame("Frame", nil, DBGUI)
@@ -290,8 +290,8 @@ function DBGUI_HideButtons()
     if (DBGUI_ItemButtons["Button_"..i]) then
       DBGUI_ItemButtons["Button_"..i]:Hide();
     end
-    if (DBGUI_VendorButtons["Button_"..i]) then
-      DBGUI_VendorButtons["Button_"..i]:Hide();
+    if (DBGUI_QuestButtons["Button_"..i]) then
+      DBGUI_QuestButtons["Button_"..i]:Hide();
     end
   end
 end
@@ -305,8 +305,8 @@ function DBGUI_HideFavEdit()
     if (DBGUI_FavouritesEdit["ItemEdit"..i]) then
       DBGUI_FavouritesEdit["ItemEdit"..i]:Hide();
     end
-    if (DBGUI_FavouritesEdit["VendorEdit"..i]) then
-      DBGUI_FavouritesEdit["VendorEdit"..i]:Hide();
+    if (DBGUI_FavouritesEdit["QuestEdit"..i]) then
+      DBGUI_FavouritesEdit["QuestEdit"..i]:Hide();
     end
   end
 end
@@ -365,32 +365,32 @@ function DBGUI_SearchItem(search)
   end
 end
 -- }}}
--- {{{ SearchVenador
-function DBGUI_SearchVendor(search)
-  local vendorCount = 1;
-  --[[
-  for spawn in pairs(vendorDB) do
-    if (strfind(strlower(spawn), strlower(search))) then
-      if ( vendorCount <= 13) then
-        DBGUI_VendorButtons["Button_"..vendorCount] = CreateFrame("Button","mybutton",DBGUI,"UIPanelButtonTemplate")
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetPoint("TOPRIGHT", -10, -vendorCount*22-55)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetWidth(200)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetHeight(20)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetFont("Fonts\\FRIZQT__.TTF", 10)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetNormalTexture(nil)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetPushedTexture(nil)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetTextColor(1,1,1)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetText(spawn)
-        DBGUI_VendorButtons["Button_"..vendorCount]:SetScript("OnClick", function(self)
+-- {{{ SearchQuest
+function DBGUI_SearchQuest(search)
+  local questCount = 1;
+  for quest in pairs(qLookup) do
+    if (strfind(strlower(quest), strlower(search))) then
+      if ( questCount <= 13) then
+        DBGUI_QuestButtons["Button_"..questCount] = CreateFrame("Button","mybutton",DBGUI,"UIPanelButtonTemplate")
+        DBGUI_QuestButtons["Button_"..questCount]:SetPoint("TOPRIGHT", -10, -questCount*22-55)
+        DBGUI_QuestButtons["Button_"..questCount]:SetWidth(200)
+        DBGUI_QuestButtons["Button_"..questCount]:SetHeight(20)
+        DBGUI_QuestButtons["Button_"..questCount]:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        DBGUI_QuestButtons["Button_"..questCount]:SetNormalTexture(nil)
+        DBGUI_QuestButtons["Button_"..questCount]:SetPushedTexture(nil)
+        DBGUI_QuestButtons["Button_"..questCount]:SetTextColor(1,1,1)
+        DBGUI_QuestButtons["Button_"..questCount]:SetText(quest)
+        DBGUI_QuestButtons["Button_"..questCount]:SetScript("OnClick", function(self)
+			--[[
             WHDB_MAP_NOTES = {};
-            WHDB_searchVendor(this:GetText(),nil)
+            WHDB_searchQ(this:GetText(),nil)
             WHDB_ShowMap();
+			--]]
           end)
-        vendorCount = vendorCount + 1
+        questCount = questCount + 1
       end
     end
   end
-  --]]
 end
 -- }}}
 -- {{{ ShowFavourites
@@ -432,20 +432,20 @@ function DBGUI_ShowFavourites()
         end)
     end
 
-    if ( DBGUI_Favourites["vendor"][i] ~= '' ) then
-      DBGUI_VendorButtons["Button_"..i] = CreateFrame("Button","mybutton",DBGUI,"UIPanelButtonTemplate")
-      DBGUI_VendorButtons["Button_"..i]:SetPoint("TOPRIGHT", -10, -i*22-55)
-      DBGUI_VendorButtons["Button_"..i]:SetWidth(200)
-      DBGUI_VendorButtons["Button_"..i]:SetHeight(20)
-      DBGUI_VendorButtons["Button_"..i]:SetFont("Fonts\\FRIZQT__.TTF", 10)
-      DBGUI_VendorButtons["Button_"..i]:SetNormalTexture(nil)
-      DBGUI_VendorButtons["Button_"..i]:SetPushedTexture(nil)
-      DBGUI_VendorButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
-      DBGUI_VendorButtons["Button_"..i]:SetText(DBGUI_Favourites["vendor"][i])
-      DBGUI_VendorButtons["Button_"..i]:SetScript("OnClick", function(self)
+    if ( DBGUI_Favourites["quest"][i] ~= '' ) then
+      DBGUI_QuestButtons["Button_"..i] = CreateFrame("Button","mybutton",DBGUI,"UIPanelButtonTemplate")
+      DBGUI_QuestButtons["Button_"..i]:SetPoint("TOPRIGHT", -10, -i*22-55)
+      DBGUI_QuestButtons["Button_"..i]:SetWidth(200)
+      DBGUI_QuestButtons["Button_"..i]:SetHeight(20)
+      DBGUI_QuestButtons["Button_"..i]:SetFont("Fonts\\FRIZQT__.TTF", 10)
+      DBGUI_QuestButtons["Button_"..i]:SetNormalTexture(nil)
+      DBGUI_QuestButtons["Button_"..i]:SetPushedTexture(nil)
+      DBGUI_QuestButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
+      DBGUI_QuestButtons["Button_"..i]:SetText(DBGUI_Favourites["quest"][i])
+      DBGUI_QuestButtons["Button_"..i]:SetScript("OnClick", function(self)
 			--[[
           WHDB_MAP_NOTES = {};
-          WHDB_searchVendor(this:GetText(),nil)
+          WHDB_searchQ(this:GetText(),nil)
           WHDB_ShowMap();
 			--]]
         end)
@@ -506,24 +506,24 @@ function DBGUI_EditFavourites()
         this:ClearFocus()
       end)
 
-    DBGUI_FavouritesEdit["VendorEdit"..i] = CreateFrame("EditBox", "InputBoxTemplateV"..i, DBGUI)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetBackdrop(backdrop)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetBackdropBorderColor(0.2,0.2,0.2,1)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetText(DBGUI_Favourites["vendor"][i])
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetJustifyH("CENTER")
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetTextColor(0.2,1,0.9,0.7)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetFont("Fonts\\FRIZQT__.TTF", 10)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetWidth(180)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetHeight(25)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetPoint("TOPRIGHT", -20, -i*22-53)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetFontObject(GameFontNormal)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetAutoFocus(false)
-    DBGUI_FavouritesEdit["VendorEdit"..i].editID = i
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetTextInsets(8,8,0,0)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetScript("OnTextChanged", function(self)
-        DBGUI_Favourites["vendor"][this.editID] = this:GetText()
+    DBGUI_FavouritesEdit["QuestEdit"..i] = CreateFrame("EditBox", "InputBoxTemplateV"..i, DBGUI)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetBackdrop(backdrop)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetBackdropBorderColor(0.2,0.2,0.2,1)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetText(DBGUI_Favourites["quest"][i])
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetJustifyH("CENTER")
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetTextColor(0.2,1,0.9,0.7)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetFont("Fonts\\FRIZQT__.TTF", 10)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetWidth(180)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetHeight(25)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetPoint("TOPRIGHT", -20, -i*22-53)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetFontObject(GameFontNormal)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetAutoFocus(false)
+    DBGUI_FavouritesEdit["QuestEdit"..i].editID = i
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetTextInsets(8,8,0,0)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetScript("OnTextChanged", function(self)
+        DBGUI_Favourites["quest"][this.editID] = this:GetText()
       end)
-    DBGUI_FavouritesEdit["VendorEdit"..i]:SetScript("OnEscapePressed", function(self)
+    DBGUI_FavouritesEdit["QuestEdit"..i]:SetScript("OnEscapePressed", function(self)
         this:ClearFocus()
       end)
   end
@@ -536,7 +536,7 @@ function DBGUI_Query(search)
   if (strlen(search) >= 3) then
     DBGUI_SearchSpawn(search)
     DBGUI_SearchItem(search)
-    DBGUI_SearchVendor(search)
+    DBGUI_SearchQuest(search)
   else
     DBGUI_ShowFavourites()
   end
