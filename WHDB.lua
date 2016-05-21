@@ -513,7 +513,7 @@ function WHDB_GetQuestEndNotes(questLogID)
 				if (npcID) then
 					local done = false;
 					for n, IDInside in pairs(npcIDs) do
-						if (npcID == IDInsidemn) then 
+						if (npcID == IDInside) then 
 							done = true;
 						end
 					end
