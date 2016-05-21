@@ -338,10 +338,18 @@ function WHDB_Slash(input)
 	elseif (string.sub(input,1,6) == "starts") then
 		WHDB_SwitchSetting("questStarts");
 	elseif (string.sub(input,1,5) == "reset") then
-		WHDB_Frame:SetPoint("TOPLEFT", 0, 0);
-		WHDB_Frame:Show();
+		WHDB_ResetGui();
 	end
 end -- WHDB_Slash(input)
+
+function WHDB_ResetGui()
+	DBGUI:ClearAllPoints();
+	DBGUI:SetPoint("CENTER", 0, 0);
+	WHDB_Frame:ClearAllPoints();
+	WHDB_Frame:SetPoint("BOTTOMLEFT", "DBGUI", "BOTTOMRIGHT", 0, 0);
+	DBGUI:Show();
+	WHDB_Frame:Show();
+end
 
 function WHDB_PlotAllQuests()
 	WHDB_Debug_Print(2, "WHDB_PlotAllQuests() called");

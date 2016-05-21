@@ -1,3 +1,9 @@
+--[[ GUI for searching locations for npcs, items and quests.
+This file was taken from ShaguDB 6.7 (https://github.com/shagu/shaguquest)
+and modified to fit WHDBs DB and functions. Some extras added.
+Credits to http://shaguaddons.ericmauser.de/shaguquest/
+--]]
+
 DBGUI_SpawnButtons = {}
 DBGUI_ItemButtons = {}
 DBGUI_QuestButtons = {}
@@ -254,16 +260,38 @@ DBGUI.minimapButton:SetHeight(31)
 DBGUI.minimapButton:SetFrameLevel(9)
 DBGUI.minimapButton:SetHighlightTexture('Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight')
 DBGUI.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDBMinimapPosition)),(80*sin(WHDBMinimapPosition))-52)
+DBGUI.minimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 DBGUI.minimapButton:SetScript("OnClick", function()
-    if ( arg1 == "LeftButton" ) then
-      if (WHDB_Frame:IsShown()) then
-        WHDB_Frame:Hide()
-      else
-        WHDB_Frame:Show()
-      end
-    end
-  end)
-
+	if ( arg1 == "LeftButton" ) then
+		if (WHDB_Frame:IsShown()) then
+			WHDB_Frame:Hide()
+		else
+			WHDB_Frame:Show()
+		end
+	end
+	if (arg1 == "RightButton") then
+		if IsShiftKeyDown() then
+			WHDB_ResetGui();
+		else
+			if (DBGUI:IsShown()) then
+				DBGUI:Hide();
+			else
+				DBGUI:Show();
+			end
+		end
+	end
+end)
+-- {{{ Minimap Tooltip
+DBGUI.minimapButton:SetScript("OnEnter", function()
+	WHDB_MinimapTooltip:SetOwner(DBGUI.minimapButton, "ANCHOR_BOTTOMLEFT");
+	WHDB_MinimapTooltip:ClearLines();
+	WHDB_MinimapTooltip:SetText("LeftClick: Open/Close settings and controls.\nRightClick: Open/Close search window.\nShift+RightClick: Reset and show both windows.");
+	WHDB_MinimapTooltip:Show();
+end)
+DBGUI.minimapButton:SetScript("OnLeave", function()
+	WHDB_MinimapTooltip:Hide();
+end)
+-- }}}
 -- {{{ Highlight
 DBGUI.minimapButton.overlay = DBGUI.minimapButton:CreateTexture(nil, 'OVERLAY')
 DBGUI.minimapButton.overlay:SetWidth(53)

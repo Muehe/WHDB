@@ -240,7 +240,7 @@
 					<OnClick> Cartographer.options.args.Notes.args.toggle.set(); </OnClick>
 				</Scripts>
 			</Button>
-			<Button name="ToggleQuestie" inherits="OptionsButtonTemplate" text="Questie">
+			<Button name="ToggleQuestieNotes" inherits="OptionsButtonTemplate" text="Questie">
 				<Size>
 					<AbsDimension x="80" y="24"/>
 				</Size>
@@ -250,10 +250,11 @@
 					</Anchor> 
 				</Anchors>
 				<Scripts>
-					<OnLoad> if not Questie then ToggleQuestie:Hide(); end </OnLoad>
+					<OnLoad> if not Questie then ToggleQuestieNotes:Hide(); end </OnLoad>
 					<OnClick> if Questie then Questie:Toggle(); else WHDB_Print("Questie not found."); end </OnClick>
 				</Scripts>
 			</Button>
 		</Frames>
 	</Frame>
+	<GameTooltip name="WHDB_MinimapTooltip" inherits="GameTooltipTemplate"/>
 </Ui>
