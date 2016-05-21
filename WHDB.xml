@@ -13,7 +13,7 @@
 	</Font>
 	<Frame name="WHDB_Frame" parent="UIParent" movable="true" toplevel="true" enableMouse="true" frameStrata="HIGH" hidden="true">
 		<Size>
-			<AbsDimension x="256" y="136"/>
+			<AbsDimension x="240" y="192"/>
 		</Size>
 		
 		<Anchors>
@@ -56,24 +56,31 @@
 		
 		<Layers>
 			<Layer>
-				<FontString name="MapButtons" inherits="RQP_Font" text="Mapping">
+				<FontString name="MapButtons" inherits="RQP_Font" text="Mapping:">
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset x="12" y="-12"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="Settings" inherits="RQP_Font" text="Settings:">
+				<FontString name="QuestButtons" inherits="RQP_Font" text="Quest Log Control:">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="MapButtons" relativePoint="TOPLEFT">
-							<Offset x="0" y="-64"/>
+							<Offset x="0" y="-40"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="Settings" inherits="RQP_Font" text="Settings:">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="QuestButtons" relativePoint="TOPLEFT">
+							<Offset x="0" y="-40"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
 				<FontString name="SetWaypoints" inherits="RQP_Font" text="Show Waypoints">
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="Settings" relativePoint="BOTTOMLEFT">
-							<Offset x="10" y="-2"/>
+							<Offset x="20" y="-2"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
@@ -88,6 +95,13 @@
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="SetAutoPlot" relativePoint="BOTTOMLEFT">
 							<Offset x="0" y="-2"/>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="SetNoteShow" inherits="RQP_Font" text="Toggle Notes:">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="Settings" relativePoint="BOTTOMLEFT">
+							<Offset x="0" y="-44"/>
 						</Anchor>
 					</Anchors>
 				</FontString>
@@ -132,8 +146,8 @@
 					<AbsDimension x="80" y="24"/>
 				</Size>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="CleanMap" relativePoint="BOTTOMLEFT">
-						<Offset x="0" y="-2"/>
+					<Anchor point="TOPLEFT" relativeTo="QuestButtons" relativePoint="BOTTOMLEFT">
+						<Offset x="5" y="-2"/>
 					</Anchor> 
 				</Anchors>
 				<Scripts>
@@ -213,6 +227,33 @@
 					</OnClick>
 				</Scripts>
 			</CheckButton>
+			<Button name="ToggleCartographer" inherits="OptionsButtonTemplate" text="WHDB">
+				<Size>
+					<AbsDimension x="80" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="SetNoteShow" relativePoint="BOTTOMLEFT">
+						<Offset x="5" y="-2"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnClick> Cartographer.options.args.Notes.args.toggle.set(); </OnClick>
+				</Scripts>
+			</Button>
+			<Button name="ToggleQuestie" inherits="OptionsButtonTemplate" text="Questie">
+				<Size>
+					<AbsDimension x="80" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ToggleCartographer" relativePoint="TOPRIGHT">
+						<Offset x="5" y="0"/>
+					</Anchor> 
+				</Anchors>
+				<Scripts>
+					<OnLoad> if not Questie then ToggleQuestie:Hide(); end </OnLoad>
+					<OnClick> if Questie then Questie:Toggle(); else WHDB_Print("Questie not found."); end </OnClick>
+				</Scripts>
+			</Button>
 		</Frames>
 	</Frame>
 </Ui>
