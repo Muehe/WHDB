@@ -222,6 +222,7 @@ function WHDB_Event(event, arg1)
 		else
 			WHDB_Print("Unable to use UnitFactionGroup(\"player\"). Try making yourself visible and then use the chat-command /reloadUI.");
 		end
+		deleteClasses();
 		fillQuestLookup();
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
@@ -483,6 +484,9 @@ function WHDB_DoCleanMap()
 		WHDB_Settings.questStarts = false;
 		WHDB_CheckSetting("questStarts")
 		WHDB_Print("Quest start plotting disabled.");
+	end
+	if (ShaguDB_MAP_NOTES) then
+		ShaguDB_CleanMap();
 	end
 	WHDB_CleanMap();
 end -- WHDB_DoCleanMap()
