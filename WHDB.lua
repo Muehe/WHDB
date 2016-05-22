@@ -11,29 +11,35 @@ WHDB_Version = "Continued WHDB for Classic WoW";
 
 -- Cartographer related stuff
 -- New Icons
-Cartographer_Notes:RegisterIcon("QuestionMark", {
-	text = "QuestionMark",
-	path = "Interface\\GossipFrame\\ActiveQuestIcon",
-	width = 12,
-	height = 12,
-})
-Cartographer_Notes:RegisterIcon("ExclamationMark", {
-	text = "ExclamationMark",
-	path = "Interface\\GossipFrame\\AvailableQuestIcon",
-	width = 12,
-	height = 12,
-})
 Cartographer_Notes:RegisterIcon("NPC", {
 	text = "NPC",
 	path = "Interface\\WorldMap\\WorldMapPartyIcon",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("Waypoint", {
 	text = "Waypoint",
 	path = "Interface\\WorldMap\\WorldMapPlayerIcon",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
+})
+Cartographer_Notes:RegisterIcon("QuestionMark", {
+	text = "QuestionMark",
+	path = "Interface\\AddOns\\WHDB\\symbols\\complete",
+	width = 16,
+	height = 16,
+})
+Cartographer_Notes:RegisterIcon("ExclamationMark", {
+	text = "ExclamationMark",
+	path = "Interface\\AddOns\\WHDB\\symbols\\available",
+	width = 16,
+	height = 16,
+})
+Cartographer_Notes:RegisterIcon("AreaTrigger", {
+	text = "AreaTrigger",
+	path = "Interface\\AddOns\\WHDB\\symbols\\event",
+	width = 16,
+	height = 16,
 })
 
 -- Icons from ShaguDB, thanks fam.
@@ -42,50 +48,50 @@ WHDB_cMark = "WHDB_mk1";
 Cartographer_Notes:RegisterIcon("WHDB_mk1", {
 	text = "Mark 1",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk1",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk2", {
 	text = "Mark 2",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk2",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk3", {
 	text = "Mark 3",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk7",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk4", {
 	text = "Mark 4",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk4",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk5", {
 	text = "Mark 5",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk5",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk6", {
 	text = "Mark 6",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk6",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk7", {
 	text = "Mark 7",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk3",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 Cartographer_Notes:RegisterIcon("WHDB_mk8", {
 	text = "Mark 8",
 	path = "Interface\\AddOns\\WHDB\\symbols\\mk8",
-	width = 8,
-	height = 8,
+	width = 16,
+	height = 16,
 })
 
 function WHDB_cycleMarks()
@@ -984,14 +990,14 @@ function WHDB_GetQuestStartComment(npcOrGoStarts)
 	local tooltipText = "";
 	for key, questID in npcOrGoStarts do
 		if qData[questID] then
-			tooltipText = tooltipText.."|cFF33FF00["..qData[questID].level.."] "..qData[questID].name.."|r\n";
+			tooltipText = tooltipText.."|cFF33FF00["..qData[questID][DB_LEVEL].."] "..qData[questID][DB_NAME].."|r\n";
 			if WHDB_Settings.questIds and WHDB_Settings.reqLevel then
 				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..") | |r";
 			elseif WHDB_Settings.questIds then
 				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..")|r\n";
 			end
 			if WHDB_Settings.reqLevel then
-				tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID].minLevel.."|r\n";
+				tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID][DB_MINLEVEL].."|r\n";
 			end
 		end
 	end
