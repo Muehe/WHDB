@@ -165,22 +165,28 @@ function WHDB_Event(event, arg1)
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
 			if (Cartographer_Notes ~= nil) then
-				WHDB_Settings["auto_plot"] = 1;
+				WHDB_Settings["auto_plot"] = true;
 			else
-				WHDB_Settings["auto_plot"] = 0;
+				WHDB_Settings["auto_plot"] = false;
 			end
 		end
 		if (WHDB_Settings["minDropChance"] == nil) then
 			WHDB_Settings["minDropChance"] = 0;
 		end
 		if (WHDB_Settings["auto_plot"] == nil) then
-			WHDB_Settings["auto_plot"] = 0;
+			WHDB_Settings["auto_plot"] = false;
 		end
 		if (WHDB_Settings["waypoints"] == nil) then
-			WHDB_Settings["waypoints"] = 0;
+			WHDB_Settings["waypoints"] = false;
 		end
 		if (WHDB_Settings["questStarts"] == nil) then
-			WHDB_Settings["questStarts"] = 0;
+			WHDB_Settings["questStarts"] = false;
+		end
+		if (WHDB_Settings["questIds"] == nil) then
+			WHDB_Settings["questIds"] = true;
+		end
+		if (WHDB_Settings["reqLevel"] == nil) then
+			WHDB_Settings["reqLevel"] = true;
 		end
 		if (WHDB_Settings["player"] == nil) then
 			WHDB_Settings["player"] = UnitName("player");
@@ -220,11 +226,11 @@ function WHDB_Event(event, arg1)
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
 	elseif (event == "QUEST_LOG_UPDATE") then
-		if (WHDB_Settings.auto_plot == 1) then
+		if (WHDB_Settings.auto_plot) then
 			WHDB_Debug_Print(2, "Event: QUEST_LOG_UPDATE");
 			WHDB_PlotAllQuests();
 		end
-	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings.questStarts == 1) then
+	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings.questStarts) then
 		WHDB_Debug_Print(2, zone);
 		WHDB_GetQuestStartNotes();
 	end
@@ -246,6 +252,7 @@ function WHDB_Slash(input)
 		WHDB_Print("/whdb waypoint | Enable/Disable: Plot waypoints on map.");
 		WHDB_Print("/whdb starts | Enable/Disable: Plot quest starts on map.");
 		WHDB_Print("/whdb reset | Reset positon of the Interface.");
+		WHDB_Print("/whdb clear | !This reloads the UI! Delete WHDB Settings.");
 		DEFAULT_CHAT_FRAME:AddMessage("\n");
 		WHDB_Print("Note: All parameters are case sensitive!");
 	elseif (string.sub(input,1,7) == "version") then
@@ -339,6 +346,9 @@ function WHDB_Slash(input)
 		WHDB_SwitchSetting("questStarts");
 	elseif (string.sub(input,1,5) == "reset") then
 		WHDB_ResetGui();
+	elseif (string.sub(input,1,5) == "clear") then
+		WHDB_Settings = nil;
+		ReloadUI();
 	end
 end -- WHDB_Slash(input)
 
@@ -464,13 +474,13 @@ end -- WHDB_CleanMap()
 -- called from xml
 function WHDB_DoCleanMap()
 	WHDB_Debug_Print(2, "WHDB_DoCleanMap() called");
-	if (WHDB_Settings.auto_plot == 1) then
-		WHDB_Settings.auto_plot = 0;
+	if (WHDB_Settings.auto_plot) then
+		WHDB_Settings.auto_plot = false;
 		WHDB_CheckSetting("auto_plot")
 		WHDB_Print("Auto plotting disabled.");
 	end
-	if (WHDB_Settings.questStarts == 1) then
-		WHDB_Settings.questStarts = 0;
+	if (WHDB_Settings.questStarts) then
+		WHDB_Settings.questStarts = false;
 		WHDB_CheckSetting("questStarts")
 		WHDB_Print("Quest start plotting disabled.");
 	end
@@ -660,25 +670,26 @@ function WHDB_SwitchSetting(setting)
 	text = {
 		["waypoints"] = "Waypoint plotting",
 		["auto_plot"] = "Auto plotting",
-		["questStarts"] = "Quest start plotting"
+		["questStarts"] = "Quest start plotting",
+		["questIds"] = "Quest IDs in tooltips"
 	};
-	if (WHDB_Settings[setting] == 0) then
-		WHDB_Settings[setting] = 1;
+	if (WHDB_Settings[setting] == false) then
+		WHDB_Settings[setting] = true;
 		WHDB_Print(text[setting].." enabled.");
 	else
-		WHDB_Settings[setting] = 0;
+		WHDB_Settings[setting] = false;
 		WHDB_Print(text[setting].." disabled.");
 	end
 	WHDB_CheckSetting(setting);
-	if (setting == "auto_plot") and (WHDB_Settings[setting] == 1) then
+	if (setting == "auto_plot") and (WHDB_Settings[setting]) then
 		WHDB_PlotAllQuests();
-	elseif (setting == "auto_plot") and (WHDB_Settings[setting] == 0) then
+	elseif (setting == "auto_plot") and (not WHDB_Settings[setting]) then
 		WHDB_CleanMap();
 	end
 end -- WHDB_SwitchSetting(setting)
 
 function WHDB_CheckSetting(setting)
-	if (WHDB_Settings[setting] == 1) then
+	if (WHDB_Settings[setting] == true) then
 		getglobal(setting):SetChecked(true);
 	else
 		getglobal(setting):SetChecked(false);
@@ -697,7 +708,7 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 		end
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
-			if (npcData[npcID]["waypoints"] and WHDB_Settings.waypoints == 1) then
+			if (npcData[npcID]["waypoints"] and WHDB_Settings.waypoints == true) then
 				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
 					zoneName = zoneData[zoneID];
 					for cID, coords in pairs(coordsdata) do
@@ -944,20 +955,44 @@ function WHDB_GetQuestStartNotes(zoneName)
 		end
 	end
 	if zoneID ~= 0 then
-		-- TODO: add quests to tooltip and add hide option to right click menu
+		-- TODO: add hide option to right click menu
 		for id, data in pairs(npcData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				WHDB_GetNPCNotes(data.name, data.name, "Queststarts", 5)
+				local comment = WHDB_GetQuestStartComment(data.starts);
+				if (comment ~= "") then -- (comment == "") => other faction quest
+					WHDB_GetNPCNotes(id, data.name, "Starts quests:\n"..comment, 5);
+				end
 			end
 		end
 		for id, data in pairs(objData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				WHDB_GetObjNotes(data.name, data.name, "Queststarts", 5)
+				local comment = WHDB_GetQuestStartComment(data.starts);
+				if (comment ~= "") then
+					WHDB_GetObjNotes(id, data.name, "Starts quests:\n"..comment, 5);
+				end
 			end
 		end
 		local _,_,_ = WHDB_PlotNotesOnMap();
 	end
 end -- WHDB_GetQuestStartNotes(zoneName)
+
+function WHDB_GetQuestStartComment(npcOrGoStarts)
+	local tooltipText = "";
+	for key, questID in npcOrGoStarts do
+		if qData[questID] then
+			tooltipText = tooltipText.."|cFF33FF00["..qData[questID].level.."] "..qData[questID].name.."|r\n";
+			if WHDB_Settings.questIds and WHDB_Settings.reqLevel then
+				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..") | |r";
+			elseif WHDB_Settings.questIds then
+				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..")|r\n";
+			end
+			if WHDB_Settings.reqLevel then
+				tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID].minLevel.."|r\n";
+			end
+		end
+	end
+	return tooltipText;
+end
 
 function WHDB_GetCurrentZoneID()
 	local zoneXY = {GetMapZones(GetCurrentMapContinent())};
