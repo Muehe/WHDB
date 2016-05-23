@@ -1032,3 +1032,18 @@ function WHDB_GetTableLength(tab)
 		return 0;
 	end
 end -- WHDB_GetTableLength()
+
+function WHDB_CompareTables(tab1, tab2)
+	for k, v in pairs(tab1) do
+		if (type(v) == "table") then
+			if not compareTables(v, tab2[k]) then
+				return false;
+			end
+		else
+			if not (v == tab2[k]) then
+				return false;
+			end
+		end
+	end
+	return true;
+end
