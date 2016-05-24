@@ -997,7 +997,7 @@ function WHDB_GetQuestStartComment(npcOrGoStarts)
 				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..")|r\n";
 			end
 			if WHDB_Settings.reqLevel then
-				tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID][DB_MINLEVEL].."|r\n";
+				tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID][DB_MIN_LEVEL].."|r\n";
 			end
 		end
 	end
