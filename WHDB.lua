@@ -7,6 +7,7 @@
 WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
+WHDB_InEvent = false;
 WHDB_Version = "Continued WHDB for Classic WoW";
 
 -- Cartographer related stuff
@@ -239,7 +240,9 @@ function WHDB_Event(event, arg1)
 		end
 	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings.questStarts) then
 		WHDB_Debug_Print(2, zone);
+		WHDB_InEvent = true;
 		WHDB_GetQuestStartNotes();
+		WHDB_InEvent = false;
 	end
 end -- WHDB_Event(event, arg1)
 
@@ -435,7 +438,7 @@ function WHDB_PlotNotesOnMap()
 	end
 	if table.getn(WHDB_MAP_NOTES) ~= nil then
 		local notes = table.getn(WHDB_MAP_NOTES);
-		if notes ~= WHDB_Notes then
+		if (notes ~= WHDB_Notes) and (not WHDB_InEvent) then
 			WHDB_Print(notes.." notes plotted.");
 			WHDB_Notes = notes;
 		end
