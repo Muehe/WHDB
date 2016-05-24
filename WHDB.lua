@@ -993,7 +993,8 @@ function WHDB_GetQuestStartComment(npcOrGoStarts)
 	local tooltipText = "";
 	for key, questID in npcOrGoStarts do
 		if qData[questID] then
-			tooltipText = tooltipText.."|cFF33FF00["..qData[questID][DB_LEVEL].."] "..qData[questID][DB_NAME].."|r\n";
+			local colorString = WHDB_GetDifficultyColor(qData[questID][DB_LEVEL]);
+			tooltipText = tooltipText..colorString.."["..qData[questID][DB_LEVEL].."] "..qData[questID][DB_NAME].."|r\n";
 			if WHDB_Settings.questIds and WHDB_Settings.reqLevel then
 				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..") | |r";
 			elseif WHDB_Settings.questIds then
@@ -1049,4 +1050,32 @@ function WHDB_CompareTables(tab1, tab2)
 		end
 	end
 	return true;
+end
+
+function WHDB_GetDifficultyColor(level1, ...)
+	if type(arg[1]) ~= "number" then
+		level2 = UnitLevel("player");
+	end
+	if (level1 > (level2 + 4)) then
+		return "|cFFFF1A1A"; -- Red
+	elseif (level1 > (level2 + 2)) then
+		return "|cFFFF8040"; -- Orange
+	elseif (level1 <= (level2 + 2)) and (level1 >= (level2 - 2)) then
+		return "|cFFFFFF00"; -- Yellow
+	elseif (level1 > WHDB_GetGreyLevel(level2)) then
+		return "|cFF40C040"; -- Green
+	else
+		return "|cFFC0C0C0"; -- Grey
+	end
+	return "|cFFffffff";
+end
+
+function WHDB_GetGreyLevel(level)
+	if (level <= 5) then
+		return 0;
+	elseif (level <= 39) then
+		return (level - math.floor(level/10) - 5);
+	else
+		return (level - math.floor(level/5) - 1);
+	end
 end
