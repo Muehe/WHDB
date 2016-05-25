@@ -729,14 +729,14 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 					zoneName = zoneData[zoneID];
 					for cID, coords in pairs(coordsdata) do
 						if (coords[1] == -1) then
-								for id, data in pairs(instanceData[zoneID]) do
-									noteZone = zoneData[data[1]];
-									coordx = data[2];
-									coordy = data[3];
-									table.insert(WHDB_MAP_NOTES,{noteZone, coordx, coordy, commentTitle, "|cFF00FF00Instance Entry to "..zoneName.."|r\n"..comment, icon});
-								end
-								break;
+							for id, data in pairs(instanceData[zoneID]) do
+								noteZone = zoneData[data[1] ];
+								coordx = data[2];
+								coordy = data[3];
+								table.insert(WHDB_MAP_NOTES,{noteZone, coordx, coordy, commentTitle, "|cFF00FF00Instance Entry to "..zoneName.."|r\n"..comment, icon});
 							end
+							break;
+						end
 						coordx = coords[1];
 						coordy = coords[2];
 						table.insert(WHDB_MAP_NOTES,{zoneName, coordx, coordy, commentTitle, comment, 3});
@@ -880,33 +880,83 @@ function WHDB_GetQuestNotes(questLogID)
 		if (numObjectives ~= nil) then
 			WHDB_Debug_Print(2, "    numObjectives = "..numObjectives);
 		end
+		local questDescription, questObjectives = GetQuestLogQuestText();
+		local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
+		if (type(qIDs) == "number") then
+			WHDB_Debug_Print(2, "    qID = "..qIDs);
+		elseif (type(qIDs) == "table") then
+			for k, qID in pairs(qIDs) do
+				WHDB_Debug_Print(2, "    qID["..k.."] = "..qID);
+			end
+		else
+			WHDB_Debug_Print(1, "Failed to find Quest ID for: "..questTitle)
+		end
 		if (numObjectives ~= nil) then
 			for i=1, numObjectives, 1 do
-				local text, type, finished = GetQuestLogLeaderBoard(i, questLogID);
+				local text, objectiveType, finished = GetQuestLogLeaderBoard(i, questLogID);
 				local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
+				WHDB_Debug_Print(2, "    objectiveText = "..itemName);
 				if (not finished) then
-					if (type == "monster") then
+					if (objectiveType == "monster") then
 						WHDB_Debug_Print(2, "    type = monster");
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
 						if monsterName then
-							local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"
 							local npcID = WHDB_GetNPCID(monsterName);
-							showMap = WHDB_GetNPCNotes(npcID, questTitle, comment..WHDB_GetNPCStatsComment(npcID), WHDB_cMark) or showMap;
+							local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"..WHDB_GetNPCStatsComment(npcID);
+							showMap = WHDB_GetNPCNotes(npcID, questTitle, comment, WHDB_cMark) or showMap;
 						end
-					elseif (type == "item") then
+					elseif (objectiveType == "item") then
 						WHDB_Debug_Print(2, "    type = item");
-						if ((itemLookup[itemName]) and (itemData[itemLookup[itemName]])) then
+						local itemID = itemLookup[itemName];
+						if (itemID and (itemData[itemID])) then
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-							showMap = WHDB_GetItemNotes(itemName, questTitle, comment, WHDB_cMark) or showMap;
+							showMap = WHDB_GetItemNotes(itemID, questTitle, comment, WHDB_cMark) or showMap;
 						end
 					-- checks for objective type other than item or monster, e.g. objective, reputation, event
 					-- TODO: object check is WIP, most objects can't be found easily by checking item name
-					elseif (type == "object") then
+					elseif (objectiveType == "object") then
+						WHDB_Debug_Print(2, "    type = object");
+						if (type(qIDs) == "number") then
+							if qData[qIDs][DB_REQ_NPC_OR_OBJ][DB_OBJ] then
+								for key, data in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ][DB_OBJ]) do
+									local objectId, objectiveText = data[1], data[2];
+									if (objData[objectId] and objectiveText == itemName) then
+										local comment = "|cFF00FF00";
+										if (numNeeded == "1") then
+											comment = comment..objectiveText.."|r\n";
+										else
+											comment = comment..objectiveText..": "..numItems.."/"..numNeeded.."|r\n";
+										end
+										showMap = WHDB_GetObjNotes(objectId, questTitle, comment, WHDB_cMark) or showMap;
+									end
+								end
+							end
+						end
+						if (type(qIDs) == "table") then
+							for k, qID in pairs(qIDs) do
+								if qData[qID][DB_REQ_NPC_OR_OBJ][DB_OBJ] then
+									for key, data in pairs(qData[qID][DB_REQ_NPC_OR_OBJ][DB_OBJ]) do
+										local objectId, objectiveText = data[1], data[2];
+										if (objData[objectId] and objectiveText == itemName) then
+											local comment = "|cFF00FF00";
+											if (numItems == "1") then
+												comment = comment..objectiveText.."|r\n";
+											else
+												comment = comment..objectiveText..": "..numItems.."/"..numNeeded.."|r\n";
+											end
+											showMap = WHDB_GetObjNotes(objectId, questTitle, comment, WHDB_cMark) or showMap;
+										end
+									end
+								end
+							end
+						end
+						--[[
 						local i, j, objectName = strfind(itemName, "(.*) ")
 						local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
 						showMap = WHDB_GetObjNotes(objectName, questTitle, comment, WHDB_cMark) or showMap;
-					elseif (type ~= "item" and type ~= "monster") then
-						WHDB_Debug_Print(1, "    "..type.." quest objective-type not supported yet");
+						--]]
+					elseif (objectiveType ~= "item" and objectiveType ~= "monster" and objectiveType ~= "object") then
+						WHDB_Debug_Print(1, "    "..objectiveType.." quest objective-type not supported yet");
 					end
 				end
 			end
