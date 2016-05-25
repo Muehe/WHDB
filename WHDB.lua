@@ -4,6 +4,9 @@
 -- Wowhead DB Continued By: Muehe
 --------------------------------------------------------
 
+
+-- Globals
+-- Note that there are other globals in the DB files.
 WHDB_Debug = 2;
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
@@ -128,7 +131,7 @@ function WHDB_Debug_Print(...)
 		elseif (t == "number") then
 			out = out .. arg[i];
 		else
-			out = out .. "nil";
+			out = out .. "\"nil or table or smth\"";
 		end
 	end
 	getglobal("ChatFrame"..debugWin):AddMessage(out, 1.0, 1.0, 0.3);
