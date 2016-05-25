@@ -174,17 +174,11 @@ function WHDB_Event(event, arg1)
 		end
 		if (WHDB_Settings == nil) then
 			WHDB_Settings = {};
-			if (Cartographer_Notes ~= nil) then
-				WHDB_Settings["auto_plot"] = true;
-			else
-				WHDB_Settings["auto_plot"] = false;
-			end
 		end
+		WHDB_Settings["auto_plot"] = false;
+		WHDB_Settings["item_item"] = false;
 		if (WHDB_Settings["minDropChance"] == nil) then
 			WHDB_Settings["minDropChance"] = 0;
-		end
-		if (WHDB_Settings["auto_plot"] == nil) then
-			WHDB_Settings["auto_plot"] = false;
 		end
 		if (WHDB_Settings["waypoints"] == nil) then
 			WHDB_Settings["waypoints"] = false;
@@ -852,7 +846,7 @@ function WHDB_GetItemNotes(itemNameOrID, commentTitle, comment, icon)
 				end
 			end
 		end
-		if (itemData[itemID].items) then
+		if (itemData[itemID].items) and (WHDB_Settings.item_item) then
 			for key, value in pairs(itemData[itemID].items) do
 				local show = true;
 				if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
