@@ -283,13 +283,13 @@ DBGUI.minimapButton:SetScript("OnClick", function()
 end)
 -- {{{ Minimap Tooltip
 DBGUI.minimapButton:SetScript("OnEnter", function()
-	WHDB_MinimapTooltip:SetOwner(DBGUI.minimapButton, "ANCHOR_BOTTOMLEFT");
-	WHDB_MinimapTooltip:ClearLines();
-	WHDB_MinimapTooltip:SetText("LeftClick: Open/Close settings and controls.\nRightClick: Open/Close search window.\nShift+RightClick: Reset and show both windows.");
-	WHDB_MinimapTooltip:Show();
+	WHDB_Tooltip:SetOwner(DBGUI.minimapButton, "ANCHOR_BOTTOMLEFT");
+	WHDB_Tooltip:ClearLines();
+	WHDB_Tooltip:SetText("LeftClick: Open/Close settings and controls.\nRightClick: Open/Close search window.\nShift+RightClick: Reset and show both windows.");
+	WHDB_Tooltip:Show();
 end)
 DBGUI.minimapButton:SetScript("OnLeave", function()
-	WHDB_MinimapTooltip:Hide();
+	WHDB_Tooltip:Hide();
 end)
 -- }}}
 -- {{{ Highlight
