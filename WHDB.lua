@@ -906,8 +906,6 @@ function WHDB_GetQuestNotes(questLogID)
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
 							showMap = WHDB_GetItemNotes(itemID, questTitle, comment, WHDB_cMark) or showMap;
 						end
-					-- checks for objective type other than item or monster, e.g. objective, reputation, event
-					-- TODO: object check is WIP, most objects can't be found easily by checking item name
 					elseif (objectiveType == "object") then
 						WHDB_Debug_Print(2, "    type = object");
 						if (type(qIDs) == "number") then
@@ -944,11 +942,7 @@ function WHDB_GetQuestNotes(questLogID)
 								end
 							end
 						end
-						--[[
-						local i, j, objectName = strfind(itemName, "(.*) ")
-						local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-						showMap = WHDB_GetObjNotes(objectName, questTitle, comment, WHDB_cMark) or showMap;
-						--]]
+					-- checks for objective type other than item/monster/object, e.g. reputation, event
 					elseif (objectiveType ~= "item" and objectiveType ~= "monster" and objectiveType ~= "object") then
 						WHDB_Debug_Print(1, "    "..objectiveType.." quest objective-type not supported yet");
 					end
