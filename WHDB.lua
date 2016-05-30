@@ -8,6 +8,8 @@
 -- Globals
 -- Note that there are other globals in the DB files.
 WHDB_Debug = 2;
+WHDB_PREPARE = {{},{},{}};
+WHDB_MARKED = {{},{},{}};
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
 WHDB_InEvent = false;
@@ -18,14 +20,14 @@ WHDB_Version = "Continued WHDB for Classic WoW";
 Cartographer_Notes:RegisterIcon("NPC", {
 	text = "NPC",
 	path = "Interface\\WorldMap\\WorldMapPartyIcon",
-	width = 16,
-	height = 16,
+	width = 12,
+	height = 12,
 })
 Cartographer_Notes:RegisterIcon("Waypoint", {
 	text = "Waypoint",
 	path = "Interface\\WorldMap\\WorldMapPlayerIcon",
-	width = 16,
-	height = 16,
+	width = 12,
+	height = 12,
 })
 Cartographer_Notes:RegisterIcon("QuestionMark", {
 	text = "QuestionMark",
@@ -297,7 +299,7 @@ function WHDB_Slash(input)
 		WHDB_Print("Drops for: "..itemName);
 		if (itemName ~= "") then
 			if ((itemLookup[itemName]) and (itemData[itemLookup[itemName]])) then
-				WHDB_GetItemNotes(itemName, itemName, "", 0);
+				WHDB_MarkForPlotting(DB_ITM, itemName, itemName, "", 0);
 				WHDB_PlotNotesOnMap();
 			end
 		end
@@ -323,7 +325,7 @@ function WHDB_Slash(input)
 					zoneName = zoneData[npcData[npcID]["zone"]];
 					if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
 					WHDB_Print_Indent("Zone: " .. zoneName);
-					if (WHDB_GetNPCNotes(monsterName, monsterName, WHDB_GetNPCStatsComment(monsterName), 0)) then
+					if (WHDB_MarkForPlotting(DB_NPC, monsterName, monsterName, WHDB_GetNPCStatsComment(monsterName), 0)) then
 						WHDB_ShowMap();
 					end
 				else
@@ -336,7 +338,7 @@ function WHDB_Slash(input)
 		if (objName ~= "") then
 			WHDB_Print("Locations for: "..objName);
 			if (objName ~= nil) then
-				if (WHDB_GetObjNotes(objName, objName, "This object can be found here", 0)) then
+				if (WHDB_MarkForPlotting(DB_OBJ, objName, objName, "This object can be found here", 0)) then
 					WHDB_ShowMap();
 				else
 					WHDB_Print("No locations found.");
@@ -394,6 +396,23 @@ function WHDB_PlotNotesOnMap()
 	local zone = nil;
 	local title = nil;
 	local noteID = nil;
+	if WHDB_PREPARE[DB_NPC] then
+		for k, v in WHDB_PREPARE[DB_NPC] do
+			WHDB_GetNPCNotes(k, v[1], v[2], v[3]);
+		end
+	end
+	if WHDB_PREPARE[DB_OBJ] then
+		for k, v in WHDB_PREPARE[DB_OBJ] do
+			WHDB_GetObjNotes(k, v[1], v[2], v[3]);
+		end
+	end
+	if WHDB_PREPARE[DB_ITM] then
+		for k, v in WHDB_PREPARE[DB_ITM] do
+			WHDB_GetItemNotes(k, v[1], v[2], v[3]);
+		end
+	end
+	WHDB_MARKED = WHDB_PREPARE;
+	WHDB_PREPARE = {{},{},{}};
 
 	local firstNote = 1;
 	if WHDB_MAP_NOTES == {} then
@@ -555,12 +574,12 @@ function WHDB_GetQuestEndNotes(questLogID)
 					for n, npcID in pairs(npcIDs) do
 						local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(npcIDs).." NPCs";
 						local comment = npcData[npcID].name.."\n("..multi.." quests with this name)"
-						WHDB_GetNPCNotes(npcID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+						WHDB_MarkForPlotting(DB_NPC, npcID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
 					local npcID = npcIDs[1]
 					local comment = npcData[npcID].name.."\n(Ends "..multi.." quests with this name)"
-					return WHDB_GetNPCNotes(npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+					return WHDB_MarkForPlotting(DB_NPC, npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 				end
 			else
 				local objIDs = {}
@@ -583,12 +602,12 @@ function WHDB_GetQuestEndNotes(questLogID)
 						for n, objID in pairs(objIDs) do
 							local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(objIDs).." NPCs";
 							local comment = objData[objID].name.."\n("..multi.." quests with this name)"
-							WHDB_GetObjNotes(objID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+							WHDB_MarkForPlotting(DB_OBJ, objID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 						end
 					else
 						local objID = objIDs[1]
 						local comment = objData[objID].name.."\n(Ends "..multi.." quests with this name)"
-						return WHDB_GetObjNotes(objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
+						return WHDB_MarkForPlotting(DB_OBJ, objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
 					return false;
@@ -599,12 +618,12 @@ function WHDB_GetQuestEndNotes(questLogID)
 			local npcID = WHDB_SearchEndNPC(qIDs);
 			if npcID and npcData[npcID] then
 				local name = npcData[npcID].name;
-				return WHDB_GetNPCNotes(npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+				return WHDB_MarkForPlotting(DB_NPC, npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 			else
 				local objID = WHDB_SearchEndObj(qIDs);
 				if objID and objData[objID] then
 					local name = objData[objID].name;
-					return WHDB_GetObjNotes(objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
+					return WHDB_MarkForPlotting(DB_OBJ, objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 				else
 					return false;
 				end
@@ -826,8 +845,8 @@ function WHDB_GetItemNotes(itemNameOrID, commentTitle, comment, icon)
 						show = false;
 					end
 					if show then
-						local dropComment = "Dropped by (Chance "..value[2].."%):\n"..npcData[value[1]].name.."\n"..WHDB_GetNPCStatsComment(value[1]);
-						showMap = WHDB_GetNPCNotes(value[1], commentTitle, comment..dropComment, icon) or showMap;
+						local dropComment = "Drop by: "..npcData[value[1]].name.." (Chance "..value[2].."%)\n"..WHDB_GetNPCStatsComment(value[1]);
+						showMap = WHDB_MarkForPlotting(DB_NPC, value[1], commentTitle, comment..dropComment, icon) or showMap;
 					end
 				end
 			end
@@ -841,7 +860,7 @@ function WHDB_GetItemNotes(itemNameOrID, commentTitle, comment, icon)
 					end
 					if show then
 						local dropComment = "Contained in (Chance "..value[2].."%):\n"..objData[value[1]].name;
-						showMap = WHDB_GetObjNotes(objData[value[1]].name, commentTitle, comment..dropComment, icon) or showMap;
+						showMap = WHDB_MarkForPlotting(DB_OBJ, objData[value[1]].name, commentTitle, comment..dropComment, icon) or showMap;
 					end
 				end
 			end
@@ -853,7 +872,7 @@ function WHDB_GetItemNotes(itemNameOrID, commentTitle, comment, icon)
 					show = false;
 				end
 				local dropComment = "|cFF00FF00"..value[2].."% chance of containing "..commentTitle.."|r\n"
-				showMap = WHDB_GetItemNotes(value[1], value[1], dropComment..comment, icon) or showMap;
+				showMap = WHDB_MarkForPlotting(DB_ITM, value[1], value[1], dropComment..comment, icon) or showMap;
 			end
 		end
 		return showMap;
@@ -876,20 +895,25 @@ function WHDB_GetQuestNotes(questLogID)
 		end
 		local questDescription, questObjectives = GetQuestLogQuestText();
 		local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
+		local title = "";
 		if (type(qIDs) == "number") then
 			WHDB_Debug_Print(2, "    qID = "..qIDs);
+			title = WHDB_GetDifficultyColor(qData[qIDs][DB_LEVEL]).."["..qData[qIDs][DB_LEVEL].."] "..questTitle.."|r";
 		elseif (type(qIDs) == "table") then
 			for k, qID in pairs(qIDs) do
 				WHDB_Debug_Print(2, "    qID["..k.."] = "..qID);
 			end
 		else
 			WHDB_Debug_Print(1, "Failed to find Quest ID for: "..questTitle)
+			title = questTitle
 		end
 		if (numObjectives ~= nil) then
 			for i=1, numObjectives, 1 do
 				local text, objectiveType, finished = GetQuestLogLeaderBoard(i, questLogID);
 				local i, j, itemName, numItems, numNeeded = strfind(text, "(.*):%s*([%d]+)%s*/%s*([%d]+)");
-				WHDB_Debug_Print(2, "    objectiveText = "..itemName);
+				if itemName then
+					WHDB_Debug_Print(2, "    objectiveText = "..itemName);
+				end
 				if (not finished) then
 					if (objectiveType == "monster") then
 						WHDB_Debug_Print(2, "    type = monster");
@@ -897,14 +921,14 @@ function WHDB_GetQuestNotes(questLogID)
 						if monsterName then
 							local npcID = WHDB_GetNPCID(monsterName);
 							local comment = "|cFF00FF00"..monsterName.." "..numItems.."/"..numNeeded.."|r\n"..WHDB_GetNPCStatsComment(npcID);
-							showMap = WHDB_GetNPCNotes(npcID, questTitle, comment, WHDB_cMark) or showMap;
+							showMap = WHDB_MarkForPlotting(DB_NPC, npcID, title, comment, WHDB_cMark) or showMap;
 						end
 					elseif (objectiveType == "item") then
 						WHDB_Debug_Print(2, "    type = item");
 						local itemID = itemLookup[itemName];
 						if (itemID and (itemData[itemID])) then
 							local comment = "|cFF00FF00"..itemName.." "..numItems.."/"..numNeeded.."|r\n"
-							showMap = WHDB_GetItemNotes(itemID, questTitle, comment, WHDB_cMark) or showMap;
+							showMap = WHDB_GetItemNotes(itemID, title, comment, WHDB_cMark) or showMap;
 						end
 					elseif (objectiveType == "object") then
 						WHDB_Debug_Print(2, "    type = object");
@@ -919,7 +943,7 @@ function WHDB_GetQuestNotes(questLogID)
 										else
 											comment = comment..objectiveText..": "..numItems.."/"..numNeeded.."|r\n";
 										end
-										showMap = WHDB_GetObjNotes(objectId, questTitle, comment, WHDB_cMark) or showMap;
+										showMap = WHDB_MarkForPlotting(DB_OBJ, objectId, title, comment, WHDB_cMark) or showMap;
 									end
 								end
 							end
@@ -936,7 +960,7 @@ function WHDB_GetQuestNotes(questLogID)
 											else
 												comment = comment..objectiveText..": "..numItems.."/"..numNeeded.."|r\n";
 											end
-											showMap = WHDB_GetObjNotes(objectId, questTitle, comment, WHDB_cMark) or showMap;
+											showMap = WHDB_MarkForPlotting(DB_OBJ, objectId, title, comment, WHDB_cMark) or showMap;
 										end
 									end
 								end
@@ -1014,7 +1038,7 @@ function WHDB_GetQuestStartNotes(zoneName)
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
 				local comment = WHDB_GetQuestStartComment(data.starts);
 				if (comment ~= "") then -- (comment == "") => other faction quest
-					WHDB_GetNPCNotes(id, data.name, "Starts quests:\n"..comment, 5);
+					WHDB_MarkForPlotting(DB_NPC, id, data.name, "Starts quests:\n"..comment, 5);
 				end
 			end
 		end
@@ -1022,7 +1046,7 @@ function WHDB_GetQuestStartNotes(zoneName)
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
 				local comment = WHDB_GetQuestStartComment(data.starts);
 				if (comment ~= "") then
-					WHDB_GetObjNotes(id, data.name, "Starts quests:\n"..comment, 5);
+					WHDB_MarkForPlotting(DB_OBJ, id, data.name, "Starts quests:\n"..comment, 5);
 				end
 			end
 		end
@@ -1081,7 +1105,7 @@ end -- WHDB_GetTableLength()
 function WHDB_CompareTables(tab1, tab2)
 	for k, v in pairs(tab1) do
 		if (type(v) == "table") then
-			if not compareTables(v, tab2[k]) then
+			if not WHDB_CompareTables(v, tab2[k]) then
 				return false;
 			end
 		else
@@ -1091,6 +1115,27 @@ function WHDB_CompareTables(tab1, tab2)
 		end
 	end
 	return true;
+end
+
+function WHDB_PrintTable(tab, indent)
+	local iString = "";
+	local ind = indent;
+	while (ind > 0) do
+		iString = iString.."-";
+		ind = ind -1;
+	end
+	for k, v in pairs(tab) do
+		if (type(v) == "table") then
+			WHDB_Print(iString..k..":");
+			WHDB_PrintTable(v, indent+1);
+		else
+			if (v) then
+				WHDB_Print(iString..k..": "..v);
+			else
+				WHDB_Print(iString..k..": ".."nil");
+			end
+		end
+	end
 end
 
 function WHDB_GetDifficultyColor(level1, ...)
@@ -1119,4 +1164,87 @@ function WHDB_GetGreyLevel(level)
 	else
 		return (level - math.floor(level/5) - 1);
 	end
+end
+
+function WHDB_MarkForPlotting(kind, nameOrId, title, comment, icon, ...)
+	if kind == DB_NPC then
+		local npcID = 0;
+		if type(nameOrId) == "number" then
+			npcID = nameOrId;
+		else
+			npcID = WHDB_GetNPCID(nameOrId);
+		end
+		if npcID and npcID ~=0 then
+			if WHDB_PREPARE[DB_NPC][npcID] then
+				if WHDB_PREPARE[DB_NPC][npcID][NOTE_TITLE] ~= "Multiple targets:"
+				and (WHDB_PREPARE[DB_NPC][npcID][NOTE_TITLE] ~= title
+				or WHDB_PREPARE[DB_NPC][npcID][NOTE_COMMENT] ~= comment
+				or WHDB_PREPARE[DB_NPC][npcID][NOTE_ICON] ~= icon)then
+					local new_comment = title.."\n"..comment.."\n\n"..WHDB_PREPARE[DB_NPC][npcID][NOTE_TITLE].."\n"..WHDB_PREPARE[DB_NPC][npcID][NOTE_COMMENT];
+					WHDB_PREPARE[DB_NPC][npcID][NOTE_TITLE] = "Multiple targets:";
+					WHDB_PREPARE[DB_NPC][npcID][NOTE_COMMENT] = new_comment;
+					WHDB_PREPARE[DB_NPC][npcID][NOTE_ICON] = 0;
+				elseif WHDB_PREPARE[DB_NPC][npcID][NOTE_TITLE] == "Multiple targets:" then
+					local new_comment = title.."\n"..comment.."\n\n"..WHDB_PREPARE[DB_NPC][npcID][NOTE_COMMENT];
+					WHDB_PREPARE[DB_NPC][npcID][NOTE_COMMENT] = new_comment;
+				end
+			else
+				WHDB_PREPARE[DB_NPC][npcID] = {title, comment, icon}
+			end
+			return true;
+		end
+	elseif kind == DB_OBJ then
+		local objID = 0;
+		if type(nameOrId) == "number" then
+			objID = nameOrId;
+		else
+			objID = WHDB_GetObjID(nameOrId);
+		end
+		if objID and objID ~=0 then
+			if WHDB_PREPARE[DB_OBJ][objID] then
+				if WHDB_PREPARE[DB_OBJ][objID][NOTE_TITLE] ~= "Multiple targets:"
+				and (WHDB_PREPARE[DB_OBJ][objID][NOTE_TITLE] ~= title
+				or WHDB_PREPARE[DB_OBJ][objID][NOTE_COMMENT] ~= comment
+				or WHDB_PREPARE[DB_OBJ][objID][NOTE_ICON] ~= icon)then
+					local new_comment = title.."\n"..comment.."\n\n"..WHDB_PREPARE[DB_OBJ][objID][NOTE_TITLE].."\n"..WHDB_PREPARE[DB_OBJ][objID][NOTE_COMMENT];
+					WHDB_PREPARE[DB_OBJ][objID][NOTE_TITLE] = "Multiple targets:";
+					WHDB_PREPARE[DB_OBJ][objID][NOTE_COMMENT] = new_comment;
+					WHDB_PREPARE[DB_OBJ][objID][NOTE_ICON] = 0;
+				elseif WHDB_PREPARE[DB_OBJ][objID][NOTE_TITLE] == "Multiple targets:" then
+					local new_comment = title.."\n"..comment.."\n\n"..WHDB_PREPARE[DB_OBJ][objID][NOTE_COMMENT];
+					WHDB_PREPARE[DB_OBJ][objID][NOTE_COMMENT] = new_comment;
+				end
+			else
+				WHDB_PREPARE[DB_OBJ][objID] = {title, comment, icon}
+			end
+			return true;
+		end
+	elseif kind == DB_ITM then
+		local itmID = 0;
+		if type(nameOrId) == "number" then
+			itmID = nameOrId;
+		else
+			itmID = itemLookup[nameOrId];
+		end
+		if itmID and itmID ~=0 then
+			if WHDB_PREPARE[DB_ITM][itmID] then
+				if WHDB_PREPARE[DB_ITM][itmID][NOTE_TITLE] ~= "Multiple targets:"
+				and (WHDB_PREPARE[DB_ITM][itmID][NOTE_TITLE] ~= title
+				or WHDB_PREPARE[DB_ITM][itmID][NOTE_COMMENT] ~= comment
+				or WHDB_PREPARE[DB_ITM][itmID][NOTE_ICON] ~= icon)then
+					local new_comment = title.."\n"..comment.."\n\n"..WHDB_PREPARE[DB_ITM][itmID][NOTE_TITLE].."\n"..WHDB_PREPARE[DB_ITM][itmID][NOTE_COMMENT];
+					WHDB_PREPARE[DB_ITM][itmID][NOTE_TITLE] = "Multiple targets:";
+					WHDB_PREPARE[DB_ITM][itmID][NOTE_COMMENT] = new_comment;
+					WHDB_PREPARE[DB_ITM][itmID][NOTE_ICON] = 0;
+				elseif WHDB_PREPARE[DB_ITM][itmID][NOTE_TITLE] == "Multiple targets:" then
+					local new_comment = title.."\n"..comment.."\n\n"..WHDB_PREPARE[DB_ITM][itmID][NOTE_COMMENT];
+					WHDB_PREPARE[DB_ITM][itmID][NOTE_COMMENT] = new_comment;
+				end
+			else
+				WHDB_PREPARE[DB_ITM][itmID] = {title, comment, icon}
+			end
+			return true;
+		end
+	end
+	return false;
 end
