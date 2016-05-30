@@ -9,6 +9,9 @@ DB_OBJECTIVES = 8;
 DB_TRIGGER = 9;
 DB_REQ_NPC_OR_OBJ = 10;
 function deleteFaction(str)
+	if (WHDB_Settings.dbMode) then
+		return;
+	end
 	local before = WHDB_GetTableLength(qData);
 	for key, data in pairs(qData) do
 		if (data[DB_REQ_RACE] == "AH") or (data[DB_REQ_RACE] ~= str) then
@@ -21,7 +24,7 @@ function deleteFaction(str)
 	WHDB_Debug_Print(2, before-after.." opposite faction quests deleted");
 end
 function deleteClasses()
-	if not WHDB_Settings.class then
+	if (not WHDB_Settings.class) or (WHDB_Settings.dbMode) then
 		return;
 	end
 	local before = WHDB_GetTableLength(qData);
