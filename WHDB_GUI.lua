@@ -357,7 +357,7 @@ function DBGUI_SearchSpawn(search)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetScript("OnClick", function(self)
             WHDB_MAP_NOTES = {};
 			local name = this:GetText()
-            WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name), 0);
+            WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name, true), 0);
             WHDB_ShowMap();
           end)
         spawnCount = spawnCount + 1
@@ -437,7 +437,7 @@ function DBGUI_ShowFavourites()
       DBGUI_SpawnButtons["Button_"..i]:SetScript("OnClick", function(self)
 			WHDB_MAP_NOTES = {};
 			local name = this:GetText()
-			WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name), 0);
+			WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name, true), 0);
 			WHDB_ShowMap();
         end)
     end
