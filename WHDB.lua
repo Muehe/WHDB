@@ -550,6 +550,7 @@ function WHDB_DoCleanMap()
 		ShaguDB_CleanMap();
 	end
 	WHDB_CleanMap();
+	WHDB_MARKED = {{},{}};
 end -- WHDB_DoCleanMap()
 
 function WHDB_SearchEndNPC(questID)
@@ -1156,6 +1157,7 @@ end -- WHDB_GetCurrentZoneID()
 
 -- called from xml
 function WHDB_GetSelectionQuestNotes()
+	WHDB_PREPARE = WHDB_MARKED;
 	WHDB_GetQuestNotes(GetQuestLogSelection())
 	WHDB_PlotNotesOnMap();
 end -- WHDB_GetSelectionQuestNotes()
