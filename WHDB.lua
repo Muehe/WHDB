@@ -579,11 +579,11 @@ end -- WHDB_SearchEndObj(questID)
 
 function WHDB_GetQuestEndNotes(questLogID)
 	WHDB_Debug_Print(2, "WHDB_GetQuestEndNotes("..questLogID..") called");
-	local questTitle = GetQuestLogTitle(questLogID);
+	local questTitle, level = GetQuestLogTitle(questLogID);
 	SelectQuestLogEntry(questLogID);
 	local questDescription, questObjectives = GetQuestLogQuestText();
 	if (questObjectives == nil) then questObjectives = ''; end
-	local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
+	local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives, level);
 	if qIDs ~= false then
 		WHDB_Debug_Print(2, "    "..type(qIDs));
 	end
@@ -671,13 +671,13 @@ function WHDB_GetQuestEndNotes(questLogID)
 	end
 end -- WHDB_GetQuestEndNotes(questLogID)
 
-function WHDB_GetQuestIDs(questName, objectives)
+function WHDB_GetQuestIDs(questName, objectives, ...)
 	if not qLookup[questName] then
 		return false;
 	end
 	local qIDs = {};
 	if (objectives == nil) then objectives = ''; end
-	WHDB_Debug_Print(2, "WHDB_GetQuestIDs('"..questName.."', '"..objectives.."')");
+	WHDB_Debug_Print(2, "WHDB_GetQuestIDs('"..questName.."', '"..objectives.."')", arg[1]);
 	if (WHDB_GetTableLength(qLookup[questName]) == 1) then
 		for k, v in pairs(qLookup[questName]) do
 			WHDB_Debug_Print(2, "    Possible questIDs: 1");
@@ -691,19 +691,30 @@ function WHDB_GetQuestIDs(questName, objectives)
 				end
 			end
 		end
-		-- This was an else, but that could miss some cases I think, so changed to if.
 		if (table.getn(qIDs) == 0) then
 			for k, v in pairs(qLookup[questName]) do
 				table.insert(qIDs, k);
 			end
 		end
+		if (WHDB_GetTableLength(qIDs) > 1) then
+			local level = arg[1];
+			if level then
+				for k, v in pairs(qIDs) do
+					if qData[v][DB_LEVEL] ~= level then
+						qIDs[k] = nil;
+					end
+				end
+			end
+		end
 	end
-	WHDB_Debug_Print(2, "    Possible questIDs: ", table.getn(qIDs));
-	length = table.getn(qIDs);
+	local length = WHDB_GetTableLength(qIDs);
+	WHDB_Debug_Print(2, "    Possible questIDs: ", length);
 	if (length == nil) then
 		return false;
 	elseif (length == 1) then
-		return qIDs[1];
+		for k, v in pairs(qIDs) do
+			return v;
+		end
 	else
 		return qIDs;
 	end
@@ -933,7 +944,7 @@ function WHDB_GetQuestNotes(questLogID)
 		end
 		SelectQuestLogEntry(questLogID);
 		local questDescription, questObjectives = GetQuestLogQuestText();
-		local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives);
+		local qIDs = WHDB_GetQuestIDs(questTitle, questObjectives, level);
 		local title = "";
 		if (type(qIDs) == "number") then
 			WHDB_Debug_Print(2, "    qID = "..qIDs);
