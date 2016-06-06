@@ -262,34 +262,34 @@ DBGUI.minimapButton:SetHighlightTexture('Interface\\Minimap\\UI-Minimap-ZoomButt
 DBGUI.minimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", 52-(80*cos(WHDBMinimapPosition)),(80*sin(WHDBMinimapPosition))-52)
 DBGUI.minimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 DBGUI.minimapButton:SetScript("OnClick", function()
-	if ( arg1 == "LeftButton" ) then
-		if (WHDB_Frame:IsShown()) then
-			WHDB_Frame:Hide()
-		else
-			WHDB_Frame:Show()
-		end
-	end
-	if (arg1 == "RightButton") then
-		if IsShiftKeyDown() then
-			WHDB_ResetGui();
-		else
-			if (DBGUI:IsShown()) then
-				DBGUI:Hide();
-			else
-				DBGUI:Show();
-			end
-		end
-	end
+    if ( arg1 == "LeftButton" ) then
+        if (WHDB_Frame:IsShown()) then
+            WHDB_Frame:Hide()
+        else
+            WHDB_Frame:Show()
+        end
+    end
+    if (arg1 == "RightButton") then
+        if IsShiftKeyDown() then
+            WHDB_ResetGui();
+        else
+            if (DBGUI:IsShown()) then
+                DBGUI:Hide();
+            else
+                DBGUI:Show();
+            end
+        end
+    end
 end)
 -- {{{ Minimap Tooltip
 DBGUI.minimapButton:SetScript("OnEnter", function()
-	WHDB_Tooltip:SetOwner(DBGUI.minimapButton, "ANCHOR_BOTTOMLEFT");
-	WHDB_Tooltip:ClearLines();
-	WHDB_Tooltip:SetText("LeftClick: Open/Close settings and controls.\nRightClick: Open/Close search window.\nShift+RightClick: Reset and show both windows.");
-	WHDB_Tooltip:Show();
+    WHDB_Tooltip:SetOwner(DBGUI.minimapButton, "ANCHOR_BOTTOMLEFT");
+    WHDB_Tooltip:ClearLines();
+    WHDB_Tooltip:SetText("LeftClick: Open/Close settings and controls.\nRightClick: Open/Close search window.\nShift+RightClick: Reset and show both windows.");
+    WHDB_Tooltip:Show();
 end)
 DBGUI.minimapButton:SetScript("OnLeave", function()
-	WHDB_Tooltip:Hide();
+    WHDB_Tooltip:Hide();
 end)
 -- }}}
 -- {{{ Highlight
@@ -356,7 +356,7 @@ function DBGUI_SearchSpawn(search)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetText(npc.name)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetScript("OnClick", function(self)
             WHDB_MAP_NOTES = {};
-			local name = this:GetText()
+            local name = this:GetText()
             WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name, true), 0);
             WHDB_ShowMap();
           end)
@@ -383,8 +383,8 @@ function DBGUI_SearchItem(search)
         DBGUI_ItemButtons["Button_"..itemCount]:SetText(item)
         DBGUI_ItemButtons["Button_"..itemCount]:SetScript("OnClick", function(self)
             WHDB_MAP_NOTES = {};
-			local name = this:GetText();
-            WHDB_GetItemNotes(name, name, "", 0)
+            local name = this:GetText();
+            WHDB_PrepareItemNotes(name, name, "", 0)
             WHDB_ShowMap();
           end)
         itemCount = itemCount + 1
@@ -409,11 +409,11 @@ function DBGUI_SearchQuest(search)
         DBGUI_QuestButtons["Button_"..questCount]:SetTextColor(1,1,1)
         DBGUI_QuestButtons["Button_"..questCount]:SetText(quest)
         DBGUI_QuestButtons["Button_"..questCount]:SetScript("OnClick", function(self)
-			--[[
+            --[[
             WHDB_MAP_NOTES = {};
             WHDB_searchQ(this:GetText(),nil)
             WHDB_ShowMap();
-			--]]
+            --]]
           end)
         questCount = questCount + 1
       end
@@ -435,10 +435,10 @@ function DBGUI_ShowFavourites()
       DBGUI_SpawnButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
       DBGUI_SpawnButtons["Button_"..i]:SetText(DBGUI_Favourites["spawn"][i])
       DBGUI_SpawnButtons["Button_"..i]:SetScript("OnClick", function(self)
-			WHDB_MAP_NOTES = {};
-			local name = this:GetText()
-			WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name, true), 0);
-			WHDB_ShowMap();
+            WHDB_MAP_NOTES = {};
+            local name = this:GetText()
+            WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name, true), 0);
+            WHDB_ShowMap();
         end)
     end
 
@@ -453,10 +453,10 @@ function DBGUI_ShowFavourites()
       DBGUI_ItemButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
       DBGUI_ItemButtons["Button_"..i]:SetText(DBGUI_Favourites["item"][i])
       DBGUI_ItemButtons["Button_"..i]:SetScript("OnClick", function(self)
-			WHDB_MAP_NOTES = {};
-			local name = this:GetText();
-			WHDB_GetItemNotes(name, name, "", 0)
-			WHDB_ShowMap();
+            WHDB_MAP_NOTES = {};
+            local name = this:GetText();
+            WHDB_GetItemNotes(name, name, "", 0)
+            WHDB_ShowMap();
         end)
     end
 
@@ -471,11 +471,11 @@ function DBGUI_ShowFavourites()
       DBGUI_QuestButtons["Button_"..i]:SetTextColor(0.2,1,0.9,0.7)
       DBGUI_QuestButtons["Button_"..i]:SetText(DBGUI_Favourites["quest"][i])
       DBGUI_QuestButtons["Button_"..i]:SetScript("OnClick", function(self)
-			--[[
+            --[[
           WHDB_MAP_NOTES = {};
           WHDB_searchQ(this:GetText(),nil)
           WHDB_ShowMap();
-			--]]
+            --]]
         end)
     end
   end
