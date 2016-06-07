@@ -988,8 +988,8 @@ function WHDB_GetQuestNotes(questLogID)
 					elseif (objectiveType == "object") then
 						WHDB_Debug_Print(2, "    type = object");
 						if (type(qIDs) == "number") then
-							if qData[qIDs][DB_REQ_NPC_OR_OBJ][DB_OBJ] then
-								for key, data in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ][DB_OBJ]) do
+							if qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_OBJ] then
+								for key, data in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_OBJ]) do
 									local objectId, objectiveText = data[1], data[2];
 									if (objData[objectId] and objectiveText == itemName) then
 										local comment = "|cFF00FF00";
@@ -1005,8 +1005,8 @@ function WHDB_GetQuestNotes(questLogID)
 						end
 						if (type(qIDs) == "table") then
 							for k, qID in pairs(qIDs) do
-								if qData[qID][DB_REQ_NPC_OR_OBJ][DB_OBJ] then
-									for key, data in pairs(qData[qID][DB_REQ_NPC_OR_OBJ][DB_OBJ]) do
+								if qData[qID][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_OBJ] then
+									for key, data in pairs(qData[qID][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_OBJ]) do
 										local objectId, objectiveText = data[1], data[2];
 										if (objData[objectId] and objectiveText == itemName) then
 											local comment = "|cFF00FF00";
@@ -1024,6 +1024,36 @@ function WHDB_GetQuestNotes(questLogID)
 					-- checks for objective type other than item/monster/object, e.g. reputation, event
 					elseif (objectiveType ~= "item" and objectiveType ~= "monster" and objectiveType ~= "object") then
 						WHDB_Debug_Print(1, "    "..objectiveType.." quest objective-type not supported yet");
+					end
+				end
+			end
+			if (type(qIDs) == "number") then
+				if qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM] then
+					for k, itemID in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM]) do
+						local comment = '';
+						for name, id in pairs(qLookup) do
+							if (id == itemID) then
+								comment = name;
+								break;
+							end
+						end
+						showMap = WHDB_PrepareItemNotes(itemID, title, comment, WHDB_cMark) or showMap;
+					end
+				end
+			end
+			if (type(qIDs) == "table") then
+				for k, qID in pairs(qIDs) do
+					if qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM] then
+						for k, itemID in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM]) do
+							local comment = '';
+							for name, id in pairs(qLookup) do
+								if (id == itemID) then
+									comment = name;
+									break;
+								end
+							end
+							showMap = WHDB_PrepareItemNotes(itemID, title, comment, WHDB_cMark) or showMap;
+						end
 					end
 				end
 			end
