@@ -886,8 +886,8 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 	end
 	if (itemData[itemID]) then
 		local showMap = false;
-		if (itemData[itemID].npcs) then
-			for key, value in pairs(itemData[itemID].npcs) do
+		if (itemData[itemID][DB_NPC]) then
+			for key, value in pairs(itemData[itemID][DB_NPC]) do
 				if npcData[value[1]] then
 					local show = true;
 					if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
@@ -900,8 +900,8 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 				end
 			end
 		end
-		if (itemData[itemID].objects) then
-			for key, value in pairs(itemData[itemID].objects) do
+		if (itemData[itemID][DB_OBJ]) then
+			for key, value in pairs(itemData[itemID][DB_OBJ]) do
 				if objData[value[1]] then
 					local show = true;
 					if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
@@ -914,8 +914,8 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 				end
 			end
 		end
-		if (itemData[itemID].items) and (WHDB_Settings.item_item) then
-			for key, value in pairs(itemData[itemID].items) do
+		if (itemData[itemID][DB_ITM]) and (WHDB_Settings.item_item) then
+			for key, value in pairs(itemData[itemID][DB_ITM]) do
 				local show = true;
 				if (WHDB_Settings.minDropChance > 0) and (value[2] < WHDB_Settings.minDropChance) then
 					show = false;
@@ -1030,13 +1030,7 @@ function WHDB_GetQuestNotes(questLogID)
 			if (type(qIDs) == "number") then
 				if qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM] then
 					for k, itemID in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM]) do
-						local comment = '';
-						for name, id in pairs(qLookup) do
-							if (id == itemID) then
-								comment = name;
-								break;
-							end
-						end
+						local comment = "Drop for quest related item:\n"..itemData[itemID][DB_ITM_NAME];
 						showMap = WHDB_PrepareItemNotes(itemID, title, comment, WHDB_cMark) or showMap;
 					end
 				end
@@ -1045,13 +1039,7 @@ function WHDB_GetQuestNotes(questLogID)
 				for k, qID in pairs(qIDs) do
 					if qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM] then
 						for k, itemID in pairs(qData[qIDs][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_ITM]) do
-							local comment = '';
-							for name, id in pairs(qLookup) do
-								if (id == itemID) then
-									comment = name;
-									break;
-								end
-							end
+							local comment = "Drop for quest related item:\n"..itemData[itemID][DB_ITM_NAME];
 							showMap = WHDB_PrepareItemNotes(itemID, title, comment, WHDB_cMark) or showMap;
 						end
 					end
