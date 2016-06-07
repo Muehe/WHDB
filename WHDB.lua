@@ -222,16 +222,18 @@ function WHDB_Event(event, arg1)
 				WHDB_Settings["faction"] = temp;
 			end
 		end
-		if (WHDB_Settings["faction"] == "Alliance") then
+		if (WHDB_Settings.faction == "Alliance" and not WHDB_Settings.dbMode) then
 			deleteFaction("H");
 			WHDB_Print("Horde data cleared.");
-		elseif (WHDB_Settings["faction"] == "Horde") then
+		elseif (WHDB_Settings.faction == "Horde" and not WHDB_Settings.dbMode) then
 			deleteFaction("A");
 			WHDB_Print("Alliance data cleared.");
 		else
-			WHDB_Print("Unable to use UnitFactionGroup(\"player\"). Try making yourself visible and then use the chat-command /reloadUI.");
+			WHDB_Print("DB Mode active, no quest data cleared.");
 		end
-		deleteClasses();
+		if not WHDB_Settings.dbMode then
+			deleteClasses();
+		end
 		fillQuestLookup();
 		WHDB_Frame:Show();
 		WHDB_Print("WHDB Loaded.");
