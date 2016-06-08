@@ -356,6 +356,7 @@ function DBGUI_SearchSpawn(search)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetText(npc.name)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetScript("OnClick", function(self)
             WHDB_MAP_NOTES = {};
+            WHDB_PREPARE = WHDB_MARKED;
             local name = this:GetText()
             WHDB_GetNPCNotes(name, name, "Spawnpoint".."\n"..WHDB_GetNPCStatsComment(name, true), 0);
             WHDB_ShowMap();
@@ -383,6 +384,7 @@ function DBGUI_SearchItem(search)
         DBGUI_ItemButtons["Button_"..itemCount]:SetText(item)
         DBGUI_ItemButtons["Button_"..itemCount]:SetScript("OnClick", function(self)
             WHDB_MAP_NOTES = {};
+            WHDB_PREPARE = WHDB_MARKED;
             local name = this:GetText();
             WHDB_PrepareItemNotes(name, name, "", 0)
             WHDB_ShowMap();

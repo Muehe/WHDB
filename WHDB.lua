@@ -59,6 +59,13 @@ Cartographer_Notes:RegisterIcon("AreaTrigger", {
 	width = 16,
 	height = 16,
 })
+Cartographer_Notes:RegisterIcon("Vendor", {
+	text = "Vendor",
+	path = "Interface\\AddOns\\WHDB\\symbols\\vendor",
+	width = 16,
+	height = 16,
+})
+
 
 -- Icons from ShaguDB, thanks fam.
 -- Switched 3 and 7 for better contrast of colors follwing each other
@@ -935,6 +942,22 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 				if show then
 					local dropComment = "|cFF00FF00"..value[2].."% chance of containing "..commentTitle.."|r\n"
 					showMap = WHDB_PrepareItemNotes(value[1], commentTitle, dropComment..comment, icon) or showMap;
+				end
+			end
+		end
+		if (itemData[itemID][DB_VENDOR]) then
+			for key, value in pairs(itemData[itemID][DB_VENDOR]) do
+				local npc, maxcount, increaseTime = value[1], value[2], value[3];
+				if npcData[npc] then
+					local sellComment = '';
+					if maxcount then
+						sellComment = "Sold by: "..npcData[npc].name.."\nMax: "..maxcount.."\nRestock time:"..increaseTime.." secs\n"..comment;
+					else
+						sellComment = "Sold by: "..npcData[npc].name.."\n"..comment;
+					end
+					showMap = WHDB_MarkForPlotting(DB_NPC, npc, commentTitle, sellComment, "Vendor") or showMap;
+				else
+					WHDB_Debug_Print(2, "Spawn Error for NPC", npc);
 				end
 			end
 		end
