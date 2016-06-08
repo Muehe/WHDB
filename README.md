@@ -34,12 +34,14 @@ Can be used with Questie and ShaguDB (ShaguDB is a little buggy due to using Car
 **Eric Mauser** creator of ShaguDB, an addon quite like mine (also forked from WHDB), of which I was unaware when starting to improve the old WHDB. Some of his stuff was incorporated into this addon (e.g. the beautiful icons).
 
 # Screenshots:
+http://imgur.com/a/iyegU
 
-Everything on one glimpse? Small Map, big icons:
-<img src="http://i.imgur.com/mWP0DTm.jpg" alt="Small Map, big icons"/>
+<img src="http://i.imgur.com/AG29iuy.jpg" alt="Small Map, big icons"/>
 
-Map to full? Single Quest Display:
-<img src="http://i.imgur.com/nhWVyXX.jpg" alt="Single Quest Display"/>
+<img src="http://i.imgur.com/bXdSXw2.jpg" alt="Big Map, Small Icons"/>
 
-Want too see more? Big Map, Small Icons:
-<img src="http://i.imgur.com/E4whTVu.jpg" alt="Big Map, Small Icons"/>
+<img src="http://i.imgur.com/j8kSAXf.jpg" alt="Single Quest Display"/>
+
+<img src="http://i.imgur.com/K8qGT76.jpg" alt="Multi Quest Display"/>
+
+<img src="http://i.imgur.com/yXPQZas.jpg" alt="Quest Start Display"/>
