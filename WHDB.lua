@@ -951,7 +951,7 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 				if npcData[npc] then
 					local sellComment = '';
 					if maxcount then
-						sellComment = "Sold by: "..npcData[npc].name.."\nMax: "..maxcount.."\nRestock time:"..increaseTime.." secs\n"..comment;
+						sellComment = "Sold by: "..npcData[npc].name.."\nMax available: "..maxcount.."\nRestock time: "..WHDB_GetTimeString(increaseTime).."\n"..comment;
 					else
 						sellComment = "Sold by: "..npcData[npc].name.."\n"..comment;
 					end
@@ -966,6 +966,14 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 		return false;
 	end
 end -- WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
+
+function WHDB_GetTimeString(seconds)
+	local hour, minute, second;
+	hour = math.floor(seconds/(60*60));
+	minute = math.floor(mod(seconds/60, 60));
+	second = mod(seconds, 60);
+	return string.format("%.2d:%.2d:%.2d", hour, minute, second);
+end
 
 function WHDB_GetQuestNotes(questLogID)
 	WHDB_Debug_Print(2, "WHDB_GetQuestNotes("..questLogID..") called");
