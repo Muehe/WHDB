@@ -425,7 +425,6 @@ function WHDB_PlotNotesOnMap()
 			local noteTitle, comment, icon = '', '', 1;
 			if WHDB_GetTableLength(npcMarks) > 1 then
 				noteTitle = npcData[k].name;
-				comment = WHDB_GetNPCStatsComment(k);
 				for key, note in pairs(npcMarks) do
 					comment = comment.."\n"..note[NOTE_TITLE].."\n"..note[NOTE_COMMENT].."\n";
 					if icon ~= 1 then
@@ -436,10 +435,18 @@ function WHDB_PlotNotesOnMap()
 						icon = note[NOTE_ICON];
 					end
 				end
+				if (icon ~= 2) then
+					comment = WHDB_GetNPCStatsComment(k, true)..comment;
+					local st, en = string.find(comment, "|c.-|r");
+					noteTitle = string.sub(comment, st, en);
+					comment = string.sub(comment, en+2);
+				end
 				WHDB_GetNPCNotes(k, noteTitle, comment, icon);
 			else
 				for key, v in pairs(npcMarks) do
-					comment = WHDB_GetNPCStatsComment(k).."\n";
+					if (v[NOTE_ICON] ~= 2) then
+						comment = WHDB_GetNPCStatsComment(k, true)..comment;
+					end
 					WHDB_GetNPCNotes(k, v[NOTE_TITLE], comment..v[NOTE_COMMENT], v[NOTE_ICON]);
 				end
 			end
@@ -1141,6 +1148,12 @@ function WHDB_GetNPCStatsComment(npcNameOrID, ...)
 						colorStringMax = WHDB_GetDifficultyColor(tonumber(maxlvl));
 					end
 					level = colorStringMin..minlvl.."|r - "..colorStringMax..maxlvl.."|r";
+				else
+					local i, j, lvl = strfind(level, "([%d]+)%s*");
+					if tonumber(lvl) then
+						colorStringMax = WHDB_GetDifficultyColor(tonumber(lvl));
+						level = colorStringMax..level.."|r";
+					end
 				end
 			end
 		end
