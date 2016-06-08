@@ -151,6 +151,12 @@ function WHDB_Debug_Print(...)
 			out = out..arg[i];
 		elseif (t == "number") then
 			out = out .. arg[i];
+		elseif (t == "boolean") then
+			if t == true then
+				out = out .. "true";
+			else
+				out = out .. "false";
+			end
 		else
 			out = out .. "\"nil or table or smth\"";
 		end
