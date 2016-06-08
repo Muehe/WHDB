@@ -15,6 +15,18 @@ WHDB_Notes = 0;
 WHDB_InEvent = false;
 WHDB_Version = "Continued WHDB for Classic WoW";
 
+DB_NAME, DB_NPC, NOTE_TITLE = 1, 1, 1;
+DB_STARTS, DB_OBJ, NOTE_COMMENT = 2, 2, 2;
+DB_ENDS, DB_ITM, NOTE_ICON = 3, 3, 3;
+DB_MIN_LEVEL, DB_ZONES, DB_VENDOR = 4, 4, 4;
+DB_LEVEL, DB_ITM_NAME = 5, 5;
+DB_REQ_RACE = 6;
+DB_REQ_CLASS = 7;
+DB_OBJECTIVES = 8;
+DB_TRIGGER = 9;
+DB_REQ_NPC_OR_OBJ_OR_ITM = 10;
+DB_SRC_ITM = 11;
+
 -- Cartographer related stuff
 -- New Icons
 Cartographer_Notes:RegisterIcon("NPC", {
