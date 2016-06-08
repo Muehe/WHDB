@@ -1,7 +1,9 @@
 # WHDB
 Continued WHDB addon for classic WoW
 
-Somewhere in beta phase. No warranties. Requires Cartographer addon (using the [modified WHDB version of Cartographer](https://github.com/Muehe/Cartographer) is advised but not required).
+## This Addon wil be merged with [ShaguQuest](https://github.com/shagu/shaguquest) soon™
+
+Requires Cartographer addon (using the [modified WHDB version of Cartographer](https://github.com/Muehe/Cartographer) is advised but not required).
 
 # Description:
 
