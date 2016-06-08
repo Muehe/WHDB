@@ -441,7 +441,7 @@ function WHDB_PlotNotesOnMap()
 						icon = note[NOTE_ICON];
 					end
 				end
-				if (icon ~= 2) then
+				if (icon ~= 2) and (icon ~= 6) then
 					comment = WHDB_GetNPCStatsComment(k, true)..comment;
 					local st, en = string.find(comment, "|c.-|r");
 					noteTitle = string.sub(comment, st, en);
@@ -450,7 +450,7 @@ function WHDB_PlotNotesOnMap()
 				WHDB_GetNPCNotes(k, noteTitle, comment, icon);
 			else
 				for key, v in pairs(npcMarks) do
-					if (v[NOTE_ICON] ~= 2) then
+					if (v[NOTE_ICON] ~= 2) and (v[NOTE_ICON] ~= 6) then
 						comment = WHDB_GetNPCStatsComment(k, true)..comment;
 					end
 					WHDB_GetNPCNotes(k, v[NOTE_TITLE], comment..v[NOTE_COMMENT], v[NOTE_ICON]);
@@ -513,6 +513,8 @@ function WHDB_PlotNotesOnMap()
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Cross", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 5) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "ExclamationMark", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] == 6) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Vendor", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] ~= nil) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, nData[6], "WHDB", 'title', nData[4], 'info', nData[5]);
 			end
@@ -968,7 +970,7 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 					else
 						sellComment = "Sold by: "..npcData[npc].name.."\n"..comment;
 					end
-					showMap = WHDB_MarkForPlotting(DB_NPC, npc, commentTitle, sellComment, "Vendor") or showMap;
+					showMap = WHDB_MarkForPlotting(DB_NPC, npc, commentTitle, sellComment, 6) or showMap;
 				else
 					WHDB_Debug_Print(2, "Spawn Error for NPC", npc);
 				end
