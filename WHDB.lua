@@ -10,6 +10,8 @@
 WHDB_Debug = 2;
 WHDB_PREPARE = {{},{},{}};
 WHDB_MARKED = {{},{},{}};
+WHDB_MARKED_ZONES = {};
+WHDB_QUEST_START_ZONES = {};
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
 WHDB_InEvent = false;
@@ -376,7 +378,7 @@ function WHDB_Slash(input)
 			end
 		end
 	elseif (string.sub(input,1,5) == "clean") then
-		WHDB_CleanMap();
+		WHDB_DoCleanMap();
 	elseif (string.sub(input,1,4) == "auto") then
 		WHDB_SwitchSetting("auto_plot");
 	elseif (string.sub(input,1,8) == "waypoint") then
@@ -408,6 +410,7 @@ function WHDB_PlotAllQuests()
 		questLogID = questLogID + 1;
 		WHDB_GetQuestNotes(questLogID)
 	end
+	WHDB_QUEST_START_ZONES = {};
 	WHDB_CleanMap();
 	WHDB_PlotNotesOnMap();
 end -- WHDB_PlotAllQuests()
@@ -423,9 +426,6 @@ end -- WHDB_Print_Indent( str )
 function WHDB_PlotNotesOnMap()
 	WHDB_Debug_Print(2, "WHDB_PlotNotesOnMap() called");
 
-	local zone = nil;
-	local title = nil;
-	local noteID = nil;
 	if WHDB_PREPARE[DB_NPC] then
 		for k, npcMarks in WHDB_PREPARE[DB_NPC] do
 			local noteTitle, comment, icon = '', '', -1;
@@ -505,10 +505,14 @@ function WHDB_PlotNotesOnMap()
 	WHDB_MARKED = WHDB_PREPARE;
 	WHDB_PREPARE = {{},{},{}};
 
-	local firstNote = 1;
 	if WHDB_MAP_NOTES == {} then
-		return false, false, false
+		return false, false, false;
 	end
+	local firstNote = 1;
+
+	local zone = nil;
+	local title = nil;
+	local noteID = nil;
 
 	for nKey, nData in ipairs(WHDB_MAP_NOTES) do
 		-- C nData[1] is zone name/number
@@ -544,14 +548,21 @@ function WHDB_PlotNotesOnMap()
 		end
 		if (nData[1] ~= nil) and (not instance) then
 			zone = nData[1];
+			if nData[6] ~= 5 then
+				WHDB_MARKED_ZONES[zone] = true;
+			end
 			title = nData[4];
 		end
 	end
-	if table.getn(WHDB_MAP_NOTES) ~= nil then
+	if (table.getn(WHDB_MAP_NOTES) ~= nil) and (not WHDB_InEvent) then
 		local notes = table.getn(WHDB_MAP_NOTES);
-		if (notes ~= WHDB_Notes) and (not WHDB_InEvent) then
+		if (notes ~= WHDB_Notes) then
 			WHDB_Print(notes.." notes plotted.");
 			WHDB_Notes = notes;
+		end
+		WHDB_Print("Marked zones:");
+		for k, v in pairs(WHDB_MARKED_ZONES) do
+			WHDB_Print(k);
 		end
 	end
 	WHDB_MAP_NOTES = {}
@@ -609,6 +620,8 @@ function WHDB_DoCleanMap()
 		ShaguDB_CleanMap();
 	end
 	WHDB_CleanMap();
+	WHDB_MARKED_ZONES = {};
+	WHDB_QUEST_START_ZONES = {};
 	WHDB_MARKED = {{},{},{}};
 end -- WHDB_DoCleanMap()
 
@@ -1235,6 +1248,11 @@ function WHDB_GetQuestStartNotes(zoneName)
 		end
 	end
 	if zoneID ~= 0 then
+		if WHDB_QUEST_START_ZONES[zoneID] == true then
+			return;
+		else
+			WHDB_QUEST_START_ZONES[zoneID] = true;
+		end
 		WHDB_PREPARE = WHDB_MARKED;
 		-- TODO: add hide option to right click menu
 		for id, data in pairs(npcData) do
