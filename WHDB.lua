@@ -428,20 +428,24 @@ function WHDB_PlotNotesOnMap()
 	local noteID = nil;
 	if WHDB_PREPARE[DB_NPC] then
 		for k, npcMarks in WHDB_PREPARE[DB_NPC] do
-			local noteTitle, comment, icon = '', '', 1;
+			local noteTitle, comment, icon = '', '', -1;
 			if WHDB_GetTableLength(npcMarks) > 1 then
 				noteTitle = npcData[k].name;
 				for key, note in pairs(npcMarks) do
 					comment = comment.."\n"..note[NOTE_TITLE].."\n"..note[NOTE_COMMENT].."\n";
-					if icon ~= 1 then
+					if icon ~= -1 then
 						if icon ~= note[NOTE_ICON] then
-							icon = 0;
+							if (icon == 2 or note[NOTE_ICON] == 2) then
+								icon = 2;
+							else
+								icon = 0;
+							end
 						end
 					else
 						icon = note[NOTE_ICON];
 					end
 				end
-				if (icon ~= 2) and (icon ~= 6) then
+				if (icon ~= 2) and (icon ~= 5) and (icon ~= 6) then
 					comment = WHDB_GetNPCStatsComment(k, true)..comment;
 					local st, en = string.find(comment, "|c.-|r");
 					noteTitle = string.sub(comment, st, en);
@@ -450,7 +454,7 @@ function WHDB_PlotNotesOnMap()
 				WHDB_GetNPCNotes(k, noteTitle, comment, icon);
 			else
 				for key, v in pairs(npcMarks) do
-					if (v[NOTE_ICON] ~= 2) and (v[NOTE_ICON] ~= 6) then
+					if (v[NOTE_ICON] ~= 2) and (v[NOTE_ICON] ~= 5) and (v[NOTE_ICON] ~= 6) then
 						comment = WHDB_GetNPCStatsComment(k, true)..comment;
 					end
 					WHDB_GetNPCNotes(k, v[NOTE_TITLE], comment..v[NOTE_COMMENT], v[NOTE_ICON]);
@@ -460,14 +464,18 @@ function WHDB_PlotNotesOnMap()
 	end
 	if WHDB_PREPARE[DB_OBJ] then
 		for k, objMarks in WHDB_PREPARE[DB_OBJ] do
-			local noteTitle, comment, icon = '', '', 1;
+			local noteTitle, comment, icon = '', '', -1;
 			if WHDB_GetTableLength(objMarks) > 1 then
 				noteTitle = objData[k].name;
 				for key, note in pairs(objMarks) do
 					comment = comment.."\n"..note[NOTE_TITLE].."\n"..note[NOTE_COMMENT].."\n";
-					if icon ~= 1 then
+					if icon ~= -1 then
 						if icon ~= note[NOTE_ICON] then
-							icon = 0;
+							if (icon == 2 or note[NOTE_ICON] == 2) then
+								icon = 2;
+							else
+								icon = 0;
+							end
 						end
 					else
 						icon = note[NOTE_ICON];
@@ -1199,6 +1207,7 @@ function WHDB_GetQuestStartNotes(zoneName)
 		end
 	end
 	if zoneID ~= 0 then
+		WHDB_PREPARE = WHDB_MARKED;
 		-- TODO: add hide option to right click menu
 		for id, data in pairs(npcData) do
 			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
@@ -1383,7 +1392,11 @@ function WHDB_FillPrepare(tab, title, comment, icon)
 		for k, v in tab do
 			if v[NOTE_TITLE] == title then
 				if v[NOTE_ICON] ~= icon then
-					v[NOTE_ICON] = 0;
+					if (v[NOTE_ICON] == 2) or (icon == 2) then
+						v[NOTE_ICON] = 2;
+					else
+						v[NOTE_ICON] = 0;
+					end
 				end
 				v[NOTE_COMMENT] = v[NOTE_COMMENT].."\n"..comment;
 				added = true;
