@@ -492,7 +492,9 @@ function WHDB_PlotNotesOnMap()
 	if WHDB_PREPARE[DB_TRIGGER_MARKED] then
 		for questId, _ in WHDB_PREPARE[DB_TRIGGER_MARKED] do
 			local color = WHDB_GetDifficultyColor(qData[questId][DB_LEVEL]);
-			local title = color.."Location for: ".."["..qData[questId][DB_LEVEL].."] "..qData[questId][DB_NAME].."|r";
+			local level = qData[questId][DB_LEVEL];
+			if level == -1 then level = UnitLevel("player"); end
+			local title = color.."Location for: ".."["..level.."] "..qData[questId][DB_NAME].."|r";
 			for zoneId, coords in pairs(qData[questId][DB_TRIGGER][2]) do
 				for _, coord in pairs(coords) do
 					table.insert(WHDB_MAP_NOTES,{zoneData[zoneId], coord[1], coord[2], title, "|cFF00FF00"..qData[questId][DB_TRIGGER][1].."|r", 7});
@@ -757,7 +759,7 @@ function WHDB_GetQuestIDs(questName, objectives, ...)
 			local level = arg[1];
 			if level then
 				for k, v in pairs(qIDs) do
-					if qData[v][DB_LEVEL] ~= level then
+					if qData[v][DB_LEVEL] ~= level and level ~= UnitLevel("player") then
 						qIDs[k] = nil;
 					end
 				end
@@ -1029,7 +1031,9 @@ function WHDB_GetQuestNotes(questLogID)
 		local title = "";
 		if (type(qIDs) == "number") then
 			WHDB_Debug_Print(2, "    qID = "..qIDs);
-			title = WHDB_GetDifficultyColor(qData[qIDs][DB_LEVEL]).."["..qData[qIDs][DB_LEVEL].."] "..questTitle.."|r";
+			local level = qData[qIDs][DB_LEVEL];
+			if level == -1 then level = UnitLevel("player"); end
+			title = WHDB_GetDifficultyColor(qData[qIDs][DB_LEVEL]).."["..level.."] "..questTitle.."|r";
 		elseif (type(qIDs) == "table") then
 			numQuests = 0;
 			for k, qID in pairs(qIDs) do
@@ -1258,7 +1262,9 @@ function WHDB_GetQuestStartComment(npcOrGoStarts)
 	for key, questID in npcOrGoStarts do
 		if qData[questID] then
 			local colorString = WHDB_GetDifficultyColor(qData[questID][DB_LEVEL]);
-			tooltipText = tooltipText..colorString.."["..qData[questID][DB_LEVEL].."] "..qData[questID][DB_NAME].."|r\n";
+			local level = qData[questID][DB_LEVEL];
+			if level == -1 then level = UnitLevel("player"); end
+			tooltipText = tooltipText..colorString.."["..level.."] "..qData[questID][DB_NAME].."|r\n";
 			if WHDB_Settings.questIds and WHDB_Settings.reqLevel then
 				tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..") | |r";
 			elseif WHDB_Settings.questIds then
@@ -1339,6 +1345,9 @@ function WHDB_PrintTable(tab, indent)
 end
 
 function WHDB_GetDifficultyColor(level1, ...)
+	if level1 == -1 then
+		level1 = UnitLevel("player");
+	end
 	local level2 = 0;
 	if type(arg[1]) ~= "number" then
 		level2 = UnitLevel("player");
