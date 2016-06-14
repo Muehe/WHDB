@@ -8,8 +8,8 @@
 -- Globals
 -- Note that there are other globals in the DB files.
 WHDB_Debug = 2;
-WHDB_PREPARE = {{},{}};
-WHDB_MARKED = {{},{}};
+WHDB_PREPARE = {{},{},{}};
+WHDB_MARKED = {{},{},{}};
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
 WHDB_InEvent = false;
@@ -17,7 +17,7 @@ WHDB_Version = "Continued WHDB for Classic WoW";
 
 DB_NAME, DB_NPC, NOTE_TITLE = 1, 1, 1;
 DB_STARTS, DB_OBJ, NOTE_COMMENT = 2, 2, 2;
-DB_ENDS, DB_ITM, NOTE_ICON = 3, 3, 3;
+DB_ENDS, DB_ITM, NOTE_ICON, DB_TRIGGER_MARKED = 3, 3, 3, 3;
 DB_MIN_LEVEL, DB_ZONES, DB_VENDOR = 4, 4, 4;
 DB_LEVEL, DB_ITM_NAME = 5, 5;
 DB_REQ_RACE = 6;
@@ -489,8 +489,19 @@ function WHDB_PlotNotesOnMap()
 			end
 		end
 	end
+	if WHDB_PREPARE[DB_TRIGGER_MARKED] then
+		for questId, _ in WHDB_PREPARE[DB_TRIGGER_MARKED] do
+			local color = WHDB_GetDifficultyColor(qData[questId][DB_LEVEL]);
+			local title = color.."Location for: ".."["..qData[questId][DB_LEVEL].."] "..qData[questId][DB_NAME].."|r";
+			for zoneId, coords in pairs(qData[questId][DB_TRIGGER][2]) do
+				for _, coord in pairs(coords) do
+					table.insert(WHDB_MAP_NOTES,{zoneData[zoneId], coord[1], coord[2], title, "|cFF00FF00"..qData[questId][DB_TRIGGER][1].."|r", 7});
+				end
+			end
+		end
+	end
 	WHDB_MARKED = WHDB_PREPARE;
-	WHDB_PREPARE = {{},{}};
+	WHDB_PREPARE = {{},{},{}};
 
 	local firstNote = 1;
 	if WHDB_MAP_NOTES == {} then
@@ -523,6 +534,8 @@ function WHDB_PlotNotesOnMap()
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "ExclamationMark", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] == 6) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "Vendor", "WHDB", 'title', nData[4], 'info', nData[5]);
+			elseif (nData[6] == 7) then
+				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, "AreaTrigger", "WHDB", 'title', nData[4], 'info', nData[5]);
 			elseif (nData[6] ~= nil) then
 				Cartographer_Notes:SetNote(nData[1], nData[2]/100, nData[3]/100, nData[6], "WHDB", 'title', nData[4], 'info', nData[5]);
 			end
@@ -594,7 +607,7 @@ function WHDB_DoCleanMap()
 		ShaguDB_CleanMap();
 	end
 	WHDB_CleanMap();
-	WHDB_MARKED = {{},{}};
+	WHDB_MARKED = {{},{},{}};
 end -- WHDB_DoCleanMap()
 
 function WHDB_SearchEndNPC(questID)
@@ -1068,8 +1081,7 @@ function WHDB_GetQuestNotes(questLogID)
 									end
 								end
 							end
-						end
-						if (type(qIDs) == "table") then
+						elseif (type(qIDs) == "table") then
 							for k, qID in pairs(qIDs) do
 								if qData[qID][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_OBJ] then
 									for key, data in pairs(qData[qID][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_OBJ]) do
@@ -1087,8 +1099,20 @@ function WHDB_GetQuestNotes(questLogID)
 								end
 							end
 						end
+					elseif (objectiveType == "event") then
+						if (type(qIDs) == "number") then
+							if qData[qIDs][DB_TRIGGER] then
+								WHDB_PREPARE[DB_TRIGGER_MARKED][qIDs] = true;
+							end
+						elseif (type(qIDs) == "table") then
+							for k, qID in pairs(qIDs) do
+								if qData[qIDs][DB_TRIGGER] then
+									WHDB_PREPARE[DB_TRIGGER_MARKED][qID] = true;
+								end
+							end
+						end
 					-- checks for objective type other than item/monster/object, e.g. reputation, event
-					elseif (objectiveType ~= "item" and objectiveType ~= "monster" and objectiveType ~= "object") then
+					elseif (objectiveType ~= "item" and objectiveType ~= "monster" and objectiveType ~= "object" and objectiveType ~= "event") then
 						WHDB_Debug_Print(1, "    "..objectiveType.." quest objective-type not supported yet");
 					end
 				end
