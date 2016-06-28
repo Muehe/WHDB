@@ -266,8 +266,10 @@ function WHDB_Event(event, arg1)
 		WHDB_Print("WHDB Loaded.");
 	elseif (event == "QUEST_LOG_UPDATE") then
 		if (WHDB_Settings.auto_plot) then
+			WHDB_InEvent = true;
 			WHDB_Debug_Print(2, "Event: QUEST_LOG_UPDATE");
 			WHDB_PlotAllQuests();
+			WHDB_InEvent = false;
 		end
 	elseif (event == "WORLD_MAP_UPDATE") and (WorldMapFrame:IsVisible()) and (WHDB_Settings.questStarts) then
 		WHDB_Debug_Print(2, zone);
@@ -332,7 +334,7 @@ function WHDB_Slash(input)
 		if (itemName ~= "") then
 			if ((itemLookup[itemName]) and (itemData[itemLookup[itemName]])) then
 				WHDB_MarkForPlotting(DB_ITM, itemName, itemName, "", 0);
-				WHDB_PlotNotesOnMap();
+				WHDB_ShowMap();
 			end
 		end
 	elseif (string.sub(input,1,3) == "min") then
@@ -412,7 +414,11 @@ function WHDB_PlotAllQuests()
 	end
 	WHDB_QUEST_START_ZONES = {};
 	WHDB_CleanMap();
-	WHDB_PlotNotesOnMap();
+	if WHDB_InEvent == true then
+		WHDB_PlotNotesOnMap();
+	else
+		WHDB_ShowMap();
+	end
 end -- WHDB_PlotAllQuests()
 
 function WHDB_Print( str )
@@ -669,7 +675,7 @@ function WHDB_GetQuestEndNotes(questLogID)
 				if (npcID) then
 					local done = false;
 					for n, IDInside in pairs(npcIDs) do
-						if (npcID == IDInside) then 
+						if (npcID == IDInside) then
 							done = true;
 						end
 					end
@@ -697,7 +703,7 @@ function WHDB_GetQuestEndNotes(questLogID)
 					if (objID) then
 						local done = false;
 						for n, IDInside in pairs(objIDs) do
-							if (objID == IDInside) then 
+							if (objID == IDInside) then
 								done = true;
 							end
 						end
@@ -758,7 +764,7 @@ function WHDB_GetQuestIDs(questName, objectives, ...)
 	else
 		if (objectives ~= '') then
 			for k, v in pairs(qLookup[questName]) do
-				if v == objectives then -- implicit nil ~= string 
+				if v == objectives then -- implicit nil ~= string
 					table.insert(qIDs, k);
 				end
 			end
@@ -805,7 +811,7 @@ function WHDB_GetObjID(objName)
 	WHDB_Debug_Print(2, "WHDB_GetObjID("..objName..") called");
 	local objIDs = {};
 	for objID, data in pairs(objData) do
-		if (data['name'] == objName) then 
+		if (data['name'] == objName) then
 			table.insert(objIDs, objID);
 		end
 	end
@@ -883,7 +889,7 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 						for cID, coords in pairs(coordsdata) do
 							if (coords[1] == -1) and (instanceData[zoneID]) then
 								for id, data in pairs(instanceData[zoneID]) do
-									noteZone = zoneData[data[1]];
+									noteZone = zoneData[data[1] ];
 									coordx = data[2];
 									coordy = data[3];
 									table.insert(WHDB_MAP_NOTES,{noteZone, coordx, coordy, commentTitle, "|cFF00FF00Instance Entry to "..zoneName.."|r\n"..comment, icon});
@@ -1026,6 +1032,17 @@ function WHDB_GetTimeString(seconds)
 	return string.format("%.2d:%.2d:%.2d", hour, minute, second);
 end
 
+function WHDB_GetSpecialNpcNotes(qId, objectiveText, numItems, numNeeded, title)
+	local showMap = false;
+	for _, v in pairs(qData[qId][DB_REQ_NPC_OR_OBJ_OR_ITM][DB_NPC]) do
+		if v[2] ~= nil and v[2] == objectiveText then
+			local comment = "|cFF00FF00"..objectiveText..":  "..numItems.."/"..numNeeded.."|r";
+			showMap = WHDB_MarkForPlotting(DB_NPC, v[1], title, comment, WHDB_cMark) or showMap;
+		end
+	end
+	return showMap;
+end
+
 function WHDB_GetQuestNotes(questLogID)
 	WHDB_Debug_Print(2, "WHDB_GetQuestNotes("..questLogID..") called");
 	local questTitle, level, questTag, isHeader, isCollapsed, isComplete = GetQuestLogTitle(questLogID);
@@ -1071,8 +1088,18 @@ function WHDB_GetQuestNotes(questLogID)
 						local i, j, monsterName = strfind(itemName, "(.*) slain");
 						if monsterName then
 							local npcID = WHDB_GetNPCID(monsterName);
-							local comment = "|cFF00FF00"..itemName..":  "..numItems.."/"..numNeeded.."|r";
-							showMap = WHDB_MarkForPlotting(DB_NPC, npcID, title, comment, WHDB_cMark) or showMap;
+							if npcID then
+								local comment = "|cFF00FF00"..itemName..":  "..numItems.."/"..numNeeded.."|r";
+								showMap = WHDB_MarkForPlotting(DB_NPC, npcID, title, comment, WHDB_cMark) or showMap;
+							end
+						else
+							if (type(qIDs) == "number") then
+								showMap = WHDB_GetSpecialNpcNotes(qIDs, itemName, numItems, numNeeded, title) or showMap;
+							elseif (type(qIDs) == "table") then
+								for _, qId in pairs(qIDs) do
+									showMap = WHDB_GetSpecialNpcNotes(qId, itemName, numItems, numNeeded, title) or showMap;
+								end
+							end
 						end
 					elseif (objectiveType == "item") then
 						WHDB_Debug_Print(2, "    type = item");
@@ -1311,7 +1338,7 @@ end -- WHDB_GetCurrentZoneID()
 function WHDB_GetSelectionQuestNotes()
 	WHDB_PREPARE = WHDB_MARKED;
 	WHDB_GetQuestNotes(GetQuestLogSelection())
-	WHDB_PlotNotesOnMap();
+	WHDB_ShowMap();
 end -- WHDB_GetSelectionQuestNotes()
 
 function WHDB_GetTableLength(tab)
