@@ -343,7 +343,7 @@ end
 function DBGUI_SearchSpawn(search)
   local spawnCount = 1;
   for id, npc in pairs(npcData) do
-    if (strfind(strlower(npc.name), strlower(search))) then
+    if (strfind(strlower(npc[DB_NAME]), strlower(search))) then
       if ( spawnCount <= 13) then
         DBGUI_SpawnButtons["Button_"..spawnCount] = CreateFrame("Button","mybutton",DBGUI,"UIPanelButtonTemplate")
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetPoint("TOPLEFT", 10, -spawnCount*22-55)
@@ -353,7 +353,7 @@ function DBGUI_SearchSpawn(search)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetNormalTexture(nil)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetPushedTexture(nil)
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetTextColor(1,1,1)
-        DBGUI_SpawnButtons["Button_"..spawnCount]:SetText(npc.name)
+        DBGUI_SpawnButtons["Button_"..spawnCount]:SetText(npc[DB_NAME])
         DBGUI_SpawnButtons["Button_"..spawnCount]:SetScript("OnClick", function(self)
             WHDB_MAP_NOTES = {};
             WHDB_PREPARE = WHDB_MARKED;
@@ -386,7 +386,7 @@ function DBGUI_SearchItem(search)
             WHDB_MAP_NOTES = {};
             WHDB_PREPARE = WHDB_MARKED;
             local name = this:GetText();
-            WHDB_PrepareItemNotes(name, name, "", 0)
+            WHDB_PrepareItemNotes(name, name, name, 0)
             WHDB_ShowMap();
           end)
         itemCount = itemCount + 1

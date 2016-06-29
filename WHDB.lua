@@ -18,16 +18,16 @@ WHDB_InEvent = false;
 WHDB_Version = "Continued WHDB for Classic WoW";
 
 DB_NAME, DB_NPC, NOTE_TITLE = 1, 1, 1;
-DB_STARTS, DB_OBJ, NOTE_COMMENT = 2, 2, 2;
-DB_ENDS, DB_ITM, NOTE_ICON, DB_TRIGGER_MARKED = 3, 3, 3, 3;
+DB_STARTS, DB_OBJ, NOTE_COMMENT, DB_MIN_LEVEL_HEALTH = 2, 2, 2, 2;
+DB_ENDS, DB_ITM, NOTE_ICON, DB_TRIGGER_MARKED, DB_MAX_LEVEL_HEALTH = 3, 3, 3, 3, 3;
 DB_MIN_LEVEL, DB_ZONES, DB_VENDOR = 4, 4, 4;
 DB_LEVEL, DB_ITM_NAME = 5, 5;
-DB_REQ_RACE = 6;
-DB_REQ_CLASS = 7;
-DB_OBJECTIVES = 8;
-DB_TRIGGER = 9;
-DB_REQ_NPC_OR_OBJ_OR_ITM = 10;
-DB_SRC_ITM = 11;
+DB_REQ_RACE, DB_RANK = 6, 6;
+DB_REQ_CLASS, DB_NPC_SPAWNS = 7, 7;
+DB_OBJECTIVES, DB_NPC_WAYPOINTS = 8, 8;
+DB_TRIGGER, DB_ZONE = 9, 9;
+DB_REQ_NPC_OR_OBJ_OR_ITM, DB_NPC_STARTS = 10, 10;
+DB_SRC_ITM, DB_NPC_ENDS = 11, 11;
 
 -- Cartographer related stuff
 -- New Icons
@@ -356,8 +356,8 @@ function WHDB_Slash(input)
 			if (monsterName ~= nil) then
 				npcID = WHDB_GetNPCID(monsterName)
 				if (npcData[npcID] ~= nil) then
-					zoneName = zoneData[npcData[npcID]["zone"]];
-					if (zoneName == nil) then zoneName = npcData[npcID]["zone"]; end
+					zoneName = zoneData[npcData[npcID][DB_ZONE]];
+					if (zoneName == nil) then zoneName = npcData[npcID][DB_ZONE]; end
 					WHDB_Print_Indent("Zone: " .. zoneName);
 					if (WHDB_MarkForPlotting(DB_NPC, monsterName, monsterName, WHDB_GetNPCStatsComment(monsterName, true), 0)) then
 						WHDB_ShowMap();
@@ -436,7 +436,7 @@ function WHDB_PlotNotesOnMap()
 		for k, npcMarks in WHDB_PREPARE[DB_NPC] do
 			local noteTitle, comment, icon = '', '', -1;
 			if WHDB_GetTableLength(npcMarks) > 1 then
-				noteTitle = npcData[k].name;
+				noteTitle = npcData[k][DB_NAME];
 				for key, note in pairs(npcMarks) do
 					comment = comment.."\n"..note[NOTE_TITLE].."\n"..note[NOTE_COMMENT].."\n";
 					if icon ~= -1 then
@@ -634,8 +634,8 @@ end -- WHDB_DoCleanMap()
 function WHDB_SearchEndNPC(questID)
 	WHDB_Debug_Print(2, "WHDB_SearchEndNPC("..questID..") called");
 	for npc, data in pairs(npcData) do
-		if (data["ends"] ~= nil) then
-			for line, entry in pairs(data["ends"]) do
+		if (data[DB_NPC_ENDS] ~= nil) then
+			for line, entry in pairs(data[DB_NPC_ENDS]) do
 				if (entry == questID) then return npc; end
 			end
 		end
@@ -688,12 +688,12 @@ function WHDB_GetQuestEndNotes(questLogID)
 				if (table.getn(npcIDs) > 1) then
 					for n, npcID in pairs(npcIDs) do
 						local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(npcIDs).." NPCs";
-						local comment = npcData[npcID].name.."\n("..multi.." quests with this name)"
+						local comment = npcData[npcID][DB_NAME].."\n("..multi.." quests with this name)"
 						WHDB_MarkForPlotting(DB_NPC, npcID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
 					local npcID = npcIDs[1]
-					local comment = npcData[npcID].name.."\n(Ends "..multi.." quests with this name)"
+					local comment = npcData[npcID][DB_NAME].."\n(Ends "..multi.." quests with this name)"
 					return WHDB_MarkForPlotting(DB_NPC, npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 				end
 			else
@@ -732,12 +732,12 @@ function WHDB_GetQuestEndNotes(questLogID)
 		elseif (type(qIDs) == "number") then
 			local npcID = WHDB_SearchEndNPC(qIDs);
 			if npcID and npcData[npcID] then
-				local name = npcData[npcID].name;
+				local name = npcData[npcID][DB_NAME];
 				return WHDB_MarkForPlotting(DB_NPC, npcID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 			else
 				local objID = WHDB_SearchEndObj(qIDs);
 				if objID and objData[objID] then
-					local name = objData[objID].name;
+					local name = objData[objID][DB_NAME];
 					return WHDB_MarkForPlotting(DB_OBJ, objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..name.."|r", 2);
 				else
 					return false;
@@ -802,7 +802,7 @@ end -- WHDB_GetQuestIDs(questName, objectives)
 function WHDB_GetNPCID(npcName)
 	WHDB_Debug_Print(2, "WHDB_GetNPCID("..npcName..") called");
 	for npcid, data in pairs(npcData) do
-		if (data['name'] == npcName) then return npcid; end
+		if (data[DB_NAME] == npcName) then return npcid; end
 	end
 	return false;
 end -- WHDB_GetNPCID(npcName)
@@ -862,8 +862,8 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 		end
 		if (npcData[npcID] ~= nil) then
 			local showMap = false;
-			if (npcData[npcID]["waypoints"] and WHDB_Settings.waypoints == true) then
-				for zoneID, coordsdata in pairs(npcData[npcID]["waypoints"]) do
+			if (npcData[npcID][DB_NPC_WAYPOINTS] and WHDB_Settings.waypoints == true) then
+				for zoneID, coordsdata in pairs(npcData[npcID][DB_NPC_WAYPOINTS]) do
 					zoneName = zoneData[zoneID];
 					for cID, coords in pairs(coordsdata) do
 						if (coords[1] == -1) then
@@ -882,8 +882,8 @@ function WHDB_GetNPCNotes(npcNameOrID, commentTitle, comment, icon)
 					end
 				end
 			end
-			if (npcData[npcID]["zones"]) then
-				for zoneID, coordsdata in pairs(npcData[npcID]["zones"]) do
+			if (npcData[npcID][DB_NPC_SPAWNS]) then
+				for zoneID, coordsdata in pairs(npcData[npcID][DB_NPC_SPAWNS]) do
 					if (zoneID ~= 5 and zoneID ~= 6) then
 						zoneName = zoneData[zoneID];
 						for cID, coords in pairs(coordsdata) do
@@ -1008,9 +1008,9 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 				if npcData[npc] then
 					local sellComment = '';
 					if maxcount then
-						sellComment = "Sold by: "..npcData[npc].name.."\nMax available: "..maxcount.."\nRestock time: "..WHDB_GetTimeString(increaseTime).."\n"..comment;
+						sellComment = "Sold by: "..npcData[npc][DB_NAME].."\nMax available: "..maxcount.."\nRestock time: "..WHDB_GetTimeString(increaseTime).."\n"..comment;
 					else
-						sellComment = "Sold by: "..npcData[npc].name.."\n"..comment;
+						sellComment = "Sold by: "..npcData[npc][DB_NAME].."\n"..comment;
 					end
 					showMap = WHDB_MarkForPlotting(DB_NPC, npc, commentTitle, sellComment, 6) or showMap;
 				else
@@ -1212,39 +1212,25 @@ function WHDB_GetNPCStatsComment(npcNameOrID, ...)
 	else
 		npcID = npcNameOrID;
 	end
-	if (npcId ~= 0) and (npcData[npcID] ~= nil) then
-		local level = npcData[npcID].level;
-		local hp = npcData[npcID].hp;
-		if (level == nil) then
-			level = "Unknown";
-		else
-			local num = tonumber(level);
-			if (type(num) == "number") and color then
-				colorStringMax = WHDB_GetDifficultyColor(num);
-				level = colorStringMax..level.."|r";
-			elseif color then
-				local i, j, minlvl, maxlvl = strfind(level, "([%d]+)%s*-%s*([%d]+)");
-				if i then
-					if tonumber(minlvl) then
-						colorStringMin = WHDB_GetDifficultyColor(tonumber(minlvl));
-					end
-					if tonumber(maxlvl) then
-						colorStringMax = WHDB_GetDifficultyColor(tonumber(maxlvl));
-					end
-					level = colorStringMin..minlvl.."|r - "..colorStringMax..maxlvl.."|r";
-				else
-					local i, j, lvl = strfind(level, "([%d]+)%s*");
-					if tonumber(lvl) then
-						colorStringMax = WHDB_GetDifficultyColor(tonumber(lvl));
-						level = colorStringMax..level.."|r";
-					end
-				end
+	if (npcID ~= 0) and (npcData[npcID] ~= nil) then
+		local rank = "";
+		if npcData[npcID][DB_RANK] ~= 0 then
+			if npcData[npcID][DB_RANK] == 1 then rank = "Elite";
+			elseif npcData[npcID][DB_RANK] == 2 then rank = "Rare Elite";
+			elseif npcData[npcID][DB_RANK] == 3 then rank = "World Boss";
+			elseif npcData[npcID][DB_RANK] == 4 then rank = "Rare";
 			end
 		end
-		if (hp == nil) then
-			hp = "Unknown";
+		if npcData[npcID][DB_LEVEL] ~= npcData[npcID][DB_MIN_LEVEL] then
+			local maxLevel = npcData[npcID][DB_LEVEL];
+			local minLevel = npcData[npcID][DB_MIN_LEVEL];
+			local colorStringMax = WHDB_GetDifficultyColor(maxLevel);
+			local colorStringMin = WHDB_GetDifficultyColor(minLevel);
+			return colorStringMax..npcData[npcID][DB_NAME].."|r\nLevel: "..colorStringMin..minLevel.."|r - "..colorStringMax..maxLevel.." "..rank.."|r\n".."Health: "..colorStringMin..npcData[npcID][DB_MIN_LEVEL_HEALTH].."|r - "..colorStringMax..npcData[npcID][DB_MAX_LEVEL_HEALTH].."|r\n";
+		else
+			local colorString = WHDB_GetDifficultyColor(npcData[npcID][DB_LEVEL]);
+			return colorString..npcData[npcID][DB_NAME].."|r\nLevel: "..colorString..npcData[npcID][DB_MIN_LEVEL].." "..rank.."|r\n".."Health: "..colorString..npcData[npcID][DB_MIN_LEVEL_HEALTH].."|r\n";
 		end
-		return colorStringMax..npcData[npcID].name.."|r\nLevel: "..level.."\nHealth: "..hp.."\n";
 	else
 		WHDB_Debug_Print(2, "    NPC not found: "..npcNameOrID);
 		return "NPC not found: "..npcNameOrID;
@@ -1283,10 +1269,10 @@ function WHDB_GetQuestStartNotes(zoneName)
 		WHDB_PREPARE = WHDB_MARKED;
 		-- TODO: add hide option to right click menu
 		for id, data in pairs(npcData) do
-			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				local comment = WHDB_GetQuestStartComment(data.starts);
+			if (data[DB_NPC_SPAWNS][zoneID] ~= nil) and (data[DB_NPC_STARTS] ~= nil) then
+				local comment = WHDB_GetQuestStartComment(data[DB_NPC_STARTS]);
 				if (comment ~= "") then -- (comment == "") => other faction quest
-					WHDB_MarkForPlotting(DB_NPC, id, data.name, "Starts quests:\n"..comment, 5);
+					WHDB_MarkForPlotting(DB_NPC, id, data[DB_NAME], "Starts quests:\n"..comment, 5);
 				end
 			end
 		end
