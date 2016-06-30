@@ -11,6 +11,7 @@ WHDB_Debug = 2;
 WHDB_PREPARE = {{},{},{}};
 WHDB_MARKED = {{},{},{}};
 WHDB_MARKED_ZONES = {};
+WHDB_MARKED_ZONE = "";
 WHDB_QUEST_START_ZONES = {};
 WHDB_MAP_NOTES = {};
 WHDB_Notes = 0;
@@ -133,6 +134,35 @@ function WHDB_cycleMarks()
     else WHDB_cMark = "WHDB_mk1";
     end
 end -- WHDB_cycleMarks()
+
+function WHDB_CycleMarkedZones()
+    if WHDB_MARKED_ZONE ~= "" then
+        local found = false;
+        for k, v in pairs(WHDB_MARKED_ZONES) do
+            if found then
+                WHDB_MARKED_ZONE = k;
+                SetMapZoom(WHDB_GetMapIDFromZone(k));
+                return;
+            end
+            if k == WHDB_MARKED_ZONE then
+                found = true;
+            end
+        end
+        if found then
+            for k, v in pairs(WHDB_MARKED_ZONES) do
+                WHDB_MARKED_ZONE = k;
+                SetMapZoom(WHDB_GetMapIDFromZone(k));
+                return;
+            end
+        end
+    else
+        for k, v in pairs(WHDB_MARKED_ZONES) do
+            WHDB_MARKED_ZONE = k;
+            SetMapZoom(WHDB_GetMapIDFromZone(k));
+            return;
+        end
+    end
+end -- WHDB_CycleMarkedZones()
 
 -- End of Cartographer stuff
 

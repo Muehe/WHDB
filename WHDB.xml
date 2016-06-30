@@ -15,11 +15,11 @@
 		<Size>
 			<AbsDimension x="180" y="116"/>
 		</Size>
-		
+
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
-		
+
 		<Scripts>
 			<OnLoad>
 				WHDB_Init();
@@ -28,7 +28,7 @@
 				WHDB_Event(event);
 			</OnEvent>
 			<OnShow>
-				
+
 			</OnShow>
 			<OnMouseDown>
 				WHDB_OnMouseDown(arg1);
@@ -40,9 +40,8 @@
 				WHDB_OnFrameShow();
 			</OnShow>
 		</Scripts>
-		
-		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
-           edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+
+		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
 			<BackgroundInsets>
 				<AbsInset left="5" right="5" top="5" bottom="5"/>
 			</BackgroundInsets>
@@ -53,7 +52,7 @@
 				<AbsValue val="16"/>
 			</EdgeSize>
 		</Backdrop>
-		
+
 		<Layers>
 			<Layer>
 				<FontString name="MapButtons" inherits="RQP_Font" text="Mapping:">
@@ -93,7 +92,7 @@
 				</FontString>
 			</Layer>
 		</Layers>
-		
+
 		<Frames>
 			<Button name="CleanMap" inherits="OptionsButtonTemplate">
 				<Size>
@@ -210,6 +209,28 @@
 						WHDB_Tooltip:SetOwner(ToggleCartographer, "ANCHOR_TOPLEFT");
 						WHDB_Tooltip:ClearLines();
 						WHDB_Tooltip:SetText("Show/Hide Cartographer Notes.");
+						WHDB_Tooltip:Show();
+					</OnEnter>
+					<OnLeave>WHDB_Tooltip:Hide();</OnLeave>
+				</Scripts>
+				<NormalTexture file="Interface\Addons\WHDB\symbols\OnOff"/>
+				<PushedTexture file="Interface\Addons\WHDB\symbols\OnOffPushed"/>
+			</Button>
+			<Button name="CycleMap" inherits="OptionsButtonTemplate">
+				<Size>
+					<AbsDimension x="24" y="24"/>
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="ToggleCartographer" relativePoint="BOTTOMLEFT">
+						<Offset x="0" y="2"/>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick> WHDB_CycleMarkedZones(); </OnClick>
+					<OnEnter>
+						WHDB_Tooltip:SetOwner(CycleMap, "ANCHOR_TOPLEFT");
+						WHDB_Tooltip:ClearLines();
+						WHDB_Tooltip:SetText("Cycle through marked zones.\n(Might miss first click)");
 						WHDB_Tooltip:Show();
 					</OnEnter>
 					<OnLeave>WHDB_Tooltip:Hide();</OnLeave>
