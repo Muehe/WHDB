@@ -20,7 +20,7 @@ WHDB_Version = "Continued WHDB for Classic WoW";
 DB_NAME, DB_NPC, NOTE_TITLE = 1, 1, 1;
 DB_STARTS, DB_OBJ, NOTE_COMMENT, DB_MIN_LEVEL_HEALTH = 2, 2, 2, 2;
 DB_ENDS, DB_ITM, NOTE_ICON, DB_TRIGGER_MARKED, DB_MAX_LEVEL_HEALTH = 3, 3, 3, 3, 3;
-DB_MIN_LEVEL, DB_ZONES, DB_VENDOR = 4, 4, 4;
+DB_MIN_LEVEL, DB_ZONES, DB_VENDOR, DB_OBJ_SPAWNS = 4, 4, 4, 4;
 DB_LEVEL, DB_ITM_NAME = 5, 5;
 DB_REQ_RACE, DB_RANK = 6, 6;
 DB_REQ_CLASS, DB_NPC_SPAWNS = 7, 7;
@@ -472,7 +472,7 @@ function WHDB_PlotNotesOnMap()
 		for k, objMarks in WHDB_PREPARE[DB_OBJ] do
 			local noteTitle, comment, icon = '', '', -1;
 			if WHDB_GetTableLength(objMarks) > 1 then
-				noteTitle = objData[k].name;
+				noteTitle = objData[k][DB_NAME];
 				for key, note in pairs(objMarks) do
 					comment = comment.."\n"..note[NOTE_TITLE].."\n"..note[NOTE_COMMENT].."\n";
 					if icon ~= -1 then
@@ -716,12 +716,12 @@ function WHDB_GetQuestEndNotes(questLogID)
 					if (table.getn(objIDs) > 1) then
 						for n, objID in pairs(objIDs) do
 							local commentTitle = "|cFF33FF00"..questTitle.." (Complete)|r".." - "..n.."/"..table.getn(objIDs).." NPCs";
-							local comment = objData[objID].name.."\n("..multi.." quests with this name)"
+							local comment = objData[objID][DB_NAME].."\n("..multi.." quests with this name)"
 							WHDB_MarkForPlotting(DB_OBJ, objID, commentTitle, "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 						end
 					else
 						local objID = objIDs[1]
-						local comment = objData[objID].name.."\n(Ends "..multi.." quests with this name)"
+						local comment = objData[objID][DB_NAME].."\n(Ends "..multi.." quests with this name)"
 						return WHDB_MarkForPlotting(DB_OBJ, objID, "|cFF33FF00"..questTitle.." (Complete)|r", "Finished by: |cFFa6a6a6"..comment.."|r", 2);
 					end
 				else
@@ -923,8 +923,8 @@ function WHDB_GetObjNotes(objNameOrID, commentTitle, comment, icon)
 		local count = 0;
 		for n, objID in pairs(objIDs) do
 			if (objData[objID] ~= nil) then
-				if (objData[objID]["zones"]) then
-					for zoneID, coordsdata in pairs(objData[objID]["zones"]) do
+				if (objData[objID][DB_OBJ_SPAWNS]) then
+					for zoneID, coordsdata in pairs(objData[objID][DB_OBJ_SPAWNS]) do
 						if (zoneID ~= 5 and zoneID ~= 6) then -- C legacy, unused, kept for future (world map coords)
 							zoneName = zoneData[zoneID]
 							for cID, coords in pairs(coordsdata) do
@@ -984,8 +984,8 @@ function WHDB_PrepareItemNotes(itemNameOrID, commentTitle, comment, icon)
 						show = false;
 					end
 					if show then
-						local dropComment = objData[value[1]].name.."\n"..comment.." ("..value[2].."%)";
-						showMap = WHDB_MarkForPlotting(DB_OBJ, objData[value[1]].name, commentTitle, dropComment, icon) or showMap;
+						local dropComment = objData[value[1]][DB_NAME].."\n"..comment.." ("..value[2].."%)";
+						showMap = WHDB_MarkForPlotting(DB_OBJ, objData[value[1]][DB_NAME], commentTitle, dropComment, icon) or showMap;
 					end
 				end
 			end
@@ -1277,10 +1277,10 @@ function WHDB_GetQuestStartNotes(zoneName)
 			end
 		end
 		for id, data in pairs(objData) do
-			if (data.zones[zoneID] ~= nil) and (data.starts ~= nil) then
-				local comment = WHDB_GetQuestStartComment(data.starts);
+			if (data[DB_OBJ_SPAWNS][zoneID] ~= nil) and (data[DB_STARTS] ~= nil) then
+				local comment = WHDB_GetQuestStartComment(data[DB_STARTS]);
 				if (comment ~= "") then
-					WHDB_MarkForPlotting(DB_OBJ, id, data.name, "Starts quests:\n"..comment, 5);
+					WHDB_MarkForPlotting(DB_OBJ, id, data[DB_NAME], "Starts quests:\n"..comment, 5);
 				end
 			end
 		end
