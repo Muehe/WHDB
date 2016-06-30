@@ -841,7 +841,7 @@ function WHDB_GetObjID(objName)
     WHDB_Debug_Print(2, "WHDB_GetObjID("..objName..") called");
     local objIDs = {};
     for objID, data in pairs(objData) do
-        if (data['name'] == objName) then
+        if (data[DB_NAME] == objName) then
             table.insert(objIDs, objID);
         end
     end
@@ -1438,6 +1438,7 @@ function WHDB_GetGreyLevel(level)
 end
 
 function WHDB_MarkForPlotting(kind, nameOrId, title, comment, icon, ...)
+    WHDB_Debug_Print(2, "WHDB_MarkForPlotting("..kind..", "..nameOrId..") called");
     if kind == DB_NPC then
         local npcID = 0;
         if type(nameOrId) == "number" then
