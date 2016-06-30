@@ -231,6 +231,9 @@ function WHDB_Event(event, arg1)
             Cartographer_Notes:RegisterNotesDatabase("WHDB",WHDBDB,WHDBDBH);
             WHDB_Debug_Print(1, "Cartographer Database Registered.");
         end
+        if (WHDB_FinishedQuests == nil) then
+            WHDB_FinishedQuests = {};
+        end
         if (WHDB_Settings == nil) then
             WHDB_Settings = {};
         end
@@ -327,6 +330,7 @@ function WHDB_Slash(input)
         WHDB_Print("/whdb auto | Enable/Disable: Automatically plot uncompleted objectives on map.");
         WHDB_Print("/whdb waypoint | Enable/Disable: Plot waypoints on map.");
         WHDB_Print("/whdb starts | Enable/Disable: Plot quest starts on map.");
+        WHDB_Print("/whdb hide <questID> | Prevent the given quest ID from being plotted to quest starts.");
         WHDB_Print("/whdb reset | Reset positon of the Interface.");
         WHDB_Print("/whdb clear | !This reloads the UI! Delete WHDB Settings.");
         DEFAULT_CHAT_FRAME:AddMessage("\n");
@@ -420,6 +424,11 @@ function WHDB_Slash(input)
         WHDB_SwitchSetting("waypoints");
     elseif (string.sub(input,1,6) == "starts") then
         WHDB_SwitchSetting("questStarts");
+    elseif (string.sub(input,1,4) == "hide") then
+        local questId = tonumber(string.sub(input, 6));
+        if qData[questId] then
+            WHDB_FinishedQuests[questId] = true;
+        end
     elseif (string.sub(input,1,5) == "reset") then
         WHDB_ResetGui();
     elseif (string.sub(input,1,5) == "clear") then
@@ -1324,7 +1333,7 @@ end -- WHDB_GetQuestStartNotes(zoneName)
 function WHDB_GetQuestStartComment(npcOrGoStarts)
     local tooltipText = "";
     for key, questID in npcOrGoStarts do
-        if qData[questID] then
+        if (qData[questID]) and (WHDB_FinishedQuests[questID] ~= true) then
             local tooHigh = false;
             if (WHDB_Settings.filterReqLevel == true) and (qData[questID][DB_MIN_LEVEL] > UnitLevel("player")) then
                 tooHigh = true;
