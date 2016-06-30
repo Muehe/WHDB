@@ -248,6 +248,9 @@ function WHDB_Event(event, arg1)
         if (WHDB_Settings["questStarts"] == nil) then
             WHDB_Settings["questStarts"] = false;
         end
+        if (WHDB_Settings["filterReqLevel"] == nil) then
+            WHDB_Settings["filterReqLevel"] = true;
+        end
         if (WHDB_Settings["questIds"] == nil) then
             WHDB_Settings["questIds"] = true;
         end
@@ -1322,17 +1325,23 @@ function WHDB_GetQuestStartComment(npcOrGoStarts)
     local tooltipText = "";
     for key, questID in npcOrGoStarts do
         if qData[questID] then
+            local tooHigh = false;
+            if (WHDB_Settings.filterReqLevel == true) and (qData[questID][DB_MIN_LEVEL] > UnitLevel("player")) then
+                tooHigh = true;
+            end
             local colorString = WHDB_GetDifficultyColor(qData[questID][DB_LEVEL]);
             local level = qData[questID][DB_LEVEL];
             if level == -1 then level = UnitLevel("player"); end
-            tooltipText = tooltipText..colorString.."["..level.."] "..qData[questID][DB_NAME].."|r\n";
-            if WHDB_Settings.questIds and WHDB_Settings.reqLevel then
-                tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..") | |r";
-            elseif WHDB_Settings.questIds then
-                tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..")|r\n";
-            end
-            if WHDB_Settings.reqLevel then
-                tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID][DB_MIN_LEVEL].."|r\n";
+            if not tooHigh then
+                tooltipText = tooltipText..colorString.."["..level.."] "..qData[questID][DB_NAME].."|r\n";
+                if WHDB_Settings.questIds and WHDB_Settings.reqLevel then
+                    tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..") | |r";
+                elseif WHDB_Settings.questIds and not toHigh then
+                    tooltipText = tooltipText.."|cFFa6a6a6(ID: "..questID..")|r\n";
+                end
+                if WHDB_Settings.reqLevel then
+                    tooltipText = tooltipText.."|cFFa6a6a6Requires level: "..qData[questID][DB_MIN_LEVEL].."|r\n";
+                end
             end
         end
     end
