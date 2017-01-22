@@ -1,7 +1,7 @@
 # WHDB
 Continued WHDB addon for classic WoW
 
-## This Addon is in the process of being merged with [ShaguQuest](https://github.com/shagu/shaguquest). Use its [8.0 alpha](https://github.com/shagu/shaguquest/releases] instead of this.
+## This Addon is in the process of being merged with [ShaguQuest](https://github.com/shagu/shaguquest). Use its [8.0 alpha](https://github.com/shagu/shaguquest/releases) instead of this.
 
 Requires Cartographer addon (using the [modified WHDB version of Cartographer](https://github.com/Muehe/Cartographer) is advised but not required).
 
@@ -47,3 +47,5 @@ http://imgur.com/a/iyegU
 <img src="http://i.imgur.com/K8qGT76.jpg" alt="Multi Quest Display"/>
 
 <img src="http://i.imgur.com/yXPQZas.jpg" alt="Quest Start Display"/>
+
+
