@@ -1,3 +1,6 @@
+<iframe src="https://discordapp.com/widget?id=263036731165638656&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0"></iframe>
+
+
 # WHDB
 Continued WHDB addon for classic WoW
 
